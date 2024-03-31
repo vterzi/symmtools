@@ -5,7 +5,6 @@ from .tools import *
 from .ptgrp import *
 from .chem import *
 from .irrep import *
-from .example import *
 
 # add `inplane`, `inline` functions
 # SymmOps to SymmElems, and save multiple cos and sin for all angles in Rotation
