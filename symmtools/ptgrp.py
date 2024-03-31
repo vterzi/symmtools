@@ -238,13 +238,14 @@ def symmelems(elems, tol=dtol):
 
     if not elems.check(tol):
         raise ValueError('at least two identical elements in the instance of Struct for given tolerance')
-    inversion = elems.same(elems.invert(), tol)
+    dim = 3
+    invertible = elems.same(elems.invert(), tol)
     rotations = []
     reflections = []
     rotoreflections = []
-    point = elems.pos if len(elems) == 1 else None
-    line = None
-    plane = None
+    if len(elems) == 1:
+        dim = 0
+    direction = None
     collinear = True
     for i1 in range(len(elems) - 1):
         # for all point pairs
@@ -271,9 +272,10 @@ def symmelems(elems, tol=dtol):
                         if abs(dot(elems[i4].pos, rotation) - dist) <= tol:
                             # increase the number of points in the plane
                             max_order += 1
-                    if max_order == len(elems) and plane is None and abs(dist) <= tol:
+                    if max_order == len(elems) and direction is None and abs(dist) <= tol:
                         # all points are coplanar
-                        plane = rotation
+                        dim = 2
+                        direction = rotation
                         # add reflection (described by the plane containing all points)
                         reflections.append(Reflection(rotation))
                     added = False
@@ -289,43 +291,42 @@ def symmelems(elems, tol=dtol):
             midpoint = (elems[i1].pos + elems[i2].pos) / 2
             reflection = segment / norm(segment)
             # add rotation with order infinity
-            if collinear and line is None and parallel(elems[i1].pos, elems[i2].pos, tol):
-                line = reflection
+            if collinear and direction is None and parallel(elems[i1].pos, elems[i2].pos, tol):
+                dim = 1
+                direction = reflection
                 rotations.append(Rotation(reflection, inf))
-                if inversion:
+                if invertible:
                     rotoreflections.append(Rotoreflection(reflection, inf))
             # if the distance from the origin to the segment doesn't divide it in halves
             if not perpendicular(segment, midpoint, tol):
                 continue
             len_midpoint = norm(midpoint)
             # if the distance from the origin to the midpoint is not zero or all points are in one plane
-            if len_midpoint > tol or plane is not None:
-                rotation = midpoint / len_midpoint if plane is None else cross(plane, reflection)
+            if len_midpoint > tol or dim == 2:
+                rotation = midpoint / len_midpoint if direction is None else cross(direction, reflection)
                 if not contains(rotations, rotation):
                     order = 2
                     add_rotation(rotation, order)
                     add_rotoreflection(rotation, order)
             if not contains(reflections, reflection):
                 add_reflection(reflection)
-    return (point,
-            line,
-            plane,
-            inversion,
+    return (dim,
+            invertible,
             tuple(sorted(rotations, key=lambda elem: - elem.order)),
             tuple(reflections),
             tuple(sorted(rotoreflections, key=lambda elem: - elem.order)))
 
 
 def ptgrp(elems, tol=dtol):
-    point, line, plane, inversion, rotations, reflections, rotoreflections = symmelems(elems, tol)
-    if point is not None:
+    dim, invertible, rotations, reflections, rotoreflections = symmelems(elems, tol)
+    if dim == 0:
         return 'Kh'  # 'K'
-    if line is not None:
-        return 'Dooh' if inversion else 'Coov'
+    if dim == 1:
+        return 'Dooh' if invertible else 'Coov'
     if len(rotations) == 0:
         if len(reflections) > 0:
             return 'Cs'
-        if inversion:
+        if invertible:
             return 'Ci'
         return 'C1'
     rotation = rotations[0]
