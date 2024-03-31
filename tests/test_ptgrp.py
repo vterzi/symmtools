@@ -6,7 +6,6 @@ from symmtools import ptgrp, project, signpermut, topoints, Elems, generate, Poi
 class TestPtgrp(TestCase):
     def test_ptgrp(self):
         point = project([[]], 3*[0])
-        print(type(Elems(topoints(point))))
         self.assertEqual(ptgrp(Elems(topoints(point))), 'Kh')
         segment = project(signpermut([1]), 3*[0])
         self.assertEqual(ptgrp(Elems(topoints(segment))), 'Dooh')
