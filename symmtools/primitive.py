@@ -289,14 +289,18 @@ class Elems(Primitive):
         res._elems = tuple(elems)
         return res
 
-    def center(self):
+    @property
+    def pos(self):
         centroid = zeros(3)
         for elem in self._elems:
             centroid += elem.pos
         n = len(self._elems)
         if n > 0:
             centroid /= n
-        return self.translate(Translation(- centroid))
+        return centroid
+
+    def center(self):
+        return self.translate(Translation(- self.pos))
 
     def invert(self):
         res = self.copy()
