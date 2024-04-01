@@ -1,4 +1,4 @@
-__all__ = ('Point', 'LabeledPoint', 'Arrow', 'Elems', 'Struct')
+__all__ = ['Point', 'LabeledPoint', 'Arrow', 'Elems', 'Struct']
 
 from abc import ABC, abstractmethod
 from copy import copy

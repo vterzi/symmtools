@@ -1,4 +1,4 @@
-__all__ = ('Identity', 'Translation', 'Inversion', 'Rotation', 'Reflection', 'Rotoreflection')
+__all__ = ['Identity', 'Translation', 'Inversion', 'Rotation', 'Reflection', 'Rotoreflection']
 
 from abc import ABC, abstractmethod
 from copy import copy

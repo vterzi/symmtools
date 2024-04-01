@@ -1,4 +1,4 @@
-__all__ = ('s_orb', 'px_orb', 'py_orb', 'dx2y2_orb', 'dz2_orb', 'dxy_orb', 'dyz_orb', 'dxz_orb')
+__all__ = ['s_orb', 'px_orb', 'py_orb', 'dx2y2_orb', 'dz2_orb', 'dxy_orb', 'dyz_orb', 'dxz_orb']
 
 from .primitive import Arrow, Struct
 
