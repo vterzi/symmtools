@@ -11,7 +11,9 @@ __all__ = (
     "invert",
     "move2",
     "rotate",
+    "rotate3",
     "reflect",
+    "reflect3",
 )
 
 from collections.abc import Sequence
@@ -103,9 +105,28 @@ def rotate(point: Vector, rotation: Vector, angle: Float) -> Vector:
     return move2(point, rotation, cos(angle), sin(angle))
 
 
+def rotate3(point: Vector, rotation: Vector) -> Vector:
+    """Rotate a point `point` by a rotation vector `rotation`."""
+    length = norm(rotation)
+    if length > 0:
+        point = rotate(point, rotation / length, length)
+    return point
+
+
 def reflect(point: Vector, reflection: Vector) -> Vector:
     """
     Reflect a point `point` through a reflection plane with a normalized normal
     `reflection`.
     """
     return point - 2 * dot(point, reflection) * reflection
+
+
+def reflect3(point: Vector, reflection: Vector) -> Vector:
+    """
+    Reflect a point `point` through a reflection plane with a normal
+    `reflection`.
+    """
+    length = norm(reflection)
+    if length > 0:
+        point = reflect(point, reflection / length)
+    return point
