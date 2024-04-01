@@ -3,7 +3,8 @@ from re import fullmatch
 from numpy import nan, inf, array, dot, cross
 from numpy.linalg import norm
 
-from .tools import phi, dtol, signpermut, ax3permut
+from .const import PHI, TOL
+from .tools import signpermut, ax3permut
 from .transform import Identity, Inversion, Rotation, Reflection, Rotoreflection
 from .vecop import parallel, perpendicular
 
@@ -164,9 +165,9 @@ def symb2grp(symb):
         elif reflection:
             raise ValueError('unknown point group')
     elif rotation == 'I' and not order:
-        vecs5 = ax3permut(signpermut([phi, 1], 0, True))
-        vecs3 = signpermut([1, 1, 1], 1) + ax3permut(signpermut([1, 1 + phi], 0, True))
-        vecs2 = ax3permut([[1], *signpermut([1, phi, 1 + phi], 0, True)])
+        vecs5 = ax3permut(signpermut([PHI, 1], 0, True))
+        vecs3 = signpermut([1, 1, 1], 1) + ax3permut(signpermut([1, 1 + PHI], 0, True))
+        vecs2 = ax3permut([[1], *signpermut([1, PHI, 1 + PHI], 0, True)])
         for n, vecs in ((5, vecs5), (3, vecs3), (2, vecs2)):
             group[f'C{n}'] = tuple(Rotation(vec, n) for vec in vecs)
         if reflection == 'h':
@@ -195,7 +196,7 @@ def symb2grp(symb):
     return group
 
 
-def symmelems(elems, tol=dtol):
+def symmelems(elems, tol=TOL):
     def contains(array, vector):
         for elem in array:
             if parallel(elem.vec, vector, tol):
@@ -317,7 +318,7 @@ def symmelems(elems, tol=dtol):
             tuple(sorted(rotoreflections, key=lambda elem: - elem.order)))
 
 
-def ptgrp(elems, tol=dtol):
+def ptgrp(elems, tol=TOL):
     dim, invertible, rotations, reflections, rotoreflections = symmelems(elems, tol)
     if dim == 0:
         return 'Kh'  # 'K'

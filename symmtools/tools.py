@@ -1,15 +1,21 @@
-__all__ = ('phi', 'eps', 'dtol', 'project', 'signpermut', 'ax3permut', 'topoints', 'generate', 'read')
+"""Miscellaneous functions."""
+
+__all__ = [
+    "project",
+    "signpermut",
+    "ax3permut",
+    "topoints",
+    "generate",
+    "read",
+]
 
 from re import findall
 
+from .const import TOL
 from .primitive import Point, LabeledPoint, Elems
 
-phi = (1 + 5 ** .5) / 2
-eps = 7 / 3 - 4 / 3 - 1
-dtol = 16 * eps
-
-_label_re = r'(?:\b[A-Za-z_]\w*\b)'
-_float_re = r'(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)'
+_LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
+_FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
 
 
 def project(vecs, ref, axes=None):
@@ -37,7 +43,7 @@ def signpermut(vec, parity=0, unique=False):
             permut //= 2
             i += 1
         if sign * parity >= 0:
-            if unique and tuple(- coord for coord in new) in vecs:
+            if unique and tuple(-coord for coord in new) in vecs:
                 continue
             vecs.append(tuple(new))
     return tuple(vecs)
@@ -56,7 +62,7 @@ def topoints(points):
     return tuple(Point(point) for point in points)
 
 
-def generate(points, transforms=None, tol=dtol):
+def generate(points, transforms=None, tol=TOL):
     points = list(points)
     fi = 0
     li = len(points)
@@ -78,7 +84,12 @@ def generate(points, transforms=None, tol=dtol):
 
 def read(string):
     elems = []
-    for match in findall(fr'(?:({_label_re})\s+)?({_float_re})\s+({_float_re})\s+({_float_re})', string):
+    for match in findall(
+        rf"(?:({_LABEL_RE})\s+)?({_FLOAT_RE})\s+({_FLOAT_RE})\s+({_FLOAT_RE})",
+        string,
+    ):
         label, x, y, z = match
-        elems.append(LabeledPoint((x, y, z), label) if label else Point((x, y, z)))
+        elems.append(
+            LabeledPoint((x, y, z), label) if label else Point((x, y, z))
+        )
     return Elems(elems)

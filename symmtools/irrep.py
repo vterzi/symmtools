@@ -1,5 +1,6 @@
-from .ptgrp import dtol
-from .transform import Identity, Inversion, Rotation, Reflection, Rotoreflection
+from .const import TOL
+from .transform import (Identity, Inversion, Rotation, Reflection,
+                        Rotoreflection)
 
 
 def ops2group(transforms):
@@ -50,19 +51,20 @@ def ops2group(transforms):
     return group
 
 
-def opmul(group, op1, op2, tol=dtol):
+def opmul(group, op1, op2, tol=TOL):
     mat = group[op1] @ group[op2]
     for op, mat_ in group.items():
         if abs(mat - mat_).max() <= tol:
             return op
 
 
-def multable(group, tol=dtol):
+def multable(group, tol=TOL):
     def fill(string):
         return string + (cell - len(string)) * ' '
 
     cell = max(len(op) for op in group)
-    table = [[fill(''), '|'] + [fill(op) for op in group], [((cell + 1) * (len(group) + 1) + 1) * '-']]
+    table = [[fill(''), '|'] + [fill(op) for op in group],
+             [((cell + 1) * (len(group) + 1) + 1) * '-']]
     for op1 in group:
         row = [fill(op1), '|']
         for op2 in group:

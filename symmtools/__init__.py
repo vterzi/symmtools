@@ -1,3 +1,4 @@
+from .const import *
 from .vecop import *
 from .transform import *
 from .primitive import *
@@ -18,3 +19,4 @@ from .irrep import *
 # i == S2
 # class Group
 # compare two structs with their distance mats
+# decide wether to center elems in ptgrp because if a point not centered it will not be Kh
