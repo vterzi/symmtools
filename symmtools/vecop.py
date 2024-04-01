@@ -15,16 +15,30 @@ __all__ = (
 )
 
 from collections.abc import Sequence
-from typing import Union
+from typing import TypeVar, Union
 
-from numpy import array, sin, cos, dot, cross, bool_, float64
+from numpy import (
+    array,
+    sin,
+    cos,
+    dot,
+    cross,
+    bool_,
+    signedinteger,
+    floating,
+    complexfloating,
+)
 from numpy.linalg import norm
 from numpy.typing import NDArray
 
-Vector = NDArray[float64]
+Bool = TypeVar("Bool", bool, bool_)
+Int = TypeVar("Int", int, signedinteger)
+Float = TypeVar("Float", float, floating)
+Complex = TypeVar("Complex", complex, complexfloating)
+Vector = NDArray[floating]
 
 
-def vector(vec: Sequence[Union[int, float]]) -> Vector:
+def vector(vec: Sequence[Union[Int, Float]]) -> Vector:
     """Convert a vector `vec` to a NumPy array of floating-point numbers."""
     return array(vec, dtype=float)
 
@@ -34,7 +48,7 @@ def normalize(vec: Vector) -> Vector:
     return vec / norm(vec)
 
 
-def same(vec1: Vector, vec2: Vector, tol: float) -> bool_:
+def same(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
     """
     Check if two vectors `vec1` and `vec2` are the same within a tolerance
     `tol`.
@@ -42,7 +56,7 @@ def same(vec1: Vector, vec2: Vector, tol: float) -> bool_:
     return norm(vec1 - vec2) <= tol
 
 
-def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool_:
+def parallel(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
     """
     Check if two vectors `vec1` and `vec2` are parallel within a tolerance
     `tol`.
@@ -50,7 +64,7 @@ def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool_:
     return norm(cross(vec1, vec2)) <= tol
 
 
-def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool_:
+def perpendicular(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
     """
     Check if two vectors `vec1` and `vec2` are perpendicular within a tolerance
     `tol`.
@@ -68,9 +82,7 @@ def invert(point: Vector) -> Vector:
     return -point
 
 
-def move2(
-    point: Vector, normal: Vector, coef1: float, coef2: float
-) -> Vector:
+def move2(point: Vector, normal: Vector, coef1: Float, coef2: Float) -> Vector:
     """
     Move a point `point` in a plane containing the point with a normalized
     normal `normal` to a position represented by the linear combination of the
@@ -83,7 +95,7 @@ def move2(
     return base + projection * coef1 + perpendicular_ * coef2
 
 
-def rotate(point: Vector, rotation: Vector, angle: float) -> Vector:
+def rotate(point: Vector, rotation: Vector, angle: Float) -> Vector:
     """
     Rotate a point `point` around a rotation axis with a normalized direction
     `rotation` by an angle `angle`.
