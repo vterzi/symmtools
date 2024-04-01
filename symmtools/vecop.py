@@ -21,7 +21,7 @@ from typing import Union
 from numpy import array, sin, cos, dot, cross, bool_
 from numpy.linalg import norm
 
-from .types import Int, Float, Vector
+from .typehints import Int, Float, Vector
 
 
 def vector(vec: Sequence[Union[Int, Float]]) -> Vector:
