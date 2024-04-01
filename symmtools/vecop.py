@@ -1,6 +1,10 @@
 """Functions for basic vector operations."""
 
 __all__ = (
+    "Bool",
+    "Int",
+    "Float",
+    "Complex",
     "Vector",
     "vector",
     "normalize",
