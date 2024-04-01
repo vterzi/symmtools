@@ -77,8 +77,8 @@ def move2(point: Vector, normal: Vector, coef1: Float, coef2: Float) -> Vector:
     """
     base = dot(point, normal) * normal
     projection = point - base
-    perpendicular_ = cross(normal, projection)
-    return base + projection * coef1 + perpendicular_ * coef2
+    perpendicular = cross(normal, projection)
+    return base + projection * coef1 + perpendicular * coef2
 
 
 def rotate(point: Vector, rotation: Vector, angle: Float) -> Vector:
