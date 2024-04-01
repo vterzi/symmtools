@@ -1,11 +1,6 @@
 """Functions for basic vector operations."""
 
-__all__ = (
-    "Bool",
-    "Int",
-    "Float",
-    "Complex",
-    "Vector",
+__all__ = [
     "vector",
     "normalize",
     "same",
@@ -18,30 +13,15 @@ __all__ = (
     "rotate3",
     "reflect",
     "reflect3",
-)
+]
 
 from collections.abc import Sequence
-from typing import TypeVar, Union
+from typing import Union
 
-from numpy import (
-    array,
-    sin,
-    cos,
-    dot,
-    cross,
-    bool_,
-    signedinteger,
-    floating,
-    complexfloating,
-)
+from numpy import array, sin, cos, dot, cross, bool_
 from numpy.linalg import norm
-from numpy.typing import NDArray
 
-Bool = TypeVar("Bool", bool, bool_)
-Int = TypeVar("Int", int, signedinteger)
-Float = TypeVar("Float", float, floating)
-Complex = TypeVar("Complex", complex, complexfloating)
-Vector = NDArray[floating]
+from .types import Int, Float, Vector
 
 
 def vector(vec: Sequence[Union[Int, Float]]) -> Vector:
