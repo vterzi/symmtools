@@ -9,7 +9,7 @@ __all__ = (
     "perpendicular",
     "translate",
     "invert",
-    "translate2",
+    "move2",
     "rotate",
     "reflect",
 )
@@ -68,7 +68,7 @@ def invert(point: Vector) -> Vector:
     return -point
 
 
-def translate2(
+def move2(
     point: Vector, normal: Vector, coef1: float, coef2: float
 ) -> Vector:
     """
@@ -88,7 +88,7 @@ def rotate(point: Vector, rotation: Vector, angle: float) -> Vector:
     Rotate a point `point` around a rotation axis with a normalized direction
     `rotation` by an angle `angle`.
     """
-    return translate2(point, rotation, cos(angle), sin(angle))
+    return move2(point, rotation, cos(angle), sin(angle))
 
 
 def reflect(point: Vector, reflection: Vector) -> Vector:

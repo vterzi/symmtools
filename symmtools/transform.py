@@ -5,7 +5,7 @@ from copy import copy
 
 from numpy import pi, sin, cos, eye
 
-from .vecop import vector, normalize, same, parallel, translate2, reflect, invert
+from .vecop import vector, normalize, same, parallel, move2, reflect, invert
 
 tau = 2 * pi
 
@@ -79,7 +79,7 @@ class VecTransform(Transform, ABC):
 
     def rotate(self, rotation):
         res = self.copy()
-        res._vec = translate2(self._vec, rotation.vec, rotation.cos, rotation.sin)
+        res._vec = move2(self._vec, rotation.vec, rotation.cos, rotation.sin)
         return res
 
     def reflect(self, reflection):
@@ -89,7 +89,7 @@ class VecTransform(Transform, ABC):
 
     def rotoreflect(self, rotoreflection):
         res = self.copy()
-        res._vec = reflect(translate2(self._vec, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
+        res._vec = reflect(move2(self._vec, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
                            rotoreflection.vec)
         return res
 
@@ -147,7 +147,7 @@ class Rotation(UnitVecTransform):
     def mat(self):
         res = eye(3)
         for i in range(len(res)):
-            res[i] = translate2(res[i], self._vec, self._cos, self._sin)
+            res[i] = move2(res[i], self._vec, self._cos, self._sin)
         return res.T
 
 
@@ -163,5 +163,5 @@ class Rotoreflection(Rotation):
     def mat(self):
         res = eye(3)
         for i in range(len(res)):
-            res[i] = reflect(translate2(res[i], self._vec, self._cos, self._sin), self._vec)
+            res[i] = reflect(move2(res[i], self._vec, self._cos, self._sin), self._vec)
         return res.T

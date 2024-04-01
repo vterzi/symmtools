@@ -7,7 +7,7 @@ from numpy import inf, empty, zeros, sign, dot
 from numpy.linalg import norm
 from scipy.optimize import linear_sum_assignment
 
-from .vecop import vector, normalize, translate, invert, translate2, reflect
+from .vecop import vector, normalize, translate, invert, move2, reflect
 from .transform import Identity, Translation, Inversion, Rotation, Reflection, Rotoreflection
 
 
@@ -97,7 +97,7 @@ class Point(Primitive):
 
     def rotate(self, rotation):
         res = self.copy()
-        res._pos = translate2(self._pos, rotation.vec, rotation.cos, rotation.sin)
+        res._pos = move2(self._pos, rotation.vec, rotation.cos, rotation.sin)
         return res
 
     def reflect(self, reflection):
@@ -107,7 +107,7 @@ class Point(Primitive):
 
     def rotoreflect(self, rotoreflection):
         res = self.copy()
-        res._pos = reflect(translate2(self._pos, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
+        res._pos = reflect(move2(self._pos, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
                            rotoreflection.vec)
         return res
 
@@ -188,7 +188,7 @@ class Arrow(Primitive):
 
     def rotate(self, rotation):
         res = self.copy()
-        res._vec = translate2(self._vec, rotation.vec, rotation.cos, rotation.sin)
+        res._vec = move2(self._vec, rotation.vec, rotation.cos, rotation.sin)
         return res
 
     def reflect(self, reflection):
@@ -198,7 +198,7 @@ class Arrow(Primitive):
 
     def rotoreflect(self, rotoreflection):
         res = self.copy()
-        res._vec = reflect(translate2(self._vec, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
+        res._vec = reflect(move2(self._vec, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
                            rotoreflection.vec)
         return res
 
