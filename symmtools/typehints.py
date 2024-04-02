@@ -5,16 +5,18 @@ __all__ = [
     "Int",
     "Float",
     "Complex",
+    "Scalar",
     "Vector",
 ]
 
-from typing import TypeVar
+from typing import Union
 
 from numpy import bool_, signedinteger, floating, complexfloating
 from numpy.typing import NDArray
 
-Bool = TypeVar("Bool", bool, bool_)
-Int = TypeVar("Int", int, signedinteger)
-Float = TypeVar("Float", float, floating)
-Complex = TypeVar("Complex", complex, complexfloating)
+Bool = Union[bool, bool_]
+Int = Union[int, signedinteger]
+Float = Union[float, floating]
+Complex = Union[complex, complexfloating]
+Scalar = Union[Int, Float, Complex]
 Vector = NDArray[floating]
