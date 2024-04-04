@@ -1,4 +1,11 @@
-__all__ = ['Identity', 'Translation', 'Inversion', 'Rotation', 'Reflection', 'Rotoreflection']
+__all__ = [
+    "Identity",
+    "Translation",
+    "Inversion",
+    "Rotation",
+    "Reflection",
+    "Rotoreflection",
+]
 
 from abc import ABC, abstractmethod
 from copy import copy
@@ -12,10 +19,10 @@ tau = 2 * pi
 
 class Transform(ABC):
     def args(self):
-        return ''
+        return ""
 
     def __str__(self):
-        return f'{self.__class__.__name__}({self.args()})'
+        return f"{self.__class__.__name__}({self.args()})"
 
     def __repr__(self):
         return self.__str__()
@@ -40,7 +47,7 @@ class Transform(ABC):
         elif type_transform == Rotoreflection:
             return self.rotoreflect(transform)
         else:
-            raise ValueError(f'illegal transformation: {type_transform}')
+            raise ValueError(f"illegal transformation: {type_transform}")
 
     def copy(self):
         return copy(self)
@@ -66,7 +73,7 @@ class VecTransform(Transform, ABC):
         return self._vec[item]
 
     def args(self):
-        return str(list(self._vec)).replace(' ', '')
+        return str(list(self._vec)).replace(" ", "")
 
     @property
     def vec(self):
@@ -89,8 +96,15 @@ class VecTransform(Transform, ABC):
 
     def rotoreflect(self, rotoreflection):
         res = self.copy()
-        res._vec = reflect(move2(self._vec, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
-                           rotoreflection.vec)
+        res._vec = reflect(
+            move2(
+                self._vec,
+                rotoreflection.vec,
+                rotoreflection.cos,
+                rotoreflection.sin,
+            ),
+            rotoreflection.vec,
+        )
         return res
 
 
@@ -100,7 +114,9 @@ class UnitVecTransform(VecTransform, ABC):
         self._vec = normalize(self._vec)
 
     def same(self, transform, tol):
-        return super().same(transform, tol) and parallel(self._vec, transform.vec, tol)
+        return super().same(transform, tol) and parallel(
+            self._vec, transform.vec, tol
+        )
 
 
 class Identity(Transform):
@@ -110,7 +126,9 @@ class Identity(Transform):
 
 class Translation(VecTransform):
     def same(self, transform, tol):
-        return super().same(transform, tol) and same(self._vec, transform.vec, tol)
+        return super().same(transform, tol) and same(
+            self._vec, transform.vec, tol
+        )
 
     def mat(self):
         return None
@@ -118,7 +136,7 @@ class Translation(VecTransform):
 
 class Inversion(Transform):
     def mat(self):
-        return - eye(3)
+        return -eye(3)
 
 
 class Rotation(UnitVecTransform):
@@ -130,7 +148,7 @@ class Rotation(UnitVecTransform):
         self._sin = sin(angle)
 
     def args(self):
-        return f'{super().args()},{self._order}'
+        return f"{super().args()},{self._order}"
 
     @property
     def order(self):
@@ -163,5 +181,7 @@ class Rotoreflection(Rotation):
     def mat(self):
         res = eye(3)
         for i in range(len(res)):
-            res[i] = reflect(move2(res[i], self._vec, self._cos, self._sin), self._vec)
+            res[i] = reflect(
+                move2(res[i], self._vec, self._cos, self._sin), self._vec
+            )
         return res.T

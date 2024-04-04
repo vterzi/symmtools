@@ -1,68 +1,105 @@
 """Miscellaneous functions."""
 
 __all__ = [
-    "project",
-    "signpermut",
+    "chcoords",
+    "signvar",
     "ax3permut",
     "topoints",
     "generate",
-    "read",
+    "str2elems",
 ]
 
 from re import findall
+from typing import Optional, Sequence, List
 
-from .const import TOL
+from .const import ORIGIN, TOL
+from .typehints import Scalar, Bool, Int, Float
 from .primitive import Point, LabeledPoint, Elems
+from .transform import Transform
 
 _LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
 _FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
 
 
-def project(vecs, ref, axes=None):
+def chcoords(
+    vecs: Sequence[Sequence[Scalar]],
+    origin: Sequence[Scalar],
+    axes: Optional[Sequence[Int]] = None,
+) -> List[List[Scalar]]:
+    """
+    Change the coordinate system of vectors `vecs` to a coordinate system with
+    an origin `origin` and an axes order `axes`.  If `axes` is `None`, the
+    original axes order is used.
+    """
     if axes is None:
-        axes = tuple(range(len(ref)))
+        axes = tuple(range(len(origin)))
+    origin = tuple(-coord for coord in origin)
     res = []
     for vec in vecs:
-        new = [*ref]
-        for i, coord in enumerate(vec):
-            new[axes[i]] += coord
-        res.append(tuple(new))
-    return tuple(res)
+        new = [*origin]
+        for ax, coord in zip(axes, vec):
+            new[ax] += coord
+        res.append(new)
+    return res
 
 
-def signpermut(vec, parity=0, unique=False):
-    vecs = []
-    for permut in range(2 ** len(vec)):
+def signvar(
+    vec: Sequence[Scalar], parity: Int = 0, unique: Bool = False
+) -> List[List[Scalar]]:
+    """
+    Generate vectors with all possible sign changes of the coordinates of a
+    vector `vec` that satisfy a parity `parity`.  If `parity` is
+    positive/negative, only the vectors resulting from even/odd number of sign
+    changes are returned.  If `parity` is zero, all vectors are returned.  If
+    `unique` is `True`, only linearly independent vectors are returned.
+    """
+    res = []
+    for n in range(2 ** len(vec)):
         new = [*vec]
         sign = 1
         i = 0
-        while permut > 0:
-            if permut % 2 == 1:
+        while n > 0:
+            if n % 2 == 1:
                 new[i] *= -1
                 sign *= -1
-            permut //= 2
+            n //= 2
             i += 1
-        if sign * parity >= 0:
-            if unique and tuple(-coord for coord in new) in vecs:
-                continue
-            vecs.append(tuple(new))
-    return tuple(vecs)
+        if (sign * parity >= 0 and new not in res) and not (
+            unique and [-coord for coord in new] in res
+        ):
+            res.append(new)
+    return res
 
 
-def ax3permut(vecs):
-    vecs = project(vecs, 3 * (0,))
+def ax3permut(vecs: Sequence[Sequence[Scalar]]) -> List[List[Scalar]]:
+    """
+    Generate all possible vectors by applying a circular permutation on the
+    coordinates of 3D vectors `vecs`.
+    """
+    vecs = chcoords(vecs, ORIGIN)
     res = []
     for i in range(3):
         for vec in vecs:
-            res.append((vec[i % 3], vec[(i + 1) % 3], vec[(i + 2) % 3]))
-    return tuple(res)
+            res.append([vec[i % 3], vec[(i + 1) % 3], vec[(i + 2) % 3]])
+    return res
 
 
-def topoints(points):
-    return tuple(Point(point) for point in points)
+def topoints(points: Sequence[Sequence[Scalar]]) -> List[Point]:
+    """
+    Convert a sequence of points `points` to a sequence of `Point` instances.
+    """
+    return [Point(point) for point in points]
 
 
-def generate(points, transforms=None, tol=TOL):
+def generate(
+    points: Sequence[Point],
+    transforms: Sequence[Transform] = (),
+    tol: Float = TOL,
+) -> Elems:
+    """
+    Generate all unique points by applying transformations `transforms` to
+    points `points` and return them as an `Elems` instance.
+    """
     points = list(points)
     fi = 0
     li = len(points)
@@ -70,19 +107,25 @@ def generate(points, transforms=None, tol=TOL):
         for transform in transforms:
             for i in range(fi, li):
                 point = points[i].transform(transform)
-                found = False
+                new = True
                 for ref_point in points:
                     if point.same(ref_point, tol):
-                        found = True
+                        new = False
                         break
-                if not found:
+                if new:
                     points.append(point)
         fi = li
         li = len(points)
     return Elems(points)
 
 
-def read(string):
+def str2elems(string: str) -> Elems:
+    """
+    Convert a string `string` to an `Elems` instance.  Each three
+    consecutive floating point numbers are parsed as a `Point` instance.  If
+    they are preceded by a label satisfying the rules of variable names, a
+    `LabeledPoint` instance is created instead.
+    """
     elems = []
     for match in findall(
         rf"(?:({_LABEL_RE})\s+)?({_FLOAT_RE})\s+({_FLOAT_RE})\s+({_FLOAT_RE})",
