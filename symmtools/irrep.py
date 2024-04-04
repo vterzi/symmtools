@@ -1,6 +1,11 @@
 from .const import TOL
-from .transform import (Identity, Inversion, Rotation, Reflection,
-                        Rotoreflection)
+from .transform import (
+    Identity,
+    Inversion,
+    Rotation,
+    Reflection,
+    Rotoreflection,
+)
 
 
 def ops2group(transforms):
@@ -8,39 +13,39 @@ def ops2group(transforms):
         if op not in group:
             group[op] = mat
         else:
-            if op.endswith(('+', '-')):
+            if op.endswith(("+", "-")):
                 op = op[:-1] + "'" + op[-1:]
             else:
                 op += "'"
             add(op, mat)
 
     transforms = list(transforms)
-    group = {'E': Identity().mat()}
+    group = {"E": Identity().mat()}
     for transform in transforms:
         type_transform = type(transform)
         if type_transform == Inversion:
-            group['i'] = transform.mat()
+            group["i"] = transform.mat()
         elif type_transform == Rotation:
             vec = transform.vec
             order = transform.order
-            symb = f'C{order}'
+            symb = f"C{order}"
             if order > 2:
-                add(f'{symb}+', transform.mat())
-                add(f'{symb}-', Rotation(- vec, order).mat())
+                add(f"{symb}+", transform.mat())
+                add(f"{symb}-", Rotation(-vec, order).mat())
                 for factor in range(2, order):
                     if order % factor == 0:
                         transforms.append(Rotation(vec, factor))
             elif order == 2:
                 add(symb, transform.mat())
         elif type_transform == Reflection:
-            add('s', transform.mat())
+            add("s", transform.mat())
         elif type_transform == Rotoreflection:
             vec = transform.vec
             order = transform.order
-            symb = f'S{order}'
+            symb = f"S{order}"
             if order > 2:
-                add(f'{symb}+', transform.mat())
-                add(f'{symb}-', Rotoreflection(- vec, order).mat())
+                add(f"{symb}+", transform.mat())
+                add(f"{symb}-", Rotoreflection(-vec, order).mat())
                 for factor in range(3, order):
                     if order % factor == 0:
                         transforms.append(Rotoreflection(vec, factor))
@@ -60,15 +65,17 @@ def opmul(group, op1, op2, tol=TOL):
 
 def multable(group, tol=TOL):
     def fill(string):
-        return string + (cell - len(string)) * ' '
+        return string + (cell - len(string)) * " "
 
     cell = max(len(op) for op in group)
-    table = [[fill(''), '|'] + [fill(op) for op in group],
-             [((cell + 1) * (len(group) + 1) + 1) * '-']]
+    table = [
+        [fill(""), "|"] + [fill(op) for op in group],
+        [((cell + 1) * (len(group) + 1) + 1) * "-"],
+    ]
     for op1 in group:
-        row = [fill(op1), '|']
+        row = [fill(op1), "|"]
         for op2 in group:
             row.append(fill(opmul(group, op1, op2, tol)))
         table.append(row)
     for row in table:
-        print(' '.join(row))
+        print(" ".join(row))

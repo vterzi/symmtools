@@ -1,4 +1,13 @@
-__all__ = ['s_orb', 'px_orb', 'py_orb', 'dx2y2_orb', 'dz2_orb', 'dxy_orb', 'dyz_orb', 'dxz_orb']
+__all__ = [
+    "s_orb",
+    "px_orb",
+    "py_orb",
+    "dx2y2_orb",
+    "dz2_orb",
+    "dxy_orb",
+    "dyz_orb",
+    "dxz_orb",
+]
 
 from .primitive import Arrow, Struct
 
@@ -20,7 +29,11 @@ def pz_orb(pos, coef=1):
 
 
 def dx2y2_orb(pos, coef=1):
-    return Struct(pos, coef, [Arrow([1, 0, 0], True, True), Arrow([0, 1, 0], False, False)])
+    return Struct(
+        pos,
+        coef,
+        [Arrow([1, 0, 0], True, True), Arrow([0, 1, 0], False, False)],
+    )
 
 
 def dz2_orb(pos, coef=1):
@@ -28,12 +41,24 @@ def dz2_orb(pos, coef=1):
 
 
 def dxy_orb(pos, coef=1):
-    return Struct(pos, coef, [Arrow([1, 1, 0], True, True), Arrow([1, -1, 0], False, False)])
+    return Struct(
+        pos,
+        coef,
+        [Arrow([1, 1, 0], True, True), Arrow([1, -1, 0], False, False)],
+    )
 
 
 def dyz_orb(pos, coef=1):
-    return Struct(pos, coef, [Arrow([0, 1, 1], True, True), Arrow([0, 1, -1], False, False)])
+    return Struct(
+        pos,
+        coef,
+        [Arrow([0, 1, 1], True, True), Arrow([0, 1, -1], False, False)],
+    )
 
 
 def dxz_orb(pos, coef=1):
-    return Struct(pos, coef, [Arrow([1, 0, 1], True, True), Arrow([-1, 0, 1], False, False)])
+    return Struct(
+        pos,
+        coef,
+        [Arrow([1, 0, 1], True, True), Arrow([-1, 0, 1], False, False)],
+    )
