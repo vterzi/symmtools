@@ -1,4 +1,4 @@
-__all__ = ['Point', 'LabeledPoint', 'Arrow', 'Elems', 'Struct']
+__all__ = ["Point", "LabeledPoint", "Arrow", "Elems", "Struct"]
 
 from abc import ABC, abstractmethod
 from copy import copy
@@ -8,15 +8,22 @@ from numpy.linalg import norm
 from scipy.optimize import linear_sum_assignment
 
 from .vecop import vector, normalize, translate, invert, move2, reflect
-from .transform import Identity, Translation, Inversion, Rotation, Reflection, Rotoreflection
+from .transform import (
+    Identity,
+    Translation,
+    Inversion,
+    Rotation,
+    Reflection,
+    Rotoreflection,
+)
 
 
 class Primitive(ABC):
     def args(self):
-        return ''
+        return ""
 
     def __str__(self):
-        return f'{self.__class__.__name__}({self.args()})'
+        return f"{self.__class__.__name__}({self.args()})"
 
     def __repr__(self):
         return self.__str__()
@@ -30,22 +37,22 @@ class Primitive(ABC):
     def copy(self):
         return copy(self)
 
-    def transform(self, transform):
-        type_transform = type(transform)
+    def transform(self, transformation):
+        type_transform = type(transformation)
         if type_transform == Identity:
             return self.copy()
         elif type_transform == Translation:
-            return self.translate(transform)
+            return self.translate(transformation)
         elif type_transform == Inversion:
             return self.invert()
         elif type_transform == Rotation:
-            return self.rotate(transform)
+            return self.rotate(transformation)
         elif type_transform == Reflection:
-            return self.reflect(transform)
+            return self.reflect(transformation)
         elif type_transform == Rotoreflection:
-            return self.rotoreflect(transform)
+            return self.rotoreflect(transformation)
         else:
-            raise ValueError(f'illegal transformation: {type_transform}')
+            raise ValueError(f"illegal transformation: {type_transform}")
 
     @abstractmethod
     def translate(self, translation):
@@ -73,7 +80,7 @@ class Point(Primitive):
         self._pos = vector(pos)
 
     def args(self):
-        return str(list(self._pos)).replace(' ', '')
+        return str(list(self._pos)).replace(" ", "")
 
     @property
     def pos(self):
@@ -107,8 +114,15 @@ class Point(Primitive):
 
     def rotoreflect(self, rotoreflection):
         res = self.copy()
-        res._pos = reflect(move2(self._pos, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
-                           rotoreflection.vec)
+        res._pos = reflect(
+            move2(
+                self._pos,
+                rotoreflection.vec,
+                rotoreflection.cos,
+                rotoreflection.sin,
+            ),
+            rotoreflection.vec,
+        )
         return res
 
 
@@ -119,7 +133,7 @@ class LabeledPoint(Point):
 
     def args(self):
         label = self._label.replace('"', '\\"')
-        return f'{super().args()},{label}'
+        return f"{super().args()},{label}"
 
     @property
     def label(self):
@@ -154,8 +168,8 @@ class Arrow(Primitive):
         else:
             fore = True
             back = False
-        vec = str(list(self._vec)).replace(' ', '')
-        return f'{vec},{fore},{back}'
+        vec = str(list(self._vec)).replace(" ", "")
+        return f"{vec},{fore},{back}"
 
     @property
     def vec(self):
@@ -168,13 +182,24 @@ class Arrow(Primitive):
     def diff(self, arrow):
         diff = super().diff(arrow)
         if diff < inf:
-            vec = arrow.vec if dot(self._vec, arrow.vec) >= 0 else - arrow.vec
-            diff = max(diff, norm(self._vec - vec), (0 if abs(self._phase) == abs(arrow.phase) else inf))
+            vec = arrow.vec if dot(self._vec, arrow.vec) >= 0 else -arrow.vec
+            diff = max(
+                diff,
+                norm(self._vec - vec),
+                (0 if abs(self._phase) == abs(arrow.phase) else inf),
+            )
         return diff
 
     def same(self, arrow, tol):
-        return ((int(sign(dot(self._vec, arrow.vec))) if self._phase == 0 else self._phase * arrow.phase)
-                if self.diff(arrow) <= tol else 0)
+        return (
+            (
+                int(sign(dot(self._vec, arrow.vec)))
+                if self._phase == 0
+                else self._phase * arrow.phase
+            )
+            if self.diff(arrow) <= tol
+            else 0
+        )
 
     def translate(self, translation):
         res = self.copy()
@@ -198,8 +223,15 @@ class Arrow(Primitive):
 
     def rotoreflect(self, rotoreflection):
         res = self.copy()
-        res._vec = reflect(move2(self._vec, rotoreflection.vec, rotoreflection.cos, rotoreflection.sin),
-                           rotoreflection.vec)
+        res._vec = reflect(
+            move2(
+                self._vec,
+                rotoreflection.vec,
+                rotoreflection.cos,
+                rotoreflection.sin,
+            ),
+            rotoreflection.vec,
+        )
         return res
 
 
@@ -208,10 +240,19 @@ class Elems(Primitive):
         self._elems = tuple(elems)
 
     def args(self):
-        return ('['
-                + ('' if not self._elems
-                   else '\n  ' + ',\n  '.join([str(elem).replace('\n', '\n  ') for elem in self._elems]) + ',\n')
-                + ']')
+        return (
+            "["
+            + (
+                ""
+                if not self._elems
+                else "\n  "
+                + ",\n  ".join(
+                    [str(elem).replace("\n", "\n  ") for elem in self._elems]
+                )
+                + ",\n"
+            )
+            + "]"
+        )
 
     def __getitem__(self, item):
         return self._elems[item]
@@ -226,7 +267,9 @@ class Elems(Primitive):
     def sort(self, elems):
         n = len(self._elems)
         if n != len(elems.elems):
-            raise ValueError(f'different number of elements in the instances of {self.__class__.__name__}')
+            raise ValueError(
+                f"different number of elements in the instances of {self.__class__.__name__}"
+            )
         diffs = empty((n, n))
         for i1 in range(n):
             elem = self._elems[i1]
@@ -235,7 +278,9 @@ class Elems(Primitive):
         try:
             order = linear_sum_assignment(diffs)[1]
         except ValueError:
-            raise ValueError(f'the instances of {self.__class__.__name__} differ')
+            raise ValueError(
+                f"the instances of {self.__class__.__name__} differ"
+            )
         elems = n * [None]
         for i in range(n):
             elems[order[i]] = self._elems[i]
@@ -300,7 +345,7 @@ class Elems(Primitive):
         return centroid
 
     def center(self):
-        return self.translate(Translation(- self.pos))
+        return self.translate(Translation(-self.pos))
 
     def invert(self):
         res = self.copy()
@@ -343,7 +388,9 @@ class Struct(Point, Elems):
         self._phase = int(sign(coef))
 
     def args(self):
-        return f'{Point.args(self)},{self._phase * self._coef},{Elems.args(self)}'
+        return (
+            f"{Point.args(self)},{self._phase * self._coef},{Elems.args(self)}"
+        )
 
     @property
     def coef(self):
@@ -378,4 +425,6 @@ class Struct(Point, Elems):
         return Elems.reflect(Point.reflect(self, reflection), reflection)
 
     def rotoreflect(self, rotoreflection):
-        return Elems.rotoreflect(Point.rotoreflect(self, rotoreflection), rotoreflection)
+        return Elems.rotoreflect(
+            Point.rotoreflect(self, rotoreflection), rotoreflection
+        )

@@ -19,7 +19,7 @@ from .vecop import vector, normalize, same, parallel, move2, reflect, invert
 from .typehints import Float, Matrix
 
 
-class Transform(ABC):
+class Transformation(ABC):
     def args(self) -> str:
         """Return arguments used to create the instance."""
         return ""
@@ -37,38 +37,40 @@ class Transform(ABC):
     def mat(self) -> Matrix:
         pass
 
-    def transform(self, transform: "Transform"):
-        type_transform = type(transform)
+    def transform(self, transformation: "Transformation"):
+        type_transform = type(transformation)
         if type_transform == Identity:
             return self.copy()
         elif type_transform == Inversion:
             return self.invert()
         elif type_transform == Rotation:
-            return self.rotate(transform)
+            return self.rotate(transformation)
         elif type_transform == Reflection:
-            return self.reflect(transform)
+            return self.reflect(transformation)
         elif type_transform == Rotoreflection:
-            return self.rotoreflect(transform)
+            return self.rotoreflect(transformation)
         else:
             raise ValueError(f"illegal transformation: {type_transform}")
 
-    def copy(self) -> "Transform":
+    def copy(self) -> "Transformation":
         return copy(self)
 
-    def invert(self) -> "Transform":
+    def invert(self) -> "Transformation":
         return self.copy()
 
-    def rotate(self, rotation: "Rotation") -> "Transform":
+    def rotate(self, rotation: "Rotation") -> "Transformation":
         return self.copy()
 
-    def reflect(self, reflection: "Reflection") -> "Transform":
+    def reflect(self, reflection: "Reflection") -> "Transformation":
         return self.copy()
 
-    def rotoreflect(self, rotoreflection: "Rotoreflection") -> "Transform":
+    def rotoreflect(
+        self, rotoreflection: "Rotoreflection"
+    ) -> "Transformation":
         return self.copy()
 
 
-class VecTransform(Transform, ABC):
+class VecTransform(Transformation, ABC):
     def __init__(self, vec):
         self._vec = vector(vec)
 
@@ -116,28 +118,28 @@ class UnitVecTransform(VecTransform, ABC):
         super().__init__(vec)
         self._vec = normalize(self._vec)
 
-    def same(self, transform, tol):
-        return super().same(transform, tol) and parallel(
-            self._vec, transform.vec, tol
+    def same(self, transformation, tol):
+        return super().same(transformation, tol) and parallel(
+            self._vec, transformation.vec, tol
         )
 
 
-class Identity(Transform):
+class Identity(Transformation):
     def mat(self):
         return eye(3)
 
 
 class Translation(VecTransform):
-    def same(self, transform, tol):
-        return super().same(transform, tol) and same(
-            self._vec, transform.vec, tol
+    def same(self, transformation, tol):
+        return super().same(transformation, tol) and same(
+            self._vec, transformation.vec, tol
         )
 
     def mat(self):
         return None
 
 
-class Inversion(Transform):
+class Inversion(Transformation):
     def mat(self):
         return -eye(3)
 

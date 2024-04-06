@@ -15,7 +15,7 @@ from typing import Optional, Sequence, List
 from .const import ORIGIN, TOL
 from .typehints import Scalar, Bool, Int, Float
 from .primitive import Point, LabeledPoint, Elems
-from .transform import Transform
+from .transform import Transformation
 
 _LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
 _FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
@@ -93,20 +93,20 @@ def topoints(points: Sequence[Sequence[Scalar]]) -> List[Point]:
 
 def generate(
     points: Sequence[Point],
-    transforms: Sequence[Transform] = (),
+    transformations: Sequence[Transformation] = (),
     tol: Float = TOL,
 ) -> Elems:
     """
-    Generate all unique points by applying transformations `transforms` to
+    Generate all unique points by applying transformations `transformations` to
     points `points` and return them as an `Elems` instance.
     """
     points = list(points)
     fi = 0
     li = len(points)
     while fi < li:
-        for transform in transforms:
+        for transformation in transformations:
             for i in range(fi, li):
-                point = points[i].transform(transform)
+                point = points[i].transform(transformation)
                 new = True
                 for ref_point in points:
                     if point.same(ref_point, tol):

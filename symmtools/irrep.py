@@ -8,7 +8,7 @@ from .transform import (
 )
 
 
-def ops2group(transforms):
+def ops2group(transformations):
     def add(op, mat):
         if op not in group:
             group[op] = mat
@@ -19,40 +19,40 @@ def ops2group(transforms):
                 op += "'"
             add(op, mat)
 
-    transforms = list(transforms)
+    transformations = list(transformations)
     group = {"E": Identity().mat()}
-    for transform in transforms:
-        type_transform = type(transform)
+    for transformation in transformations:
+        type_transform = type(transformation)
         if type_transform == Inversion:
-            group["i"] = transform.mat()
+            group["i"] = transformation.mat()
         elif type_transform == Rotation:
-            vec = transform.vec
-            order = transform.order
+            vec = transformation.vec
+            order = transformation.order
             symb = f"C{order}"
             if order > 2:
-                add(f"{symb}+", transform.mat())
+                add(f"{symb}+", transformation.mat())
                 add(f"{symb}-", Rotation(-vec, order).mat())
                 for factor in range(2, order):
                     if order % factor == 0:
-                        transforms.append(Rotation(vec, factor))
+                        transformations.append(Rotation(vec, factor))
             elif order == 2:
-                add(symb, transform.mat())
+                add(symb, transformation.mat())
         elif type_transform == Reflection:
-            add("s", transform.mat())
+            add("s", transformation.mat())
         elif type_transform == Rotoreflection:
-            vec = transform.vec
-            order = transform.order
+            vec = transformation.vec
+            order = transformation.order
             symb = f"S{order}"
             if order > 2:
-                add(f"{symb}+", transform.mat())
+                add(f"{symb}+", transformation.mat())
                 add(f"{symb}-", Rotoreflection(-vec, order).mat())
                 for factor in range(3, order):
                     if order % factor == 0:
-                        transforms.append(Rotoreflection(vec, factor))
+                        transformations.append(Rotoreflection(vec, factor))
             elif order == 2:
-                transforms.append(Inversion())
+                transformations.append(Inversion())
             elif order == 1:
-                transforms.append(Reflection(vec))
+                transformations.append(Reflection(vec))
     return group
 
 

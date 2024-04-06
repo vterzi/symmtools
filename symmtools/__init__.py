@@ -20,7 +20,7 @@ from .irrep import *
 # class Group
 # compare two structs with their distance mats
 # decide wether to center elems in ptgrp because if a point not centered it will not be Kh
-# change Transform in generate to SymmElem
+# change Transformation in generate to SymmElem
 # save a list of tried directions to avoid repetitions in symmelems
 # determine the number of points on the other side for Sn using ABS(dist)
 # symmetric electron maxima in Coo
