@@ -1,3 +1,5 @@
+"""Classes for transformations in 3D space."""
+
 __all__ = [
     "Identity",
     "Translation",
@@ -9,32 +11,33 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 from copy import copy
+from typing import Any
 
 from numpy import pi, sin, cos, eye
 
 from .vecop import vector, normalize, same, parallel, move2, reflect, invert
-
-tau = 2 * pi
+from .typehints import Float, Matrix
 
 
 class Transform(ABC):
-    def args(self):
+    def args(self) -> str:
+        """Return arguments used to create the instance."""
         return ""
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.__class__.__name__}({self.args()})"
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def same(self, obj, tol):
-        return type(self) == type(obj)
+    def same(self, obj: Any, tol: Float) -> bool:
+        return type(self) is type(obj)
 
     @abstractmethod
-    def mat(self):
+    def mat(self) -> Matrix:
         pass
 
-    def transform(self, transform):
+    def transform(self, transform: "Transform"):
         type_transform = type(transform)
         if type_transform == Identity:
             return self.copy()
@@ -49,19 +52,19 @@ class Transform(ABC):
         else:
             raise ValueError(f"illegal transformation: {type_transform}")
 
-    def copy(self):
+    def copy(self) -> "Transform":
         return copy(self)
 
-    def invert(self):
+    def invert(self) -> "Transform":
         return self.copy()
 
-    def rotate(self, rotation):
+    def rotate(self, rotation: "Rotation") -> "Transform":
         return self.copy()
 
-    def reflect(self, reflection):
+    def reflect(self, reflection: "Reflection") -> "Transform":
         return self.copy()
 
-    def rotoreflect(self, rotoreflection):
+    def rotoreflect(self, rotoreflection: "Rotoreflection") -> "Transform":
         return self.copy()
 
 
@@ -143,7 +146,7 @@ class Rotation(UnitVecTransform):
     def __init__(self, vec, order):
         super().__init__(vec)
         self._order = order
-        angle = tau / order
+        angle = 2 * pi / order
         self._cos = cos(angle)
         self._sin = sin(angle)
 
