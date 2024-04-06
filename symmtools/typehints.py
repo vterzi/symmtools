@@ -7,6 +7,7 @@ __all__ = [
     "Complex",
     "Scalar",
     "Vector",
+    "Matrix",
 ]
 
 from typing import Union
@@ -20,3 +21,4 @@ Float = Union[float, floating]
 Complex = Union[complex, complexfloating]
 Scalar = Union[Int, Float, Complex]
 Vector = NDArray[floating]
+Matrix = NDArray[floating]
