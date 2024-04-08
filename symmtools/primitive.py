@@ -38,21 +38,21 @@ class Primitive(ABC):
         return copy(self)
 
     def transform(self, transformation):
-        type_transform = type(transformation)
-        if type_transform == Identity:
+        transformation_type = type(transformation)
+        if transformation_type == Identity:
             return self.copy()
-        elif type_transform == Translation:
+        elif transformation_type == Translation:
             return self.translate(transformation)
-        elif type_transform == Inversion:
+        elif transformation_type == Inversion:
             return self.invert()
-        elif type_transform == Rotation:
+        elif transformation_type == Rotation:
             return self.rotate(transformation)
-        elif type_transform == Reflection:
+        elif transformation_type == Reflection:
             return self.reflect(transformation)
-        elif type_transform == Rotoreflection:
+        elif transformation_type == Rotoreflection:
             return self.rotoreflect(transformation)
         else:
-            raise ValueError(f"illegal transformation: {type_transform}")
+            raise ValueError(f"illegal transformation: {transformation_type}")
 
     @abstractmethod
     def translate(self, translation):

@@ -22,10 +22,10 @@ def ops2group(transformations):
     transformations = list(transformations)
     group = {"E": Identity().mat()}
     for transformation in transformations:
-        type_transform = type(transformation)
-        if type_transform == Inversion:
+        transformation_type = type(transformation)
+        if transformation_type == Inversion:
             group["i"] = transformation.mat()
-        elif type_transform == Rotation:
+        elif transformation_type == Rotation:
             vec = transformation.vec
             order = transformation.order
             symb = f"C{order}"
@@ -37,9 +37,9 @@ def ops2group(transformations):
                         transformations.append(Rotation(vec, factor))
             elif order == 2:
                 add(symb, transformation.mat())
-        elif type_transform == Reflection:
+        elif transformation_type == Reflection:
             add("s", transformation.mat())
-        elif type_transform == Rotoreflection:
+        elif transformation_type == Rotoreflection:
             vec = transformation.vec
             order = transformation.order
             symb = f"S{order}"
