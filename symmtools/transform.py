@@ -11,15 +11,17 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 from copy import copy
-from typing import Any
+from typing import Any, Sequence, Union
 
 from numpy import pi, sin, cos, eye
 
 from .vecop import vector, normalize, same, parallel, move2, reflect, invert
-from .typehints import Float, Matrix
+from .typehints import Float, Real, Vector, Matrix
 
 
 class Transformation(ABC):
+    """Abstract base class for a transformation in real 3D space."""
+
     def args(self) -> str:
         """Return arguments used to create the instance."""
         return ""
@@ -31,47 +33,78 @@ class Transformation(ABC):
         return self.__str__()
 
     def same(self, obj: Any, tol: Float) -> bool:
+        """
+        Check if a transformation `obj` is the same within a tolerance `tol`.
+        """
         return type(self) is type(obj)
 
     @abstractmethod
     def mat(self) -> Matrix:
+        """Return the transformation matrix."""
         pass
 
-    def transform(self, transformation: "Transformation"):
-        type_transform = type(transformation)
-        if type_transform == Identity:
-            return self.copy()
-        elif type_transform == Inversion:
-            return self.invert()
-        elif type_transform == Rotation:
-            return self.rotate(transformation)
-        elif type_transform == Reflection:
-            return self.reflect(transformation)
-        elif type_transform == Rotoreflection:
-            return self.rotoreflect(transformation)
-        else:
-            raise ValueError(f"illegal transformation: {type_transform}")
-
     def copy(self) -> "Transformation":
+        """Return a copy of the transformation."""
         return copy(self)
 
     def invert(self) -> "Transformation":
+        """
+        Return the transformation resulting from the application of a
+        inversion.
+        """
         return self.copy()
 
     def rotate(self, rotation: "Rotation") -> "Transformation":
+        """
+        Return the transformation resulting from the application of a rotation
+        `rotation`.
+        """
         return self.copy()
 
     def reflect(self, reflection: "Reflection") -> "Transformation":
+        """
+        Return the transformation resulting from the application of a
+        reflection `reflection`.
+        """
         return self.copy()
 
     def rotoreflect(
         self, rotoreflection: "Rotoreflection"
     ) -> "Transformation":
+        """
+        Return the transformation resulting from the application of a
+        rotoreflection `rotoreflection`.
+        """
         return self.copy()
 
+    def transform(self, transformation: "Transformation") -> "Transformation":
+        """
+        Return the transformation resulting from the application of a
+        transformation `transformation`.
+        """
+        transformation_type = type(transformation)
+        if transformation_type is Identity:
+            return self.copy()
+        elif transformation_type is Inversion:
+            return self.invert()
+        elif transformation_type is Rotation:
+            return self.rotate(transformation)
+        elif transformation_type is Reflection:
+            return self.reflect(transformation)
+        elif transformation_type is Rotoreflection:
+            return self.rotoreflect(transformation)
+        else:
+            raise TypeError(f"illegal transformation: {transformation_type}")
 
-class VecTransform(Transformation, ABC):
-    def __init__(self, vec):
+
+class VecTransformation(Transformation, ABC):
+    """
+    Abstract base class for a transformation in real 3D space represented by a
+    vector.
+    """
+
+    def __init__(self, vec: Union[Sequence[Real], Vector]) -> None:
+        """Initialize the transformation with a vector `vec`."""
         self._vec = vector(vec)
 
     def __getitem__(self, item):
@@ -82,6 +115,7 @@ class VecTransform(Transformation, ABC):
 
     @property
     def vec(self):
+        """Return the vector representing the transformation."""
         return self._vec
 
     def invert(self):
@@ -113,7 +147,7 @@ class VecTransform(Transformation, ABC):
         return res
 
 
-class UnitVecTransform(VecTransform, ABC):
+class UnitVecTransformation(VecTransformation, ABC):
     def __init__(self, vec):
         super().__init__(vec)
         self._vec = normalize(self._vec)
@@ -129,7 +163,7 @@ class Identity(Transformation):
         return eye(3)
 
 
-class Translation(VecTransform):
+class Translation(VecTransformation):
     def same(self, transformation, tol):
         return super().same(transformation, tol) and same(
             self._vec, transformation.vec, tol
@@ -144,7 +178,7 @@ class Inversion(Transformation):
         return -eye(3)
 
 
-class Rotation(UnitVecTransform):
+class Rotation(UnitVecTransformation):
     def __init__(self, vec, order):
         super().__init__(vec)
         self._order = order
@@ -174,7 +208,7 @@ class Rotation(UnitVecTransform):
         return res.T
 
 
-class Reflection(UnitVecTransform):
+class Reflection(UnitVecTransformation):
     def mat(self):
         res = eye(3)
         for i in range(len(res)):
