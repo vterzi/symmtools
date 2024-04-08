@@ -15,16 +15,13 @@ __all__ = [
     "reflect3",
 ]
 
-from collections.abc import Sequence
-from typing import Union
-
 from numpy import array, sin, cos, dot, cross, bool_
 from numpy.linalg import norm
 
-from .typehints import Int, Float, Vector
+from .typehints import Float, Vector, RealVector
 
 
-def vector(vec: Sequence[Union[Int, Float]]) -> Vector:
+def vector(vec: RealVector) -> Vector:
     """Convert a vector `vec` to a NumPy array of floating-point numbers."""
     return array(vec, dtype=float)
 
