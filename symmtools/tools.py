@@ -10,22 +10,32 @@ __all__ = [
 ]
 
 from re import findall
-from typing import Optional, Sequence, List
 
 from .const import ORIGIN, TOL
-from .typehints import Scalar, Bool, Int, Float
 from .primitive import Point, LabeledPoint, Elems
 from .transform import Transformation
+from .typehints import (
+    Optional,
+    Sequence,
+    List,
+    Bool,
+    Int,
+    Float,
+    Real,
+    Ints,
+    RealVector,
+    RealVectors,
+)
 
 _LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
 _FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
 
 
 def chcoords(
-    vecs: Sequence[Sequence[Scalar]],
-    origin: Sequence[Scalar],
-    axes: Optional[Sequence[Int]] = None,
-) -> List[List[Scalar]]:
+    vecs: RealVectors,
+    origin: RealVector = ORIGIN,
+    axes: Optional[Ints] = None,
+) -> List[List[Real]]:
     """
     Change the coordinate system of vectors `vecs` to a coordinate system with
     an origin `origin` and an axes order `axes`.  If `axes` is `None`, the
@@ -44,8 +54,8 @@ def chcoords(
 
 
 def signvar(
-    vec: Sequence[Scalar], parity: Int = 0, unique: Bool = False
-) -> List[List[Scalar]]:
+    vec: RealVector, parity: Int = 0, unique: Bool = False
+) -> List[List[Real]]:
     """
     Generate vectors with all possible sign changes of the coordinates of a
     vector `vec` that satisfy a parity `parity`.  If `parity` is
@@ -71,12 +81,12 @@ def signvar(
     return res
 
 
-def ax3permut(vecs: Sequence[Sequence[Scalar]]) -> List[List[Scalar]]:
+def ax3permut(vecs: RealVectors) -> List[List[Real]]:
     """
     Generate all possible vectors by applying a circular permutation on the
     coordinates of 3D vectors `vecs`.
     """
-    vecs = chcoords(vecs, ORIGIN)
+    vecs = chcoords(vecs)
     res = []
     for i in range(3):
         for vec in vecs:
@@ -84,7 +94,7 @@ def ax3permut(vecs: Sequence[Sequence[Scalar]]) -> List[List[Scalar]]:
     return res
 
 
-def topoints(points: Sequence[Sequence[Scalar]]) -> List[Point]:
+def topoints(points: RealVectors) -> List[Point]:
     """
     Convert a sequence of points `points` to a sequence of `Point` instances.
     """
