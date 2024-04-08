@@ -17,15 +17,15 @@ from symmtools import (
 
 class TestPtgrp(TestCase):
     def test_ptgrp(self):
-        point = chcoords([[]], 3 * [0])
+        point = chcoords([[]])
         self.assertEqual(ptgrp(Elems(topoints(point))), "Kh")
-        segment = chcoords(signvar([1]), 3 * [0])
+        segment = chcoords(signvar([1]))
         self.assertEqual(ptgrp(Elems(topoints(segment))), "Dooh")
-        collinear = segment + chcoords([[2]], 3 * [0])
+        collinear = segment + chcoords([[2]])
         self.assertEqual(ptgrp(Elems(topoints(collinear))), "Coov")
         triangle = generate([Point([1, 0, 0])], [Rotation([0, 0, 1], 3)], TOL)
         self.assertEqual(ptgrp(triangle), "D3h")
-        square = Elems(topoints(chcoords(signvar([1, 1]), 3 * [0])))
+        square = Elems(topoints(chcoords(signvar([1, 1]))))
         self.assertEqual(ptgrp(square), "D4h")
         pentagon = generate([Point([1, 0, 0])], [Rotation([0, 0, 1], 5)], TOL)
         self.assertEqual(ptgrp(pentagon), "D5h")
