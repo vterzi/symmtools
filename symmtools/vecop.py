@@ -15,10 +15,10 @@ __all__ = [
     "reflect3",
 ]
 
-from numpy import array, sin, cos, dot, cross, bool_
+from numpy import array, sin, cos, dot, cross
 from numpy.linalg import norm
 
-from .typehints import Float, Vector, RealVector
+from .typehints import Bool, Float, Vector, RealVector
 
 
 def vector(vec: RealVector) -> Vector:
@@ -31,7 +31,7 @@ def normalize(vec: Vector) -> Vector:
     return vec / norm(vec)
 
 
-def same(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
+def same(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
     """
     Check wether two vectors `vec1` and `vec2` are the same within a tolerance
     `tol`.
@@ -39,7 +39,7 @@ def same(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
     return norm(vec1 - vec2) <= tol
 
 
-def parallel(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
+def parallel(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
     """
     Check wether two vectors `vec1` and `vec2` are parallel within a tolerance
     `tol`.
@@ -47,10 +47,10 @@ def parallel(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
     return norm(cross(vec1, vec2)) <= tol
 
 
-def perpendicular(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
+def perpendicular(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
     """
-    Check wether two vectors `vec1` and `vec2` are perpendicular within a tolerance
-    `tol`.
+    Check wether two vectors `vec1` and `vec2` are perpendicular within a
+    tolerance `tol`.
     """
     return abs(dot(vec1, vec2)) <= tol
 
