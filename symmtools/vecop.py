@@ -33,7 +33,7 @@ def normalize(vec: Vector) -> Vector:
 
 def same(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
     """
-    Check if two vectors `vec1` and `vec2` are the same within a tolerance
+    Check wether two vectors `vec1` and `vec2` are the same within a tolerance
     `tol`.
     """
     return norm(vec1 - vec2) <= tol
@@ -41,7 +41,7 @@ def same(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
 
 def parallel(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
     """
-    Check if two vectors `vec1` and `vec2` are parallel within a tolerance
+    Check wether two vectors `vec1` and `vec2` are parallel within a tolerance
     `tol`.
     """
     return norm(cross(vec1, vec2)) <= tol
@@ -49,7 +49,7 @@ def parallel(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
 
 def perpendicular(vec1: Vector, vec2: Vector, tol: Float) -> bool_:
     """
-    Check if two vectors `vec1` and `vec2` are perpendicular within a tolerance
+    Check wether two vectors `vec1` and `vec2` are perpendicular within a tolerance
     `tol`.
     """
     return abs(dot(vec1, vec2)) <= tol
