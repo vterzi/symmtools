@@ -4,15 +4,17 @@ __all__ = [
     "vector",
     "normalize",
     "same",
+    "same_",
     "parallel",
+    "parallel_",
     "perpendicular",
     "translate",
     "invert",
     "move2",
     "rotate",
-    "rotate3",
+    "rotate_",
     "reflect",
-    "reflect3",
+    "reflect_",
 ]
 
 from numpy import array, sin, cos, dot, cross
@@ -27,7 +29,7 @@ def vector(vec: RealVector) -> Vector:
 
 
 def normalize(vec: Vector) -> Vector:
-    """Normalize a vector `vec` to a unit vector."""
+    """Normalize a non-zero vector `vec` to a unit vector."""
     return vec / norm(vec)
 
 
@@ -39,12 +41,28 @@ def same(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
     return norm(vec1 - vec2) <= tol
 
 
+def same_(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
+    """
+    Check wether two vectors `vec1` and `vec2` are the same within a tolerance
+    `tol`.
+    """
+    return all(abs(vec1 - vec2) <= tol)
+
+
 def parallel(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
     """
     Check wether two vectors `vec1` and `vec2` are parallel within a tolerance
     `tol`.
     """
     return norm(cross(vec1, vec2)) <= tol
+
+
+def parallel_(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
+    """
+    Check wether two vectors `vec1` and `vec2` are parallel within a tolerance
+    `tol`.
+    """
+    return all(abs(cross(vec1, vec2)) <= tol)
 
 
 def perpendicular(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
@@ -67,9 +85,9 @@ def invert(point: Vector) -> Vector:
 
 def move2(point: Vector, normal: Vector, coef1: Float, coef2: Float) -> Vector:
     """
-    Move a point `point` in a plane containing the point with a normalized
-    normal `normal` to a position represented by the linear combination of the
-    projection of the point position on the plane scaled by `coef1` and its
+    Move a 3D point `point` in a plane containing the point with a normalized
+    normal `normal` to the position represented by the linear combination of
+    the projection of the point position on the plane scaled by `coef1` and its
     perpendicular in the plane scaled by `coef2`.
     """
     base = dot(point, normal) * normal
@@ -80,14 +98,14 @@ def move2(point: Vector, normal: Vector, coef1: Float, coef2: Float) -> Vector:
 
 def rotate(point: Vector, rotation: Vector, angle: Float) -> Vector:
     """
-    Rotate a point `point` around a rotation axis with a normalized direction
-    `rotation` by an angle `angle`.
+    Rotate a 3D point `point` around a rotation axis with a normalized
+    direction `rotation` by an angle `angle`.
     """
     return move2(point, rotation, cos(angle), sin(angle))
 
 
-def rotate3(point: Vector, rotation: Vector) -> Vector:
-    """Rotate a point `point` by a rotation vector `rotation`."""
+def rotate_(point: Vector, rotation: Vector) -> Vector:
+    """Rotate a 3D point `point` by a rotation vector `rotation`."""
     length = norm(rotation)
     if length > 0:
         point = rotate(point, rotation / length, length)
@@ -102,7 +120,7 @@ def reflect(point: Vector, reflection: Vector) -> Vector:
     return point - 2 * dot(point, reflection) * reflection
 
 
-def reflect3(point: Vector, reflection: Vector) -> Vector:
+def reflect_(point: Vector, reflection: Vector) -> Vector:
     """
     Reflect a point `point` through a reflection plane with a normal
     `reflection`.
