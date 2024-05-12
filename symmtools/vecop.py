@@ -2,9 +2,14 @@
 
 __all__ = [
     "vector",
+    "canon",
     "normalize",
+    "diff",
+    "diff_",
     "same",
     "same_",
+    "indep",
+    "indep_",
     "parallel",
     "parallel_",
     "perpendicular",
@@ -20,7 +25,7 @@ __all__ = [
 from numpy import array, sin, cos, dot, cross
 from numpy.linalg import norm
 
-from .typehints import Bool, Float, Vector, RealVector
+from .typehints import Float, Vector, RealVector
 
 
 def vector(vec: RealVector) -> Vector:
@@ -28,49 +33,82 @@ def vector(vec: RealVector) -> Vector:
     return array(vec, dtype=float)
 
 
+def canon(vec: Vector) -> Vector:
+    """
+    Canonicalize an unsigned direction vector `vec` by making the first
+    non-zero coordinate positive.
+    """
+    for coord in vec:
+        if coord < 0:
+            vec = -vec
+        if coord != 0:
+            break
+    return vec
+
+
 def normalize(vec: Vector) -> Vector:
     """Normalize a non-zero vector `vec` to a unit vector."""
     return vec / norm(vec)
 
 
-def same(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
+def diff(vec1: Vector, vec2: Vector) -> float:
+    """Calculate the difference between two vectors `vec1` and `vec2`."""
+    return float(abs(vec1 - vec2).max())
+
+
+def diff_(vec1: Vector, vec2: Vector) -> float:
+    """Calculate the difference between two vectors `vec1` and `vec2`."""
+    return float(norm(vec1 - vec2))
+
+
+def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
     Check wether two vectors `vec1` and `vec2` are the same within a tolerance
     `tol`.
     """
-    return norm(vec1 - vec2) <= tol
+    return diff(vec1, vec2) <= tol
 
 
-def same_(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
+def same_(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
     Check wether two vectors `vec1` and `vec2` are the same within a tolerance
     `tol`.
     """
-    return all(abs(vec1 - vec2) <= tol)
+    return diff_(vec1, vec2) <= tol
 
 
-def parallel(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
+def indep(vec1: Vector, vec2: Vector) -> float:
+    """Calculate the linear independence of two vectors `vec1` and `vec2`."""
+    return float(abs(cross(vec1, vec2)).max())
+
+
+def indep_(vec1: Vector, vec2: Vector) -> float:
+    """Calculate the linear independence of two vectors `vec1` and `vec2`."""
+    return float(norm(cross(vec1, vec2)))
+
+
+def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
     Check wether two vectors `vec1` and `vec2` are parallel within a tolerance
     `tol`.
     """
-    return norm(cross(vec1, vec2)) <= tol
+    return indep(vec1, vec2) <= tol
 
 
-def parallel_(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
+def parallel_(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
     Check wether two vectors `vec1` and `vec2` are parallel within a tolerance
     `tol`.
     """
-    return all(abs(cross(vec1, vec2)) <= tol)
+    return indep_(vec1, vec2) <= tol
 
 
-def perpendicular(vec1: Vector, vec2: Vector, tol: Float) -> Bool:
+def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
     Check wether two vectors `vec1` and `vec2` are perpendicular within a
     tolerance `tol`.
     """
-    return abs(dot(vec1, vec2)) <= tol
+    return float(abs(dot(vec1, vec2))) <= tol
 
 
 def translate(point: Vector, translation: Vector) -> Vector:

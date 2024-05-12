@@ -3,8 +3,11 @@
 __all__ = [
     "Union",
     "Optional",
+    "Any",
     "Sequence",
+    "Tuple",
     "List",
+    "Dict",
     "Bool",
     "Int",
     "Float",
@@ -23,7 +26,7 @@ __all__ = [
     "RealVectors",
 ]
 
-from typing import Union, Optional, Sequence, List
+from typing import Union, Optional, Any, Sequence, Tuple, List, Dict
 
 from numpy import bool_, signedinteger, floating, complexfloating
 from numpy.typing import NDArray
