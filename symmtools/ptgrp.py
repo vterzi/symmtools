@@ -1,288 +1,65 @@
 from re import fullmatch
 
-from numpy import nan, inf, array, dot, cross
+from numpy import nan, array, dot, cross
 from numpy.linalg import norm
 
-from .const import PHI, TOL
+from .const import PHI, TOL, PRIMAX, SECAX
 from .tools import signvar, ax3permut
-from .transform import (
-    Identity,
-    Inversion,
-    Rotation,
-    Reflection,
-    Rotoreflection,
+from .symmelem import (
+    SymmElem,
+    InversionCenter,
+    RotationAxis,
+    InfRotationAxis,
+    ReflectionPlane,
+    RotoreflectionAxis,
+    InfRotoreflectionAxis,
 )
+from .primitive import Elems
 from .vecop import parallel, perpendicular
-
-primax = (0, 0, 1)
-secax = (1, 0, 0)
+from .typehints import Union, List, Dict
 
 
-def symb2grp(symb):
-    match = fullmatch(r"([SCDTOIK])([1-9]\d*|oo)?([sivdh])?", symb)
-    if match is None:
-        raise ValueError("unknown point group")
-    rotation, order, reflection = match.groups()
-    n = (int(order) if order != "oo" else inf) if order else nan
-    group = {"E": Identity()}
-    if rotation == "S" and order and not reflection:
-        if n % 2 == 1 or n == inf:
-            return symb2grp(f"C{order}h")
-        elif n == 2:
-            return symb2grp("Ci")
-        else:
-            group[f"S{order}"] = Rotoreflection(primax, n)
-            group[f"C{n // 2}"] = Rotation(primax, n)
-            if (n // 2) % 2 == 1:
-                group["i"] = Inversion()
-    elif rotation == "C":
-        if order and not reflection:
-            if n > 1:
-                group[f"C{order}"] = Rotation(primax, n)
-        elif not order and reflection == "s":
-            group["s"] = Reflection(primax)
-        elif reflection == "i":
-            if not order or n == 1:
-                group["i"] = Inversion()
-            else:
-                if n % 2 == 1:
-                    return symb2grp(f"S{2 * n}")
-                elif (n // 2) % 2 == 1:
-                    return symb2grp(f"S{n // 2}")
-                else:
-                    return symb2grp(f"S{order}")
-        elif order and reflection == "v":
-            if n == 1:
-                return symb2grp("Cs")
-            else:
-                vec = primax
-                group[f"C{order}"] = Rotation(vec, n)
-                s = Reflection(secax)
-                if n < inf:
-                    dn = 2 * n
-                    if n % 2 == 1:
-                        group["sv"] = (s,) + tuple(
-                            s.rotate(Rotation(vec, dn / factor))
-                            for factor in range(1, n)
-                        )
-                    else:
-                        group["sv"] = (s,) + tuple(
-                            s.rotate(Rotation(vec, dn / factor))
-                            for factor in range(2, n, 2)
-                        )
-                        group["sd"] = tuple(
-                            s.rotate(Rotation(vec, dn / factor))
-                            for factor in range(1, n, 2)
-                        )
-                else:
-                    s._vec = array([nan, nan, 0])
-                    group["sv"] = s
-        elif order and reflection == "h":
-            if n == 1:
-                return symb2grp("Cs")
-            else:
-                group[f"C{order}"] = Rotation(primax, n)
-                group["sh"] = Reflection(primax)
-                if n % 2 == 0:
-                    group["i"] = Inversion()
-                if n > 2:
-                    group[f"S{order}"] = Rotoreflection(primax, n)
-        else:
-            raise ValueError("unknown point group")
-    elif rotation == "D" and order:
-        vec = primax
-        group[f"C{order}"] = Rotation(vec, n)
-        C2 = Rotation(secax, 2)
-        if n < inf:
-            dn = 2 * n
-            if n % 2 == 1:
-                group["C2'"] = (C2,) + tuple(
-                    C2.rotate(Rotation(vec, dn / factor))
-                    for factor in range(1, n)
-                )
-            else:
-                group["C2'"] = (C2,) + tuple(
-                    C2.rotate(Rotation(vec, dn / factor))
-                    for factor in range(2, n, 2)
-                )
-                group["C2''"] = tuple(
-                    C2.rotate(Rotation(vec, dn / factor))
-                    for factor in range(1, n, 2)
-                )
-        else:
-            C2._vec = array([nan, nan, 0])
-            group["C2'"] = C2
-        if not reflection:
-            if n == 1:
-                return symb2grp(f"C{2 * n}")
-            elif n == inf:
-                group["i"] = Inversion()
-        elif reflection == "d":
-            if n == 1:
-                return symb2grp(f"C{2 * n}h")
-            elif n == inf:
-                return symb2grp(f"D{order}h")
-            else:
-                s = Reflection(secax)
-                group["sd"] = tuple(
-                    s.rotate(Rotation(vec, 2 * n / factor))
-                    for factor in range(1, n, 2)
-                )
-                if n % 2 == 1:
-                    group["i"] = Inversion()
-                group[f"S{2 * n}"] = Rotoreflection(primax, 2 * n)
-        elif reflection == "h":
-            if n == 1:
-                return symb2grp(f"C{2 * n}v")
-            else:
-                group["sh"] = Reflection(primax)
-                s = Reflection(secax)
-                if n < inf:
-                    if n % 2 == 1:
-                        group["sv"] = (s,) + tuple(
-                            s.rotate(Rotation(vec, 2 * n / factor))
-                            for factor in range(1, n)
-                        )
-                    else:
-                        group["sv"] = (s,) + tuple(
-                            s.rotate(Rotation(vec, 2 * n / factor))
-                            for factor in range(2, n, 2)
-                        )
-                        group["sd"] = tuple(
-                            s.rotate(Rotation(vec, 2 * n / factor))
-                            for factor in range(1, n, 2)
-                        )
-                        group["i"] = Inversion()
-                    if n > 2:
-                        group[f"S{order}"] = Rotoreflection(primax, n)
-                else:
-                    s._vec = array([nan, nan, 0])
-                    group["sv"] = s
-        else:
-            raise ValueError("unknown point group")
-    elif rotation == "T" and not order:
-        vecs3 = signvar([1, 1, 1], 1)
-        vecs2 = ax3permut([[1]])
-        for n, vecs in ((3, vecs3), (2, vecs2)):
-            group[f"C{n}"] = tuple(Rotation(vec, n) for vec in vecs)
-        if reflection == "d":
-            group["sd"] = tuple(
-                Reflection(vec) for vec in ax3permut(signvar([1, 1], 0, True))
-            )
-            n = 4
-            group[f"S{n}"] = tuple(Rotoreflection(vec, n) for vec in vecs2)
-        elif reflection == "h":
-            group["sh"] = tuple(Reflection(vec) for vec in vecs2)
-            group["i"] = Inversion()
-            n = 6
-            group[f"S{n}"] = tuple(Rotoreflection(vec, n) for vec in vecs3)
-        elif reflection:
-            raise ValueError("unknown point group")
-    elif rotation == "O" and not order:
-        vecs4 = ax3permut([[1]])
-        vecs3 = signvar([1, 1, 1], 1)
-        vecs2 = ax3permut(signvar([1, 1], 0, True))
-        for n, vecs in ((4, vecs4), (3, vecs3), (2, vecs2)):
-            group[f"C{n}"] = tuple(Rotation(vec, n) for vec in vecs)
-        if reflection == "h":
-            group["sh"] = tuple(Reflection(vec) for vec in vecs4)
-            group["sd"] = tuple(Reflection(vec) for vec in vecs2)
-            group["i"] = Inversion()
-            for n, vecs in ((6, vecs3), (4, vecs4)):
-                group[f"S{n}"] = tuple(Rotoreflection(vec, n) for vec in vecs)
-        elif reflection:
-            raise ValueError("unknown point group")
-    elif rotation == "I" and not order:
-        vecs5 = ax3permut(signvar([PHI, 1], 0, True))
-        vecs3 = signvar([1, 1, 1], 1) + ax3permut(
-            signvar([1, 1 + PHI], 0, True)
-        )
-        vecs2 = ax3permut([[1], *signvar([1, PHI, 1 + PHI], 0, True)])
-        for n, vecs in ((5, vecs5), (3, vecs3), (2, vecs2)):
-            group[f"C{n}"] = tuple(Rotation(vec, n) for vec in vecs)
-        if reflection == "h":
-            group["s"] = tuple(Reflection(vec) for vec in vecs2)
-            group["i"] = Inversion()
-            for n, vecs in ((10, vecs5), (6, vecs3)):
-                group[f"S{n}"] = tuple(Rotoreflection(vec, n) for vec in vecs)
-        elif reflection:
-            raise ValueError("unknown point group")
-    elif rotation == "K" and not order:
-        Cn = Rotation(primax, inf)
-        Cn._vec = array([nan, nan, nan])
-        group["Coo"] = Cn
-        if reflection == "h":
-            s = Reflection(primax)
-            s._vec = array([nan, nan, nan])
-            group["s"] = s
-            group["i"] = Inversion()
-            Sn = Rotoreflection(primax, inf)
-            Sn._vec = array([nan, nan, nan])
-            group["Soo"] = Sn
-        elif reflection:
-            raise ValueError("unknown point group")
-    else:
-        raise ValueError("unknown point group")
-    return group
-
-
-def symmelems(elems, tol=TOL):
+def symmelems(elems: Elems, tol: float = TOL):
     def contains(array, vector):
         for elem in array:
             if parallel(elem.vec, vector, tol):
                 return True
         return False
 
-    def add_rotation(vector, order_):
-        # for all angles
-        for factor in range(1, order_):
-            # if not symmetric for an angle
-            if not elems.same(
-                elems.rotate(Rotation(vector, order_ / factor)), tol
-            ):
-                return False
-        rotations.append(Rotation(vector, order_))
-        return True
+    def add_rotation(vector, order):
+        rotation = RotationAxis(vector, order)
+        if rotation.symmetric(elems, tol):
+            rotations.append(rotation)
+            return True
+        return False
 
     def add_reflection(vector):
-        reflection_ = Reflection(vector)
-        if not elems.same(elems.reflect(reflection_), tol):
-            return False
-        reflections.append(reflection_)
-        return True
+        reflection = ReflectionPlane(vector)
+        if reflection.symmetric(elems, tol):
+            reflections.append(reflection)
+            return True
+        return False
 
-    def add_rotoreflection(vector, order_):
-        # check the doubled order first
-        for step in (2, 1):
-            order__ = order_ * step
-            if order__ == 2:
-                continue
-            symmetric = True
-            # for all angles (only odd factors in the case of doubled order)
-            for factor in range(1, order__, step):
-                if not elems.same(
-                    elems.rotoreflect(
-                        Rotoreflection(vector, order__ / factor)
-                    ),
-                    tol,
-                ):
-                    symmetric = False
-                    break
-            # if symmetric for all angles
-            if symmetric:
-                rotoreflections.append(Rotoreflection(vector, order__))
+    def add_rotoreflection(vector, order):
+        for factor in (2, 1):
+            rotoreflection = RotoreflectionAxis(vector, factor * order)
+            if rotoreflection.symmetric(elems, tol):
+                rotoreflections.append(rotoreflection)
                 return True
         return False
 
     if not elems.check(tol):
         raise ValueError(
-            "at least two identical elements in the instance of Struct for given tolerance"
+            "at least two identical elements in the instance of Elems for the"
+            " given tolerance"
         )
     dim = 3
-    invertible = elems.same(elems.invert(), tol)
-    rotations = []
-    reflections = []
-    rotoreflections = []
+    invertible = InversionCenter().symmetric(elems, tol)
+    rotations: List[Union[RotationAxis, InfRotationAxis]] = []
+    reflections: List[ReflectionPlane] = []
+    rotoreflections: List[Union[RotoreflectionAxis, InfRotoreflectionAxis]] = (
+        []
+    )
     if len(elems) == 1:
         dim = 0
     direction = None
@@ -297,13 +74,13 @@ def symmelems(elems, tol=TOL):
                     elems[i2].pos - elems[i1].pos,
                     elems[i3].pos - elems[i1].pos,
                 )
-                len_normal = norm(normal)
+                normal_norm = norm(normal)
                 # if the point triplet is collinear
-                if len_normal <= tol:
+                if normal_norm <= tol:
                     continue
                 # not all points are collinear
                 collinear = False
-                rotation = normal / len_normal
+                rotation = normal / normal_norm
                 if not contains(rotations, rotation):
                     # calculate the distance between the origin and the plane
                     dist = dot(elems[i1].pos, rotation)
@@ -324,7 +101,7 @@ def symmelems(elems, tol=TOL):
                         dim = 2
                         direction = rotation
                         # add reflection (described by the plane containing all points)
-                        reflections.append(Reflection(rotation))
+                        reflections.append(ReflectionPlane(rotation))
                     added = False
                     # for all possible orders > 2 starting from the highest
                     for order in range(max_order, 2, -1):
@@ -345,9 +122,9 @@ def symmelems(elems, tol=TOL):
             ):
                 dim = 1
                 direction = reflection
-                rotations.append(Rotation(reflection, inf))
+                rotations.append(InfRotationAxis(reflection))
                 if invertible:
-                    rotoreflections.append(Rotoreflection(reflection, inf))
+                    rotoreflections.append(InfRotoreflectionAxis(reflection))
             # if the distance from the origin to the segment doesn't divide it in halves
             if not perpendicular(segment, midpoint, tol):
                 continue
@@ -412,3 +189,211 @@ def ptgrp(elems, tol=TOL):
         if len(rotoreflections) > 0:
             return f"S{2*order}"
         return f"C{order}"
+
+
+def symb2grp(symb):
+    match = fullmatch(r"([SCDTOIK])([1-9]\d*|oo)?([sivdh])?", symb)
+    if match is None:
+        raise ValueError("unknown point group")
+    rotation, order, reflection = match.groups()
+    n = (int(order) if order != "oo" else inf) if order else nan
+    group: Dict[str, SymmElem] = {"E": Identity()}
+    if rotation == "S" and order and not reflection:
+        if n % 2 == 1 or n == inf:
+            return symb2grp(f"C{order}h")
+        elif n == 2:
+            return symb2grp("Ci")
+        else:
+            group[f"S{order}"] = Rotoreflection(PRIMAX, n)
+            group[f"C{n // 2}"] = Rotation(PRIMAX, n)
+            if (n // 2) % 2 == 1:
+                group["i"] = Inversion()
+    elif rotation == "C":
+        if order and not reflection:
+            if n > 1:
+                group[f"C{order}"] = Rotation(PRIMAX, n)
+        elif not order and reflection == "s":
+            group["s"] = Reflection(PRIMAX)
+        elif reflection == "i":
+            if not order or n == 1:
+                group["i"] = Inversion()
+            else:
+                if n % 2 == 1:
+                    return symb2grp(f"S{2 * n}")
+                elif (n // 2) % 2 == 1:
+                    return symb2grp(f"S{n // 2}")
+                else:
+                    return symb2grp(f"S{order}")
+        elif order and reflection == "v":
+            if n == 1:
+                return symb2grp("Cs")
+            else:
+                vec = PRIMAX
+                group[f"C{order}"] = Rotation(vec, n)
+                s = Reflection(SECAX)
+                if n < inf:
+                    dn = 2 * n
+                    if n % 2 == 1:
+                        group["sv"] = (s,) + tuple(
+                            s.rotate(Rotation(vec, dn / factor))
+                            for factor in range(1, n)
+                        )
+                    else:
+                        group["sv"] = (s,) + tuple(
+                            s.rotate(Rotation(vec, dn / factor))
+                            for factor in range(2, n, 2)
+                        )
+                        group["sd"] = tuple(
+                            s.rotate(Rotation(vec, dn / factor))
+                            for factor in range(1, n, 2)
+                        )
+                else:
+                    s._vec = array([nan, nan, 0])
+                    group["sv"] = s
+        elif order and reflection == "h":
+            if n == 1:
+                return symb2grp("Cs")
+            else:
+                group[f"C{order}"] = Rotation(PRIMAX, n)
+                group["sh"] = Reflection(PRIMAX)
+                if n % 2 == 0:
+                    group["i"] = Inversion()
+                if n > 2:
+                    group[f"S{order}"] = Rotoreflection(PRIMAX, n)
+        else:
+            raise ValueError("unknown point group")
+    elif rotation == "D" and order:
+        vec = PRIMAX
+        group[f"C{order}"] = Rotation(vec, n)
+        C2 = Rotation(SECAX, 2)
+        if n < inf:
+            dn = 2 * n
+            if n % 2 == 1:
+                group["C2'"] = (C2,) + tuple(
+                    C2.rotate(Rotation(vec, dn / factor))
+                    for factor in range(1, n)
+                )
+            else:
+                group["C2'"] = (C2,) + tuple(
+                    C2.rotate(Rotation(vec, dn / factor))
+                    for factor in range(2, n, 2)
+                )
+                group["C2''"] = tuple(
+                    C2.rotate(Rotation(vec, dn / factor))
+                    for factor in range(1, n, 2)
+                )
+        else:
+            C2._vec = array([nan, nan, 0])
+            group["C2'"] = C2
+        if not reflection:
+            if n == 1:
+                return symb2grp(f"C{2 * n}")
+            elif n == inf:
+                group["i"] = Inversion()
+        elif reflection == "d":
+            if n == 1:
+                return symb2grp(f"C{2 * n}h")
+            elif n == inf:
+                return symb2grp(f"D{order}h")
+            else:
+                s = Reflection(SECAX)
+                group["sd"] = tuple(
+                    s.rotate(Rotation(vec, 2 * n / factor))
+                    for factor in range(1, n, 2)
+                )
+                if n % 2 == 1:
+                    group["i"] = Inversion()
+                group[f"S{2 * n}"] = Rotoreflection(PRIMAX, 2 * n)
+        elif reflection == "h":
+            if n == 1:
+                return symb2grp(f"C{2 * n}v")
+            else:
+                group["sh"] = Reflection(PRIMAX)
+                s = Reflection(SECAX)
+                if n < inf:
+                    if n % 2 == 1:
+                        group["sv"] = (s,) + tuple(
+                            s.rotate(Rotation(vec, 2 * n / factor))
+                            for factor in range(1, n)
+                        )
+                    else:
+                        group["sv"] = (s,) + tuple(
+                            s.rotate(Rotation(vec, 2 * n / factor))
+                            for factor in range(2, n, 2)
+                        )
+                        group["sd"] = tuple(
+                            s.rotate(Rotation(vec, 2 * n / factor))
+                            for factor in range(1, n, 2)
+                        )
+                        group["i"] = Inversion()
+                    if n > 2:
+                        group[f"S{order}"] = Rotoreflection(PRIMAX, n)
+                else:
+                    s._vec = array([nan, nan, 0])
+                    group["sv"] = s
+        else:
+            raise ValueError("unknown point group")
+    elif rotation == "T" and not order:
+        vecs3 = signvar([1, 1, 1], 1)
+        vecs2 = ax3permut([[1]])
+        for n, vecs in ((3, vecs3), (2, vecs2)):
+            group[f"C{n}"] = tuple(Rotation(vec, n) for vec in vecs)
+        if reflection == "d":
+            group["sd"] = tuple(
+                Reflection(vec) for vec in ax3permut(signvar([1, 1], 0, True))
+            )
+            n = 4
+            group[f"S{n}"] = tuple(Rotoreflection(vec, n) for vec in vecs2)
+        elif reflection == "h":
+            group["sh"] = tuple(Reflection(vec) for vec in vecs2)
+            group["i"] = Inversion()
+            n = 6
+            group[f"S{n}"] = tuple(Rotoreflection(vec, n) for vec in vecs3)
+        elif reflection:
+            raise ValueError("unknown point group")
+    elif rotation == "O" and not order:
+        vecs4 = ax3permut([[1]])
+        vecs3 = signvar([1, 1, 1], 1)
+        vecs2 = ax3permut(signvar([1, 1], 0, True))
+        for n, vecs in ((4, vecs4), (3, vecs3), (2, vecs2)):
+            group[f"C{n}"] = tuple(Rotation(vec, n) for vec in vecs)
+        if reflection == "h":
+            group["sh"] = tuple(Reflection(vec) for vec in vecs4)
+            group["sd"] = tuple(Reflection(vec) for vec in vecs2)
+            group["i"] = Inversion()
+            for n, vecs in ((6, vecs3), (4, vecs4)):
+                group[f"S{n}"] = tuple(Rotoreflection(vec, n) for vec in vecs)
+        elif reflection:
+            raise ValueError("unknown point group")
+    elif rotation == "I" and not order:
+        vecs5 = ax3permut(signvar([PHI, 1], 0, True))
+        vecs3 = signvar([1, 1, 1], 1) + ax3permut(
+            signvar([1, 1 + PHI], 0, True)
+        )
+        vecs2 = ax3permut([[1], *signvar([1, PHI, 1 + PHI], 0, True)])
+        for n, vecs in ((5, vecs5), (3, vecs3), (2, vecs2)):
+            group[f"C{n}"] = tuple(Rotation(vec, n) for vec in vecs)
+        if reflection == "h":
+            group["s"] = tuple(Reflection(vec) for vec in vecs2)
+            group["i"] = Inversion()
+            for n, vecs in ((10, vecs5), (6, vecs3)):
+                group[f"S{n}"] = tuple(Rotoreflection(vec, n) for vec in vecs)
+        elif reflection:
+            raise ValueError("unknown point group")
+    elif rotation == "K" and not order:
+        Cn = Rotation(PRIMAX, inf)
+        Cn._vec = array([nan, nan, nan])
+        group["Coo"] = Cn
+        if reflection == "h":
+            s = Reflection(PRIMAX)
+            s._vec = array([nan, nan, nan])
+            group["s"] = s
+            group["i"] = Inversion()
+            Sn = Rotoreflection(PRIMAX, inf)
+            Sn._vec = array([nan, nan, nan])
+            group["Soo"] = Sn
+        elif reflection:
+            raise ValueError("unknown point group")
+    else:
+        raise ValueError("unknown point group")
+    return group

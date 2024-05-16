@@ -9,6 +9,7 @@ from symmtools import (
     generate,
     Point,
     Rotation,
+    PI,
     TOL,
     PHI,
     ax3permut,
@@ -23,13 +24,19 @@ class TestPtgrp(TestCase):
         self.assertEqual(ptgrp(Elems(topoints(segment))), "Dooh")
         collinear = segment + chcoords([[2]])
         self.assertEqual(ptgrp(Elems(topoints(collinear))), "Coov")
-        triangle = generate([Point([1, 0, 0])], [Rotation([0, 0, 1], 3)], TOL)
+        triangle = generate(
+            [Point([1, 0, 0])], [Rotation([0, 0, 1], 2 * PI / 3)], TOL
+        )
         self.assertEqual(ptgrp(triangle), "D3h")
         square = Elems(topoints(chcoords(signvar([1, 1]))))
         self.assertEqual(ptgrp(square), "D4h")
-        pentagon = generate([Point([1, 0, 0])], [Rotation([0, 0, 1], 5)], TOL)
+        pentagon = generate(
+            [Point([1, 0, 0])], [Rotation([0, 0, 1], 2 * PI / 5)], TOL
+        )
         self.assertEqual(ptgrp(pentagon), "D5h")
-        hexagon = generate([Point([1, 0, 0])], [Rotation([0, 0, 1], 6)], TOL)
+        hexagon = generate(
+            [Point([1, 0, 0])], [Rotation([0, 0, 1], PI / 3)], TOL
+        )
         self.assertEqual(ptgrp(hexagon), "D6h")
         tetrahedron = Elems(topoints(signvar([1, 1, 1], 1)))
         self.assertEqual(ptgrp(tetrahedron), "Td")

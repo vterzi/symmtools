@@ -116,7 +116,7 @@ def generate(
     while fi < li:
         for transformation in transformations:
             for i in range(fi, li):
-                point = points[i].transform(transformation)
+                point = transformation(points[i])
                 new = True
                 for ref_point in points:
                     if point.same(ref_point, tol):

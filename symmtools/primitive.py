@@ -1,81 +1,22 @@
+"""Classes for primitive objects in a real 3D space."""
+
 __all__ = ["Point", "LabeledPoint", "Arrow", "Elems", "Struct"]
 
-from abc import ABC, abstractmethod
-from copy import copy
-
-from numpy import inf, empty, zeros, sign, dot
+from numpy import empty, zeros, sign, dot
 from numpy.linalg import norm
 from scipy.optimize import linear_sum_assignment
 
+from .const import INF
 from .vecop import vector, normalize, translate, invert, move2, reflect
 from .transform import (
-    Identity,
+    Transformable,
     Translation,
-    Inversion,
-    Rotation,
-    Reflection,
-    Rotoreflection,
 )
 
 
-class Primitive(ABC):
-    def args(self):
-        return ""
+class Point(Transformable):
+    """Point in a real 3D space."""
 
-    def __str__(self):
-        return f"{self.__class__.__name__}({self.args()})"
-
-    def __repr__(self):
-        return self.__str__()
-
-    def diff(self, primitive):
-        return 0 if type(self) == type(primitive) else inf
-
-    def same(self, primitive, tol):
-        return self.diff(primitive) <= tol
-
-    def copy(self):
-        return copy(self)
-
-    def transform(self, transformation):
-        transformation_type = type(transformation)
-        if transformation_type == Identity:
-            return self.copy()
-        elif transformation_type == Translation:
-            return self.translate(transformation)
-        elif transformation_type == Inversion:
-            return self.invert()
-        elif transformation_type == Rotation:
-            return self.rotate(transformation)
-        elif transformation_type == Reflection:
-            return self.reflect(transformation)
-        elif transformation_type == Rotoreflection:
-            return self.rotoreflect(transformation)
-        else:
-            raise ValueError(f"illegal transformation: {transformation_type}")
-
-    @abstractmethod
-    def translate(self, translation):
-        pass
-
-    @abstractmethod
-    def invert(self):
-        pass
-
-    @abstractmethod
-    def rotate(self, rotation):
-        pass
-
-    @abstractmethod
-    def reflect(self, reflection):
-        pass
-
-    @abstractmethod
-    def rotoreflect(self, rotoreflection):
-        pass
-
-
-class Point(Primitive):
     def __init__(self, pos):
         self._pos = vector(pos)
 
@@ -88,7 +29,7 @@ class Point(Primitive):
 
     def diff(self, point):
         diff = super().diff(point)
-        if diff < inf:
+        if diff < INF:
             diff = max(diff, norm(self._pos - point.pos))
         return diff
 
@@ -141,12 +82,12 @@ class LabeledPoint(Point):
 
     def diff(self, point):
         diff = super().diff(point)
-        if diff < inf:
-            diff = max(diff, 0 if self._label == point.label else inf)
+        if diff < INF:
+            diff = max(diff, 0 if self._label == point.label else INF)
         return diff
 
 
-class Arrow(Primitive):
+class Arrow(Transformable):
     def __init__(self, vec, fore, back):
         self._vec = normalize(vector(vec))
         if fore and back:
@@ -181,12 +122,12 @@ class Arrow(Primitive):
 
     def diff(self, arrow):
         diff = super().diff(arrow)
-        if diff < inf:
+        if diff < INF:
             vec = arrow.vec if dot(self._vec, arrow.vec) >= 0 else -arrow.vec
             diff = max(
                 diff,
                 norm(self._vec - vec),
-                (0 if abs(self._phase) == abs(arrow.phase) else inf),
+                (0 if abs(self._phase) == abs(arrow.phase) else INF),
             )
         return diff
 
@@ -235,7 +176,7 @@ class Arrow(Primitive):
         return res
 
 
-class Elems(Primitive):
+class Elems(Transformable):
     def __init__(self, elems):
         self._elems = tuple(elems)
 
@@ -292,11 +233,11 @@ class Elems(Primitive):
 
     def diff(self, elems):
         diff = super().diff(elems)
-        if diff < inf:
+        if diff < INF:
             try:
                 diff = max(diff, elems.sort(self))
             except ValueError:
-                diff = inf
+                diff = INF
         return diff
 
     def same(self, elems, tol):
@@ -402,7 +343,7 @@ class Struct(Point, Elems):
 
     def diff(self, struct):
         diff = max(Point.diff(self, struct), Elems.diff(self, struct))
-        if diff < inf:
+        if diff < INF:
             diff = max(diff, abs(self._coef - struct.coef))
         return diff
 
