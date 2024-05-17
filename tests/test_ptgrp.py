@@ -16,7 +16,7 @@ from symmtools import (
 )
 
 
-class TestPtgrp(TestCase):
+class TestPtGrp(TestCase):
     def test_ptgrp(self):
         point = chcoords([[]])
         self.assertEqual(ptgrp(Elems(topoints(point))), "Kh")
