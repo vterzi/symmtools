@@ -5,13 +5,10 @@ __all__ = [
     "canon",
     "normalize",
     "diff",
-    "diff_",
     "same",
-    "same_",
     "indep",
-    "indep_",
+    "indepunit",
     "parallel",
-    "parallel_",
     "perpendicular",
     "translate",
     "invert",
@@ -53,12 +50,7 @@ def normalize(vec: Vector) -> Vector:
 
 def diff(vec1: Vector, vec2: Vector) -> float:
     """Calculate the difference between two vectors `vec1` and `vec2`."""
-    return float(abs(vec1 - vec2).max())
-
-
-def diff_(vec1: Vector, vec2: Vector) -> float:
-    """Calculate the difference between two vectors `vec1` and `vec2`."""
-    return float(norm(vec1 - vec2))
+    return abs(vec1 - vec2).max().item()  # norm(vec1 - vec2)
 
 
 def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
@@ -69,22 +61,16 @@ def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
     return diff(vec1, vec2) <= tol
 
 
-def same_(vec1: Vector, vec2: Vector, tol: float) -> bool:
-    """
-    Check wether two vectors `vec1` and `vec2` are the same within a tolerance
-    `tol`.
-    """
-    return diff_(vec1, vec2) <= tol
-
-
 def indep(vec1: Vector, vec2: Vector) -> float:
     """Calculate the linear independence of two vectors `vec1` and `vec2`."""
-    return float(abs(cross(vec1, vec2)).max())
+    return abs(cross(vec1, vec2)).max().item()  # norm(cross(vec1, vec2))
 
 
-def indep_(vec1: Vector, vec2: Vector) -> float:
-    """Calculate the linear independence of two vectors `vec1` and `vec2`."""
-    return float(norm(cross(vec1, vec2)))
+def indepunit(vec1: Vector, vec2: Vector) -> float:
+    """
+    Calculate the linear independence of two unit vectors `vec1` and `vec2`.
+    """
+    return min(diff(vec1, vec2), diff(vec1, -vec2))
 
 
 def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
@@ -95,20 +81,12 @@ def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
     return indep(vec1, vec2) <= tol
 
 
-def parallel_(vec1: Vector, vec2: Vector, tol: float) -> bool:
-    """
-    Check wether two vectors `vec1` and `vec2` are parallel within a tolerance
-    `tol`.
-    """
-    return indep_(vec1, vec2) <= tol
-
-
 def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
     Check wether two vectors `vec1` and `vec2` are perpendicular within a
     tolerance `tol`.
     """
-    return float(abs(dot(vec1, vec2))) <= tol
+    return abs(dot(vec1, vec2).item()) <= tol
 
 
 def translate(point: Vector, translation: Vector) -> Vector:

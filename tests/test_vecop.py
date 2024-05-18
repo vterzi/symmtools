@@ -24,6 +24,7 @@ from symmtools import (
     diff,
     same,
     indep,
+    indepunit,
     parallel,
     perpendicular,
     translate,
@@ -91,6 +92,12 @@ class TestVecOp(TestCase):
         self.assertEqual(indep(vec, -vec), 0)
         self.assertEqual(indep(vec, 2 * vec), 0)
         self.assertEqual(indep(vec, 0 * vec), 0)
+        self.assertGreater(indep(vec, vec + perturb()), 0)
+
+    def test_indepunit(self):
+        vec = randunitvec()
+        self.assertEqual(indepunit(vec, vec), 0)
+        self.assertEqual(indepunit(vec, -vec), 0)
         self.assertGreater(indep(vec, vec + perturb()), 0)
 
     def test_parallel(self):
