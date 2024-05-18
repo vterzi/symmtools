@@ -8,6 +8,7 @@ __all__ = [
     "pi",
     "array",
     "zeros",
+    "eye",
     "sin",
     "cos",
     "cross",
@@ -18,12 +19,15 @@ __all__ = [
     "randnonzerovec",
     "randunitvec",
     "perturb",
+    "randangle",
+    "rotation_mat",
+    "reflection_mat",
 ]
 
 from random import random, choice, randrange, randint, normalvariate
 from typing import Tuple
 
-from numpy import pi, array, zeros, sin, cos, cross, ndarray, float64
+from numpy import pi, array, zeros, eye, sin, cos, cross, ndarray, float64
 from numpy.typing import NDArray
 
 from symmtools import TOL
@@ -50,3 +54,43 @@ def perturb() -> NDArray[float64]:
     vec = zeros(3)
     vec[randrange(3)] = choice([-1, 1]) * TOL
     return vec
+
+
+def randangle() -> float:
+    return 2 * pi * random()
+
+
+def rotation_mat(vec: NDArray[float64], angle: float) -> NDArray[float64]:
+    x, y, z = vec
+    c = cos(angle)
+    s = sin(angle)
+    return array(
+        [
+            [
+                c + x * x * (1 - c),
+                x * y * (1 - c) - z * s,
+                x * z * (1 - c) + y * s,
+            ],
+            [
+                y * x * (1 - c) + z * s,
+                c + y * y * (1 - c),
+                y * z * (1 - c) - x * s,
+            ],
+            [
+                z * x * (1 - c) - y * s,
+                z * y * (1 - c) + x * s,
+                c + z * z * (1 - c),
+            ],
+        ]
+    )
+
+
+def reflection_mat(vec: NDArray[float64]) -> NDArray[float64]:
+    x, y, z = vec
+    return array(
+        [
+            [1 - 2 * x * x, -2 * x * y, -2 * x * z],
+            [-2 * x * y, 1 - 2 * y * y, -2 * y * z],
+            [-2 * x * z, -2 * y * z, 1 - 2 * z * z],
+        ]
+    )

@@ -1,14 +1,9 @@
 from unittest import TestCase, main
 
 from .tools import (
-    random,
     randint,
     normalvariate,
-    pi,
-    array,
     zeros,
-    sin,
-    cos,
     cross,
     ndarray,
     float64,
@@ -16,6 +11,9 @@ from .tools import (
     randunitvec,
     randnonzerovec,
     perturb,
+    randangle,
+    rotation_mat,
+    reflection_mat,
 )
 
 from symmtools import (
@@ -143,29 +141,8 @@ class TestVecOp(TestCase):
     def test_rotate(self):
         vec = randvec()
         rotation = randunitvec()
-        angle = 2 * pi * random()
-        x, y, z = rotation
-        c = cos(angle)
-        s = sin(angle)
-        mat = array(
-            [
-                [
-                    c + x * x * (1 - c),
-                    x * y * (1 - c) - z * s,
-                    x * z * (1 - c) + y * s,
-                ],
-                [
-                    y * x * (1 - c) + z * s,
-                    c + y * y * (1 - c),
-                    y * z * (1 - c) - x * s,
-                ],
-                [
-                    z * x * (1 - c) - y * s,
-                    z * y * (1 - c) + x * s,
-                    c + z * z * (1 - c),
-                ],
-            ]
-        )
+        angle = randangle()
+        mat = rotation_mat(rotation, angle)
         self.assertLessEqual(
             abs(rotate(vec, rotation, angle) - mat @ vec).max(), TOL
         )
@@ -173,14 +150,7 @@ class TestVecOp(TestCase):
     def test_reflect(self):
         vec = randvec()
         reflection = randunitvec()
-        x, y, z = reflection
-        mat = array(
-            [
-                [1 - 2 * x * x, -2 * x * y, -2 * x * z],
-                [-2 * x * y, 1 - 2 * y * y, -2 * y * z],
-                [-2 * x * z, -2 * y * z, 1 - 2 * z * z],
-            ]
-        )
+        mat = reflection_mat(reflection)
         self.assertLessEqual(
             abs(reflect(vec, reflection) - mat @ vec).max(), TOL
         )
