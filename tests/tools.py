@@ -20,8 +20,8 @@ __all__ = [
     "randunitvec",
     "perturb",
     "randangle",
-    "rotation_mat",
-    "reflection_mat",
+    "rotmat",
+    "reflmat",
 ]
 
 from random import random, choice, randrange, randint, normalvariate
@@ -60,7 +60,7 @@ def randangle() -> float:
     return 2 * pi * random()
 
 
-def rotation_mat(vec: NDArray[float64], angle: float) -> NDArray[float64]:
+def rotmat(vec: NDArray[float64], angle: float) -> NDArray[float64]:
     x, y, z = vec
     c = cos(angle)
     s = sin(angle)
@@ -85,7 +85,7 @@ def rotation_mat(vec: NDArray[float64], angle: float) -> NDArray[float64]:
     )
 
 
-def reflection_mat(vec: NDArray[float64]) -> NDArray[float64]:
+def reflmat(vec: NDArray[float64]) -> NDArray[float64]:
     x, y, z = vec
     return array(
         [

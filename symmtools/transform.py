@@ -4,6 +4,7 @@ __all__ = [
     "Transformable",
     "InvariantTransformable",
     "VecTransformable",
+    "DirectionTransformable",
     "Transformation",
     "Identity",
     "Translation",

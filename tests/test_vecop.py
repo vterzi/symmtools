@@ -12,8 +12,8 @@ from .tools import (
     randnonzerovec,
     perturb,
     randangle,
-    rotation_mat,
-    reflection_mat,
+    rotmat,
+    reflmat,
 )
 
 from symmtools import (
@@ -142,7 +142,7 @@ class TestVecOp(TestCase):
         vec = randvec()
         rotation = randunitvec()
         angle = randangle()
-        mat = rotation_mat(rotation, angle)
+        mat = rotmat(rotation, angle)
         self.assertLessEqual(
             abs(rotate(vec, rotation, angle) - mat @ vec).max(), TOL
         )
@@ -150,7 +150,7 @@ class TestVecOp(TestCase):
     def test_reflect(self):
         vec = randvec()
         reflection = randunitvec()
-        mat = reflection_mat(reflection)
+        mat = reflmat(reflection)
         self.assertLessEqual(
             abs(reflect(vec, reflection) - mat @ vec).max(), TOL
         )
