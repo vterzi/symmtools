@@ -2,6 +2,8 @@
 
 __all__ = [
     "Transformable",
+    "InvariantTransformable",
+    "VecTransformable",
     "Transformation",
     "Identity",
     "Translation",
@@ -31,7 +33,7 @@ from .typehints import Any, Int, Float, Vector, Matrix, RealVector
 
 
 class Transformable(ABC):
-    """Transformable object in a real 3D space."""
+    """Transformable object."""
 
     def args(self) -> str:
         """Return the argument values used to create the instance."""
@@ -104,43 +106,31 @@ class Transformable(ABC):
         pass
 
 
-class Transformation(Transformable, ABC):
-    """Transformation in a real 3D space."""
+class InvariantTransformable(Transformable, ABC):
+    """Transformable object that is invariant to any transformation."""
 
-    @abstractmethod
-    def __call__(self, obj: "Transformable") -> "Transformable":
-        """Apply the transformation."""
-        pass
-
-    @abstractmethod
-    def mat(self) -> Matrix:
-        """Return the transformation matrix."""
-        pass
-
-
-class PointTransformation(Transformation, ABC):
-    """Transformation in a real 3D space represented by a point."""
-
-    def translate(self, translation: "Translation") -> "PointTransformation":
+    def translate(
+        self, translation: "Translation"
+    ) -> "InvariantTransformable":
         return copy(self)
 
-    def invert(self) -> "PointTransformation":
+    def invert(self) -> "InvariantTransformable":
         return copy(self)
 
-    def rotate(self, rotation: "Rotation") -> "PointTransformation":
+    def rotate(self, rotation: "Rotation") -> "InvariantTransformable":
         return copy(self)
 
-    def reflect(self, reflection: "Reflection") -> "PointTransformation":
+    def reflect(self, reflection: "Reflection") -> "InvariantTransformable":
         return copy(self)
 
     def rotoreflect(
         self, rotoreflection: "Rotoreflection"
-    ) -> "PointTransformation":
+    ) -> "InvariantTransformable":
         return copy(self)
 
 
-class VecTransformation(Transformation, ABC):
-    """Transformation in a real 3D space represented by a vector."""
+class VecTransformable(Transformable, ABC):
+    """Transformable object represented by a real 3D vector."""
 
     def __init__(self, vec: RealVector) -> None:
         """Initialize the instance with a 3D vector `vec`."""
@@ -165,29 +155,29 @@ class VecTransformation(Transformation, ABC):
             res = max(res, diff(self._vec, obj.vec))
         return res
 
-    def translate(self, translation: "Translation") -> "VecTransformation":
+    def translate(self, translation: "Translation") -> "VecTransformable":
         res = copy(self)
         res._vec = translate(self._vec, translation.vec)
         return res
 
-    def invert(self) -> "VecTransformation":
+    def invert(self) -> "VecTransformable":
         res = copy(self)
         res._vec = invert(self._vec)
         return res
 
-    def rotate(self, rotation: "Rotation") -> "VecTransformation":
+    def rotate(self, rotation: "Rotation") -> "VecTransformable":
         res = copy(self)
         res._vec = move2(self._vec, rotation.vec, rotation.cos, rotation.sin)
         return res
 
-    def reflect(self, reflection: "Reflection") -> "VecTransformation":
+    def reflect(self, reflection: "Reflection") -> "VecTransformable":
         res = copy(self)
         res._vec = reflect(self._vec, reflection.vec)
         return res
 
     def rotoreflect(
         self, rotoreflection: "Rotoreflection"
-    ) -> "VecTransformation":
+    ) -> "VecTransformable":
         res = copy(self)
         res._vec = reflect(
             move2(
@@ -201,8 +191,8 @@ class VecTransformation(Transformation, ABC):
         return res
 
 
-class DirectionTransformation(VecTransformation, ABC):
-    """Transformation in a real 3D space represented by a direction vector."""
+class DirectionTransformable(VecTransformable, ABC):
+    """Transformable object represented by a real 3D direction vector."""
 
     def __init__(self, vec: RealVector) -> None:
         """Initialize the instance with a non-zero 3D vector `vec`."""
@@ -214,11 +204,25 @@ class DirectionTransformation(VecTransformation, ABC):
 
     def translate(
         self, translation: "Translation"
-    ) -> "DirectionTransformation":
+    ) -> "DirectionTransformable":
         return copy(self)
 
 
-class Identity(PointTransformation):
+class Transformation(ABC):
+    """Transformation in a real 3D space."""
+
+    @abstractmethod
+    def __call__(self, obj: "Transformable") -> "Transformable":
+        """Apply the transformation."""
+        pass
+
+    @abstractmethod
+    def mat(self) -> Matrix:
+        """Return the transformation matrix."""
+        pass
+
+
+class Identity(InvariantTransformable, Transformation):
     """Identity in a real 3D space."""
 
     def __call__(self, obj: "Transformable") -> "Transformable":
@@ -228,7 +232,7 @@ class Identity(PointTransformation):
         return eye(3)
 
 
-class Translation(VecTransformation):
+class Translation(VecTransformable, Transformation):
     """Translation in a real 3D space."""
 
     def __call__(self, obj: "Transformable") -> "Transformable":
@@ -240,7 +244,7 @@ class Translation(VecTransformation):
         return res
 
 
-class Inversion(PointTransformation):
+class Inversion(InvariantTransformable, Transformation):
     """Inversion (point reflection) through the origin in a real 3D space."""
 
     def __call__(self, obj: "Transformable") -> "Transformable":
@@ -250,7 +254,7 @@ class Inversion(PointTransformation):
         return -eye(3)
 
 
-class Rotation(DirectionTransformation):
+class Rotation(DirectionTransformable, Transformation):
     """Rotation around an axis containing the origin in a real 3D space."""
 
     def __init__(self, vec: RealVector, angle: Float) -> None:
@@ -305,7 +309,7 @@ class Rotation(DirectionTransformation):
         return res.T
 
 
-class Reflection(DirectionTransformation):
+class Reflection(DirectionTransformable, Transformation):
     """Reflection through a plane containing the origin in a real 3D space."""
 
     def __init__(self, vec: RealVector) -> None:
