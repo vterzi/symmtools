@@ -21,7 +21,7 @@ class Point(Transformable):
         self._pos = vector(pos)
 
     def args(self):
-        return str(list(self._pos)).replace(" ", "")
+        return str(self._pos.tolist()).replace(" ", "")
 
     @property
     def pos(self):
@@ -109,7 +109,7 @@ class Arrow(Transformable):
         else:
             fore = True
             back = False
-        vec = str(list(self._vec)).replace(" ", "")
+        vec = str(self._vec.tolist()).replace(" ", "")
         return f"{vec},{fore},{back}"
 
     @property

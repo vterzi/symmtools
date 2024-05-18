@@ -154,7 +154,7 @@ class VecTransformation(Transformation, ABC):
         return self._vec
 
     def args(self) -> str:
-        return str(list(self._vec)).replace(" ", "")
+        return str(self._vec.tolist()).replace(" ", "")
 
     def __getitem__(self, item: Int) -> Float:
         return self._vec[item]
@@ -163,6 +163,11 @@ class VecTransformation(Transformation, ABC):
         res = super().diff(obj)
         if res < INF:
             res = max(res, diff(self._vec, obj.vec))
+        return res
+
+    def translate(self, translation: "Translation") -> "VecTransformation":
+        res = copy(self)
+        res._vec = translate(self._vec, translation.vec)
         return res
 
     def invert(self) -> "VecTransformation":
@@ -228,11 +233,6 @@ class Translation(VecTransformation):
 
     def __call__(self, obj: "Transformable") -> "Transformable":
         return obj.translate(self)
-
-    def translate(self, translation: "Translation") -> "Translation":
-        res = copy(self)
-        res._vec = translate(self._vec, translation.vec)
-        return res
 
     def mat(self) -> Matrix:
         res = eye(4)

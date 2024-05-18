@@ -98,7 +98,7 @@ class VecSymmElem(SymmElem, ABC):
         return self._vec[item]
 
     def args(self) -> str:
-        return str(list(self._vec)).replace(" ", "")
+        return str(self._vec.tolist()).replace(" ", "")
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
