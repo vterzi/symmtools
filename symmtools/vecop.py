@@ -39,9 +39,9 @@ def canonicalize(vec: Vector) -> Vector:
     non-zero coordinate positive.
     """
     for coord in vec:
-        if coord < 0:
+        if coord < 0.0:
             vec = -vec
-        if coord != 0:
+        if coord != 0.0:
             break
     return vec
 
@@ -131,7 +131,7 @@ def rotate(point: Vector, rotation: Vector, angle: Float) -> Vector:
 def rotate_(point: Vector, rotation: Vector) -> Vector:
     """Rotate a 3D point `point` by a rotation vector `rotation`."""
     length = norm(rotation)
-    if length > 0:
+    if length > 0.0:
         point = rotate(point, rotation / length, length)
     return point
 
@@ -141,7 +141,7 @@ def reflect(point: Vector, reflection: Vector) -> Vector:
     Reflect a point `point` through a reflection plane with a normalized normal
     `reflection`.
     """
-    return point - 2 * point.dot(reflection) * reflection
+    return point - 2.0 * point.dot(reflection) * reflection
 
 
 def reflect_(point: Vector, reflection: Vector) -> Vector:
@@ -150,7 +150,7 @@ def reflect_(point: Vector, reflection: Vector) -> Vector:
     `reflection`.
     """
     length = norm(reflection)
-    if length > 0:
+    if length > 0.0:
         point = reflect(point, reflection / length)
     return point
 
@@ -163,9 +163,9 @@ def rotmat(vec: Vector, angle: Float) -> Matrix:
     x, y, z = vec
     c = cos(angle)
     s = sin(angle)
-    xc = x * (1 - c)
-    yc = y * (1 - c)
-    zc = z * (1 - c)
+    xc = x * (1.0 - c)
+    yc = y * (1.0 - c)
+    zc = z * (1.0 - c)
     xs = x * s
     ys = y * s
     zs = z * s
@@ -195,8 +195,8 @@ def reflmat(vec: Vector) -> Matrix:
     zx = -z * x_
     return array(
         [
-            [1 - x * x_, xy, zx],
-            [xy, 1 - y * y_, yz],
-            [zx, yz, 1 - z * z_],
+            [1.0 - x * x_, xy, zx],
+            [xy, 1.0 - y * y_, yz],
+            [zx, yz, 1.0 - z * z_],
         ]
     )

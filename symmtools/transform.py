@@ -201,7 +201,7 @@ class DirectionTransformable(VecTransformable):
         """Initialize the instance with a non-zero 3D vector `vec`."""
         super().__init__(vec)
         vec_norm = norm(self._vec)
-        if vec_norm == 0:
+        if vec_norm == 0.0:
             raise ValueError("zero vector")
         self._vec /= vec_norm
 
@@ -313,7 +313,7 @@ class Rotation(DirectionTransformable, Transformation):
         """
         super().__init__(vec)
         angle %= TAU
-        if angle == 0:
+        if angle == 0.0:
             raise ValueError("zero angle")
         self._angle = angle
         self._cos = cos(angle)

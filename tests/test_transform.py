@@ -53,9 +53,9 @@ class TestIdentity(TestCase):
     def test_comparison(self):
         transform = Identity()
         point = Point(randvec())
-        self.assertEqual(transform.diff(transform), 0)
+        self.assertEqual(transform.diff(transform), 0.0)
         self.assertEqual(transform.diff(point), INF)
-        self.assertTrue(transform.same(transform, 0))
+        self.assertTrue(transform.same(transform, 0.0))
         self.assertFalse(transform.same(point, TOL))
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
@@ -110,13 +110,15 @@ class TestTranslation(TestCase):
         vec = randvec()
         transform = Translation(vec)
         point = Point(randvec())
-        self.assertEqual(transform.diff(transform), 0)
+        self.assertEqual(transform.diff(transform), 0.0)
         self.assertEqual(transform.diff(point), INF)
         self.assertEqual(transform.diff(Translation(vec + perturb())), TOL)
-        self.assertTrue(transform.same(transform, 0))
+        self.assertTrue(transform.same(transform, 0.0))
         self.assertFalse(transform.same(point, TOL))
         self.assertTrue(transform.same(Translation(vec + perturb()), TOL))
-        self.assertFalse(transform.same(Translation(vec + 2 * perturb()), TOL))
+        self.assertFalse(
+            transform.same(Translation(vec + 2.0 * perturb()), TOL)
+        )
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
 
@@ -179,9 +181,9 @@ class TestInversion(TestCase):
     def test_comparison(self):
         transform = Inversion()
         point = Point(randvec())
-        self.assertEqual(transform.diff(transform), 0)
+        self.assertEqual(transform.diff(transform), 0.0)
         self.assertEqual(transform.diff(point), INF)
-        self.assertTrue(transform.same(transform, 0))
+        self.assertTrue(transform.same(transform, 0.0))
         self.assertFalse(transform.same(point, TOL))
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
@@ -226,7 +228,7 @@ class TestRotation(TestCase):
         )
         self.assertRaises(ValueError, Rotation, vec[:2], angle)
         self.assertRaises(ValueError, Rotation, zeros(3), angle)
-        self.assertRaises(ValueError, Rotation, vec, 0)
+        self.assertRaises(ValueError, Rotation, vec, 0.0)
         self.assertRaises(ValueError, Rotation, vec, TAU)
 
     def test_call(self):
@@ -252,24 +254,24 @@ class TestRotation(TestCase):
         angle = randne0angle()
         transform = Rotation(vec, angle)
         point = Point(randvec())
-        self.assertEqual(transform.diff(transform), 0)
+        self.assertEqual(transform.diff(transform), 0.0)
         self.assertEqual(transform.diff(point), INF)
         self.assertEqual(
             transform.diff(Rotation(vec, angle + randsign() * TOL)), TOL
         )
-        self.assertTrue(transform.same(transform, 0))
+        self.assertTrue(transform.same(transform, 0.0))
         self.assertFalse(transform.same(point, TOL))
         self.assertTrue(transform.same(Rotation(vec, angle + TAU), TOL))
         self.assertTrue(transform.same(Rotation(vec, angle - TAU), TOL))
         self.assertTrue(transform.same(Rotation(-vec, TAU - angle), TOL))
         self.assertTrue(
-            Rotation(vec, TOL / 2).same(Rotation(vec, TAU - TOL / 2), TOL)
+            Rotation(vec, TOL / 2.0).same(Rotation(vec, TAU - TOL / 2.0), TOL)
         )
         self.assertTrue(
             transform.same(Rotation(vec + orthperturb(vec), angle), TOL)
         )
         self.assertFalse(
-            transform.same(Rotation(vec + 2 * orthperturb(vec), angle), TOL)
+            transform.same(Rotation(vec + 2.0 * orthperturb(vec), angle), TOL)
         )
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
@@ -349,16 +351,16 @@ class TestReflection(TestCase):
         vec = randunitvec()
         transform = Reflection(vec)
         point = Point(randvec())
-        self.assertEqual(transform.diff(transform), 0)
+        self.assertEqual(transform.diff(transform), 0.0)
         self.assertEqual(transform.diff(point), INF)
-        self.assertTrue(transform.same(transform, 0))
+        self.assertTrue(transform.same(transform, 0.0))
         self.assertFalse(transform.same(point, TOL))
         self.assertTrue(transform.same(Reflection(-vec), TOL))
         self.assertTrue(
             transform.same(Reflection(vec + orthperturb(vec)), TOL)
         )
         self.assertFalse(
-            transform.same(Reflection(vec + 2 * orthperturb(vec)), TOL)
+            transform.same(Reflection(vec + 2.0 * orthperturb(vec)), TOL)
         )
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
@@ -411,7 +413,7 @@ class TestRotoreflection(TestCase):
         self.assertIsInstance(transform.vec, ndarray)
         self.assertEqual(transform.vec.dtype, float64)
         self.assertTrue(parallel(transform.vec, vec, TOL))
-        self.assertAlmostEqual(norm(transform.vec), 1, delta=TOL)
+        self.assertAlmostEqual(norm(transform.vec), 1.0, delta=TOL)
         self.assertEqual(transform.angle, angle)
         self.assertAlmostEqual(
             Rotoreflection(vec, angle + TAU).angle, angle, delta=TOL
@@ -421,7 +423,7 @@ class TestRotoreflection(TestCase):
         )
         self.assertRaises(ValueError, Rotoreflection, vec[:2], angle)
         self.assertRaises(ValueError, Rotoreflection, zeros(3), angle)
-        self.assertRaises(ValueError, Rotoreflection, vec, 0)
+        self.assertRaises(ValueError, Rotoreflection, vec, 0.0)
         self.assertRaises(ValueError, Rotoreflection, vec, TAU)
 
     def test_call(self):
@@ -447,19 +449,19 @@ class TestRotoreflection(TestCase):
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)
         point = Point(randvec())
-        self.assertEqual(transform.diff(transform), 0)
+        self.assertEqual(transform.diff(transform), 0.0)
         self.assertEqual(transform.diff(point), INF)
         self.assertEqual(
             transform.diff(Rotoreflection(vec, angle + randsign() * TOL)), TOL
         )
-        self.assertTrue(transform.same(transform, 0))
+        self.assertTrue(transform.same(transform, 0.0))
         self.assertFalse(transform.same(point, TOL))
         self.assertTrue(transform.same(Rotoreflection(vec, angle + TAU), TOL))
         self.assertTrue(transform.same(Rotoreflection(vec, angle - TAU), TOL))
         self.assertTrue(transform.same(Rotoreflection(-vec, TAU - angle), TOL))
         self.assertTrue(
-            Rotoreflection(vec, TOL / 2).same(
-                Rotoreflection(vec, TAU - TOL / 2), TOL
+            Rotoreflection(vec, TOL / 2.0).same(
+                Rotoreflection(vec, TAU - TOL / 2.0), TOL
             )
         )
         self.assertTrue(
@@ -467,7 +469,7 @@ class TestRotoreflection(TestCase):
         )
         self.assertFalse(
             transform.same(
-                Rotoreflection(vec + 2 * orthperturb(vec), angle), TOL
+                Rotoreflection(vec + 2.0 * orthperturb(vec), angle), TOL
             )
         )
         self.assertEqual(transform, transform)

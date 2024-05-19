@@ -53,13 +53,13 @@ class TestVecOp(TestCase):
     def test_canonicalize(self):
         vec = randvec()
         for i in range(3):
-            while vec[i] == 0:
-                vec[i] = normalvariate(0, 1)
+            while vec[i] == 0.0:
+                vec[i] = normalvariate(0.0, 1.0)
             vec[i] = abs(vec[i])
             self.assertListEqual(canonicalize(vec).tolist(), vec.tolist())
             vec[i] = -vec[i]
             self.assertListEqual(canonicalize(vec).tolist(), (-vec).tolist())
-            vec[i] = 0
+            vec[i] = 0.0
         self.assertListEqual(canonicalize(vec).tolist(), vec.tolist())
 
     def test_normalize(self):
@@ -78,8 +78,8 @@ class TestVecOp(TestCase):
         vec2 = vec1
         while (vec1 == vec2).all():
             vec2 = randvec()
-        self.assertEqual(diff(vec1, vec1), 0)
-        self.assertEqual(diff(vec2, vec2), 0)
+        self.assertEqual(diff(vec1, vec1), 0.0)
+        self.assertEqual(diff(vec2, vec2), 0.0)
         self.assertGreaterEqual(diff(vec1, vec2), abs(vec1 - vec2).max())
 
     def test_same(self):
@@ -87,49 +87,49 @@ class TestVecOp(TestCase):
         vec2 = vec1
         while diff(vec1, vec2) <= TOL:
             vec2 = randvec()
-        self.assertTrue(same(vec1, vec1, 0))
-        self.assertTrue(same(vec2, vec2, 0))
+        self.assertTrue(same(vec1, vec1, 0.0))
+        self.assertTrue(same(vec2, vec2, 0.0))
         self.assertFalse(same(vec1, vec2, TOL))
         self.assertTrue(same(vec1, vec1 + perturb(), TOL))
         self.assertTrue(same(vec2, vec2 + perturb(), TOL))
-        self.assertFalse(same(vec1, vec1 + 2 * perturb(), TOL))
-        self.assertFalse(same(vec2, vec2 + 2 * perturb(), TOL))
+        self.assertFalse(same(vec1, vec1 + 2.0 * perturb(), TOL))
+        self.assertFalse(same(vec2, vec2 + 2.0 * perturb(), TOL))
 
     def test_indep(self):
         vec = randvec()
-        self.assertEqual(indep(vec, vec), 0)
-        self.assertEqual(indep(vec, -vec), 0)
-        self.assertEqual(indep(vec, 2 * vec), 0)
-        self.assertEqual(indep(vec, 0 * vec), 0)
-        self.assertGreater(indep(vec, vec + perturb()), 0)
+        self.assertEqual(indep(vec, vec), 0.0)
+        self.assertEqual(indep(vec, -vec), 0.0)
+        self.assertEqual(indep(vec, 2.0 * vec), 0.0)
+        self.assertEqual(indep(vec, 0.0 * vec), 0.0)
+        self.assertGreater(indep(vec, vec + perturb()), 0.0)
 
     def test_indepunit(self):
         vec = randunitvec()
-        self.assertEqual(indepunit(vec, vec), 0)
-        self.assertEqual(indepunit(vec, -vec), 0)
-        self.assertGreater(indep(vec, vec + perturb()), 0)
+        self.assertEqual(indepunit(vec, vec), 0.0)
+        self.assertEqual(indepunit(vec, -vec), 0.0)
+        self.assertGreater(indep(vec, vec + perturb()), 0.0)
 
     def test_parallel(self):
         vec = randvec()
-        self.assertTrue(parallel(vec, vec, 0))
-        self.assertTrue(parallel(vec, -vec, 0))
-        self.assertTrue(parallel(vec, 2 * vec, 0))
-        self.assertTrue(parallel(vec, 0 * vec, 0))
-        self.assertTrue(parallel(vec, vec + perturb(), 4 * TOL))
-        self.assertFalse(parallel(vec, vec + 2 * perturb(), TOL))
+        self.assertTrue(parallel(vec, vec, 0.0))
+        self.assertTrue(parallel(vec, -vec, 0.0))
+        self.assertTrue(parallel(vec, 2.0 * vec, 0.0))
+        self.assertTrue(parallel(vec, 0.0 * vec, 0.0))
+        self.assertTrue(parallel(vec, vec + perturb(), 4.0 * TOL))
+        self.assertFalse(parallel(vec, vec + 2.0 * perturb(), TOL))
 
     def test_perpendicular(self):
         vec1 = randvec()
         vec2 = zeros(3)
-        while (vec2 == 0).all():
+        while (vec2 == 0.0).all():
             vec2 = randvec()
             vec2 -= vec2.dot(vec1) / vec1.dot(vec1) * vec1
         self.assertFalse(perpendicular(vec1, vec1, TOL))
         self.assertFalse(perpendicular(vec1, -vec1, TOL))
-        self.assertFalse(perpendicular(vec1, 2 * vec1, TOL))
-        self.assertTrue(perpendicular(vec1, 0 * vec1, TOL))
+        self.assertFalse(perpendicular(vec1, 2.0 * vec1, TOL))
+        self.assertTrue(perpendicular(vec1, 0.0 * vec1, TOL))
         self.assertTrue(perpendicular(vec1, vec2, TOL))
-        self.assertTrue(perpendicular(vec1, vec2 + perturb(), 4 * TOL))
+        self.assertTrue(perpendicular(vec1, vec2 + perturb(), 4.0 * TOL))
 
     def test_translate(self):
         vec = randvec()
@@ -145,7 +145,7 @@ class TestVecOp(TestCase):
     def test_move2(self):
         vec = randvec()
         normal = randunitvec()
-        coef1, coef2 = [normalvariate(0, 1) for _ in range(2)]
+        coef1, coef2 = [normalvariate(0.0, 1.0) for _ in range(2)]
         base = vec.dot(normal) * normal
         projection = vec - base
         perpendicular = cross(normal, projection)

@@ -41,12 +41,12 @@ def randsign() -> int:
 
 
 def randvec() -> NDArray[float64]:
-    return array([normalvariate(0, 1) for _ in range(3)])
+    return array([normalvariate(0.0, 1.0) for _ in range(3)])
 
 
 def randne0vec() -> NDArray[float64]:
-    vec_norm = float64(0)
-    while vec_norm == 0:
+    vec_norm = float64(0.0)
+    while vec_norm == 0.0:
         vec = randvec()
         vec_norm = norm(vec)
     return vec
@@ -65,8 +65,8 @@ def perturb() -> NDArray[float64]:
 
 def orthperturb(unitvec: NDArray[float64]) -> NDArray[float64]:
     vec = zeros(3)
-    vec_norm = float64(0)
-    while vec_norm == 0:
+    vec_norm = float64(0.0)
+    while vec_norm == 0.0:
         vec = randvec()
         vec -= vec.dot(unitvec) * unitvec
         vec_norm = norm(vec)
@@ -74,11 +74,11 @@ def orthperturb(unitvec: NDArray[float64]) -> NDArray[float64]:
 
 
 def randangle() -> float:
-    return 2 * pi * random()
+    return 2.0 * pi * random()
 
 
 def randne0angle() -> float:
     angle = 0.0
-    while angle == 0:
-        angle = 2 * pi * random()
+    while angle == 0.0:
+        angle = randangle()
     return angle

@@ -17,11 +17,11 @@ from math import inf, pi
 
 INF = inf
 PI = pi
-TAU = 2 * pi
-EPS = 7 / 3 - 4 / 3 - 1
+TAU = 2.0 * pi
+EPS = 7.0 / 3.0 - 4.0 / 3.0 - 1.0
 TOL = 2**4 * EPS
-PHI = (1 + 5**0.5) / 2
-ORIGIN = (0, 0, 0)
-PRIMAX = (0, 0, 1)
-SECAX = (1, 0, 0)
-TERNAX = (0, 1, 0)
+PHI = (1.0 + 5.0**0.5) / 2.0
+ORIGIN = (0.0, 0.0, 0.0)
+PRIMAX = (0.0, 0.0, 1.0)
+SECAX = (1.0, 0.0, 0.0)
+TERNAX = (0.0, 1.0, 0.0)
