@@ -14,7 +14,6 @@ from symmtools import (
     ReflectionPlane,
     RotoreflectionAxis,
     Transformable,
-    Transformation,
     Identity,
     Inversion,
     Rotation,
