@@ -31,7 +31,7 @@ from .typehints import Sequence, List
 
 
 class SymmElem(ABC):
-    """Symmetry element in a real 3D space."""
+    """Symmetry element."""
 
     @abstractmethod
     def transformations(self) -> Sequence[Transformation]:
@@ -50,21 +50,21 @@ class SymmElem(ABC):
 
 
 class IdentityElem(InvariantTransformable, SymmElem):
-    """Identity element."""
+    """Identity element in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
         return (Identity(),)
 
 
 class InversionCenter(InvariantTransformable, SymmElem):
-    """Inversion center in the origin."""
+    """Inversion center in the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
         return (Inversion(),)
 
 
 class RotationAxis(OrderedTransformable, SymmElem):
-    """Rotation axis containing the origin."""
+    """Rotation axis containing the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
         return tuple(
@@ -74,21 +74,21 @@ class RotationAxis(OrderedTransformable, SymmElem):
 
 
 class InfRotationAxis(InfFoldTransformable, SymmElem):
-    """Infinite-fold rotation axis containing the origin."""
+    """Infinite-fold rotation axis containing the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
 
 class ReflectionPlane(DirectionTransformable, SymmElem):
-    """Reflection plane containing the origin."""
+    """Reflection plane containing the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
         return (Reflection(self._vec),)
 
 
 class RotoreflectionAxis(OrderedTransformable, SymmElem):
-    """Rotoreflection axis containing the origin."""
+    """Rotoreflection axis containing the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
         transformations: List[Transformation] = []
@@ -103,7 +103,9 @@ class RotoreflectionAxis(OrderedTransformable, SymmElem):
 
 
 class InfRotoreflectionAxis(InfFoldTransformable, SymmElem):
-    """Infinite-fold rotoreflaction axis containing the origin."""
+    """
+    Infinite-fold rotoreflaction axis containing the origin in a real 3D space.
+    """
 
     def transformations(self) -> Sequence[Transformation]:
         raise NotImplementedError()

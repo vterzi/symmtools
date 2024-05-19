@@ -198,7 +198,7 @@ class DirectionTransformable(VecTransformable):
     """Transformable object represented by a real 3D direction vector."""
 
     def __init__(self, vec: RealVector) -> None:
-        """Initialize the instance with a non-zero 3D vector `vec`."""
+        """Initialize the instance with a 3D non-zero vector `vec`."""
         super().__init__(vec)
         vec_norm = norm(self._vec)
         if vec_norm == 0.0:
@@ -218,11 +218,14 @@ class DirectionTransformable(VecTransformable):
 
 
 class OrderedTransformable(DirectionTransformable):
-    """Transformable object represented by a direction vector and an order."""
+    """
+    Transformable object represented by a real 3D direction vector and an
+    order.
+    """
 
     def __init__(self, vec: RealVector, order: Int) -> None:
         """
-        Initialize the instance with a non-zero 3D vector `vec` and a positive
+        Initialize the instance with a 3D non-zero vector `vec` and a positive
         order `order`.
         """
         super().__init__(vec)
@@ -247,8 +250,8 @@ class OrderedTransformable(DirectionTransformable):
 
 class InfFoldTransformable(DirectionTransformable):
     """
-    Transformable object represented by a direction vector and an infinite
-    order.
+    Transformable object represented by a real 3D direction vector and an
+    infinite order.
     """
 
     @property
@@ -258,7 +261,7 @@ class InfFoldTransformable(DirectionTransformable):
 
 
 class Transformation(ABC):
-    """Transformation in a real 3D space."""
+    """Transformation."""
 
     @abstractmethod
     def __call__(self, obj: "Transformable") -> "Transformable":
@@ -308,7 +311,7 @@ class Rotation(DirectionTransformable, Transformation):
 
     def __init__(self, vec: RealVector, angle: Float) -> None:
         """
-        Initialize the instance with a non-zero 3D vector `vec` and a non-zero
+        Initialize the instance with a 3D non-zero vector `vec` and a non-zero
         angle `angle`.
         """
         super().__init__(vec)

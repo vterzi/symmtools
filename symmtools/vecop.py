@@ -15,9 +15,8 @@ __all__ = [
     "invert",
     "move2",
     "rotate",
-    "rotate_",
+    "vecrotate",
     "reflect",
-    "reflect_",
     "rotmat",
     "reflmat",
 ]
@@ -97,14 +96,14 @@ def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
     return abs(vec1.dot(vec2).item()) <= tol
 
 
-def translate(point: Vector, translation: Vector) -> Vector:
-    """Translate a point `point` by a translation vector `translation`."""
-    return point + translation
+def translate(vec: Vector, translation: Vector) -> Vector:
+    """Translate a vector `vec` by a translation vector `translation`."""
+    return vec + translation
 
 
-def invert(point: Vector) -> Vector:
-    """Invert a point `point` through the origin."""
-    return -point
+def invert(vec: Vector) -> Vector:
+    """Invert a vector `vec` through the origin."""
+    return -vec
 
 
 def move2(point: Vector, normal: Vector, coef1: Float, coef2: Float) -> Vector:
@@ -120,47 +119,37 @@ def move2(point: Vector, normal: Vector, coef1: Float, coef2: Float) -> Vector:
     return base + projection * coef1 + perpendicular * coef2
 
 
-def rotate(point: Vector, rotation: Vector, angle: Float) -> Vector:
+def rotate(vec: Vector, rotation: Vector, angle: Float) -> Vector:
     """
-    Rotate a 3D point `point` around a rotation axis with a normalized
-    direction `rotation` by an angle `angle`.
+    Rotate a 3D vector `vec` by an angle `angle` around an axis that contains
+    the origin and is described by a unit vector `rotation`.
     """
-    return move2(point, rotation, cos(angle), sin(angle))
+    return move2(vec, rotation, cos(angle), sin(angle))
 
 
-def rotate_(point: Vector, rotation: Vector) -> Vector:
-    """Rotate a 3D point `point` by a rotation vector `rotation`."""
+def vecrotate(vec: Vector, rotation: Vector) -> Vector:
+    """Rotate a 3D vector `vec` by a rotation vector `rotation`."""
     length = norm(rotation)
     if length > 0.0:
-        point = rotate(point, rotation / length, length)
-    return point
+        vec = rotate(vec, rotation / length, length)
+    return vec
 
 
-def reflect(point: Vector, reflection: Vector) -> Vector:
+def reflect(vec: Vector, reflection: Vector) -> Vector:
     """
-    Reflect a point `point` through a reflection plane with a normalized normal
-    `reflection`.
+    Reflect a vector `vec` through a plane that contains the origin and whose
+    normal is described by a unit vector `reflection`.
     """
-    return point - 2.0 * point.dot(reflection) * reflection
+    return vec - 2.0 * vec.dot(reflection) * reflection
 
 
-def reflect_(point: Vector, reflection: Vector) -> Vector:
+def rotmat(rotation: Vector, angle: Float) -> Matrix:
     """
-    Reflect a point `point` through a reflection plane with a normal
-    `reflection`.
+    Generate a 3D transformation matrix for a rotation by an angle `angle`
+    around an axis that contains the origin and is described by a unit vector
+    `rotation`.
     """
-    length = norm(reflection)
-    if length > 0.0:
-        point = reflect(point, reflection / length)
-    return point
-
-
-def rotmat(vec: Vector, angle: Float) -> Matrix:
-    """
-    Return the transformation matrix for a rotation by an angle `angle` around
-    an axis that contains the origin and is described by a unit vector `vec`.
-    """
-    x, y, z = vec
+    x, y, z = rotation
     c = cos(angle)
     s = sin(angle)
     xc = x * (1.0 - c)
@@ -181,12 +170,13 @@ def rotmat(vec: Vector, angle: Float) -> Matrix:
     )
 
 
-def reflmat(vec: Vector) -> Matrix:
+def reflmat(reflection: Vector) -> Matrix:
     """
-    Return the transformation matrix for a reflection through a plane that
-    contains the origin and whose normal is described by a unit vector `vec`.
+    Generate a 3D transformation matrix for a reflection through a plane that
+    contains the origin and whose normal is described by a unit vector
+    `reflection`.
     """
-    x, y, z = vec
+    x, y, z = reflection
     x_ = x + x
     y_ = y + y
     z_ = z + z
