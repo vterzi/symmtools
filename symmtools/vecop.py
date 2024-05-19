@@ -155,7 +155,7 @@ def reflect_(point: Vector, reflection: Vector) -> Vector:
     return point
 
 
-def rotmat(vec: RealVector, angle: Float) -> Matrix:
+def rotmat(vec: Vector, angle: Float) -> Matrix:
     """
     Return the transformation matrix for a rotation by an angle `angle` around
     an axis that contains the origin and is described by a unit vector `vec`.
@@ -163,37 +163,40 @@ def rotmat(vec: RealVector, angle: Float) -> Matrix:
     x, y, z = vec
     c = cos(angle)
     s = sin(angle)
+    xc = x * (1 - c)
+    yc = y * (1 - c)
+    zc = z * (1 - c)
+    xs = x * s
+    ys = y * s
+    zs = z * s
+    xyc = x * yc
+    yzc = y * zc
+    zxc = z * xc
     return array(
         [
-            [
-                c + x * x * (1 - c),
-                x * y * (1 - c) - z * s,
-                x * z * (1 - c) + y * s,
-            ],
-            [
-                y * x * (1 - c) + z * s,
-                c + y * y * (1 - c),
-                y * z * (1 - c) - x * s,
-            ],
-            [
-                z * x * (1 - c) - y * s,
-                z * y * (1 - c) + x * s,
-                c + z * z * (1 - c),
-            ],
+            [c + x * xc, xyc - zs, zxc + ys],
+            [xyc + zs, c + y * yc, yzc - xs],
+            [zxc - ys, yzc + xs, c + z * zc],
         ]
     )
 
 
-def reflmat(vec: RealVector) -> Matrix:
+def reflmat(vec: Vector) -> Matrix:
     """
     Return the transformation matrix for a reflection through a plane that
     contains the origin and whose normal is described by a unit vector `vec`.
     """
     x, y, z = vec
+    x_ = x + x
+    y_ = y + y
+    z_ = z + z
+    xy = -x * y_
+    yz = -y * z_
+    zx = -z * x_
     return array(
         [
-            [1 - 2 * x * x, -2 * x * y, -2 * x * z],
-            [-2 * x * y, 1 - 2 * y * y, -2 * y * z],
-            [-2 * x * z, -2 * y * z, 1 - 2 * z * z],
+            [1 - x * x_, xy, zx],
+            [xy, 1 - y * y_, yz],
+            [zx, yz, 1 - z * z_],
         ]
     )
