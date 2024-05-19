@@ -112,13 +112,15 @@ class RotoreflectionAxis(OrderedTransformable, SymmElem):
 
     def transformations(self) -> Sequence[Transformation]:
         transformations: List[Transformation] = []
-        for i in range(1, self._order):
-            angle = i / self._order * TAU
-            transformations.append(
-                Rotation(self._vec, angle)
-                if i % 2 == 1
-                else Rotoreflection(self._vec, angle)
-            )
+        for i in range(1, self._order * (1 if self._order % 2 == 0 else 2)):
+            if i != self._order:
+                angle = (i % self._order) / self._order * TAU
+                if i % 2 == 0:
+                    transformations.append(Rotation(self._vec, angle))
+                else:
+                    transformations.append(Rotoreflection(self._vec, angle))
+            else:
+                transformations.append(Reflection(self._vec))
         return tuple(transformations)
 
     def symb(self) -> str:

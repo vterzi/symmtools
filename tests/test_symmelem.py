@@ -68,12 +68,21 @@ class TestRotationAxis(TestCase):
 
     def test_transformations(self):
         vec = randvec()
-        order = 3
-        symmelem = RotationAxis(vec, order)
+        symmelem = RotationAxis(vec, 3)
         vec = normalize(vec)
         self.assertSequenceEqual(
             symmelem.transformations(),
-            [Rotation(vec, i / order * TAU) for i in range(1, order)],
+            [Rotation(vec, 1 / 3 * TAU), Rotation(vec, 2 / 3 * TAU)],
+        )
+        symmelem = RotationAxis(vec, 4)
+        vec = normalize(vec)
+        self.assertSequenceEqual(
+            symmelem.transformations(),
+            [
+                Rotation(vec, 1 / 4 * TAU),
+                Rotation(vec, 2 / 4 * TAU),
+                Rotation(vec, 3 / 4 * TAU),
+            ],
         )
 
     def test_symb(self):
@@ -121,18 +130,18 @@ class TestRotoreflectionAxis(TestCase):
 
     def test_transformations(self):
         vec = randvec()
-        order = 3
-        symmelem = RotoreflectionAxis(vec, order)
+        symmelem = RotoreflectionAxis(vec, 3)
         vec = normalize(vec)
-        transformations: List[Transformation] = []
-        for i in range(1, order):
-            angle = i / order * TAU
-            transformations.append(
-                Rotation(vec, angle)
-                if i % 2 == 1
-                else Rotoreflection(vec, angle)
-            )
-        self.assertSequenceEqual(symmelem.transformations(), transformations)
+        self.assertSequenceEqual(
+            symmelem.transformations(),
+            [
+                Rotoreflection(vec, 1 / 3 * TAU),
+                Rotation(vec, 2 / 3 * TAU),
+                Reflection(vec),
+                Rotation(vec, (4 % 3) / 3 * TAU),
+                Rotoreflection(vec, (5 % 3) / 3 * TAU),
+            ],
+        )
 
     def test_symb(self):
         order = 3
