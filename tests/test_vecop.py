@@ -9,11 +9,9 @@ from .tools import (
     float64,
     randvec,
     randunitvec,
-    randnonzerovec,
+    randne0vec,
     perturb,
     randangle,
-    rotmat,
-    reflmat,
 )
 
 from symmtools import (
@@ -32,6 +30,8 @@ from symmtools import (
     move2,
     rotate,
     reflect,
+    rotmat,
+    reflmat,
 )
 
 
@@ -61,7 +61,7 @@ class TestVecOp(TestCase):
         self.assertListEqual(canon(vec).tolist(), vec.tolist())
 
     def test_normalize(self):
-        vec, norm = randnonzerovec()
+        vec, norm = randne0vec()
         self.assertListEqual(normalize(vec).tolist(), (vec / norm).tolist())
 
     def test_diff(self):

@@ -16,12 +16,11 @@ __all__ = [
     "float64",
     "NDArray",
     "randvec",
-    "randnonzerovec",
+    "randne0vec",
     "randunitvec",
     "perturb",
     "randangle",
-    "rotmat",
-    "reflmat",
+    "randne0angle",
 ]
 
 from random import random, choice, randrange, randint, normalvariate
@@ -37,7 +36,7 @@ def randvec() -> NDArray[float64]:
     return array([normalvariate(0, 1) for _ in range(3)])
 
 
-def randnonzerovec() -> Tuple[NDArray[float64], float64]:
+def randne0vec() -> Tuple[NDArray[float64], float64]:
     norm = float64(0)
     while norm == 0:
         vec = randvec()
@@ -46,7 +45,7 @@ def randnonzerovec() -> Tuple[NDArray[float64], float64]:
 
 
 def randunitvec() -> NDArray[float64]:
-    vec, norm = randnonzerovec()
+    vec, norm = randne0vec()
     return vec / norm
 
 
@@ -60,37 +59,8 @@ def randangle() -> float:
     return 2 * pi * random()
 
 
-def rotmat(vec: NDArray[float64], angle: float) -> NDArray[float64]:
-    x, y, z = vec
-    c = cos(angle)
-    s = sin(angle)
-    return array(
-        [
-            [
-                c + x * x * (1 - c),
-                x * y * (1 - c) - z * s,
-                x * z * (1 - c) + y * s,
-            ],
-            [
-                y * x * (1 - c) + z * s,
-                c + y * y * (1 - c),
-                y * z * (1 - c) - x * s,
-            ],
-            [
-                z * x * (1 - c) - y * s,
-                z * y * (1 - c) + x * s,
-                c + z * z * (1 - c),
-            ],
-        ]
-    )
-
-
-def reflmat(vec: NDArray[float64]) -> NDArray[float64]:
-    x, y, z = vec
-    return array(
-        [
-            [1 - 2 * x * x, -2 * x * y, -2 * x * z],
-            [-2 * x * y, 1 - 2 * y * y, -2 * y * z],
-            [-2 * x * z, -2 * y * z, 1 - 2 * z * z],
-        ]
-    )
+def randne0angle() -> float:
+    angle = 0.0
+    while angle == 0:
+        angle = 2 * pi * random()
+    return angle

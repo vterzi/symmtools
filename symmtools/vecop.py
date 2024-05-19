@@ -17,12 +17,14 @@ __all__ = [
     "rotate_",
     "reflect",
     "reflect_",
+    "rotmat",
+    "reflmat",
 ]
 
 from numpy import array, sin, cos, dot, cross
 from numpy.linalg import norm
 
-from .typehints import Float, Vector, RealVector
+from .typehints import Float, Vector, Matrix, RealVector
 
 
 def vector(vec: RealVector) -> Vector:
@@ -145,3 +147,47 @@ def reflect_(point: Vector, reflection: Vector) -> Vector:
     if length > 0:
         point = reflect(point, reflection / length)
     return point
+
+
+def rotmat(vec: RealVector, angle: Float) -> Matrix:
+    """
+    Return the transformation matrix for a rotation by an angle `angle` around
+    an axis that contains the origin and is described by a unit vector `vec`.
+    """
+    x, y, z = vec
+    c = cos(angle)
+    s = sin(angle)
+    return array(
+        [
+            [
+                c + x * x * (1 - c),
+                x * y * (1 - c) - z * s,
+                x * z * (1 - c) + y * s,
+            ],
+            [
+                y * x * (1 - c) + z * s,
+                c + y * y * (1 - c),
+                y * z * (1 - c) - x * s,
+            ],
+            [
+                z * x * (1 - c) - y * s,
+                z * y * (1 - c) + x * s,
+                c + z * z * (1 - c),
+            ],
+        ]
+    )
+
+
+def reflmat(vec: RealVector) -> Matrix:
+    """
+    Return the transformation matrix for a reflection through a plane that
+    contains the origin and whose normal is described by a unit vector `vec`.
+    """
+    x, y, z = vec
+    return array(
+        [
+            [1 - 2 * x * x, -2 * x * y, -2 * x * z],
+            [-2 * x * y, 1 - 2 * y * y, -2 * y * z],
+            [-2 * x * z, -2 * y * z, 1 - 2 * z * z],
+        ]
+    )
