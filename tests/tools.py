@@ -64,6 +64,7 @@ def perturb() -> NDArray[float64]:
 
 
 def orthperturb(unitvec: NDArray[float64]) -> NDArray[float64]:
+    vec = zeros(3)
     vec_norm = float64(0)
     while vec_norm == 0:
         vec = randvec()
