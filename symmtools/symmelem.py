@@ -38,6 +38,11 @@ class SymmElem(ABC):
         """Return the transformations."""
         pass
 
+    @abstractmethod
+    def symb(self) -> str:
+        """Return the symbol."""
+        pass
+
     def symmetric(self, elems: Elems, tol: float) -> bool:
         """
         Check wether a set of elements `elems` is symmetric within a tolerance
@@ -55,12 +60,18 @@ class IdentityElem(InvariantTransformable, SymmElem):
     def transformations(self) -> Sequence[Transformation]:
         return (Identity(),)
 
+    def symb(self) -> str:
+        return "E"
+
 
 class InversionCenter(InvariantTransformable, SymmElem):
     """Inversion center in the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
         return (Inversion(),)
+
+    def symb(self) -> str:
+        return "i"
 
 
 class RotationAxis(OrderedTransformable, SymmElem):
@@ -72,6 +83,9 @@ class RotationAxis(OrderedTransformable, SymmElem):
             for i in range(1, self._order)
         )
 
+    def symb(self) -> str:
+        return f"C{self._order}"
+
 
 class InfRotationAxis(InfFoldTransformable, SymmElem):
     """Infinite-fold rotation axis containing the origin in a real 3D space."""
@@ -79,12 +93,18 @@ class InfRotationAxis(InfFoldTransformable, SymmElem):
     def transformations(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
+    def symb(self) -> str:
+        return "Coo"  # "C\u221e"
+
 
 class ReflectionPlane(DirectionTransformable, SymmElem):
     """Reflection plane containing the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
         return (Reflection(self._vec),)
+
+    def symb(self) -> str:
+        return "s"  # "\u03c3"
 
 
 class RotoreflectionAxis(OrderedTransformable, SymmElem):
@@ -101,6 +121,9 @@ class RotoreflectionAxis(OrderedTransformable, SymmElem):
             )
         return tuple(transformations)
 
+    def symb(self) -> str:
+        return f"S{self._order}"
+
 
 class InfRotoreflectionAxis(InfFoldTransformable, SymmElem):
     """
@@ -109,3 +132,6 @@ class InfRotoreflectionAxis(InfFoldTransformable, SymmElem):
 
     def transformations(self) -> Sequence[Transformation]:
         raise NotImplementedError()
+
+    def symb(self) -> str:
+        return "Soo"  # "S\u221e"
