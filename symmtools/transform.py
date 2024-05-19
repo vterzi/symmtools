@@ -251,14 +251,10 @@ class InfFoldTransformable(DirectionTransformable):
     order.
     """
 
-    def __init__(self, vec: RealVector) -> None:
-        super().__init__(vec)
-        self._order = INF
-
     @property
     def order(self) -> Float:
         """Return the order."""
-        return self._order
+        return INF
 
 
 class Transformation(ABC):
