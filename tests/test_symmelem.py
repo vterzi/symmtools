@@ -74,6 +74,7 @@ class TestRotationAxis(TestCase):
             symmelem.transformations(),
             [Rotation(vec, 1 / 3 * TAU), Rotation(vec, 2 / 3 * TAU)],
         )
+        vec = randvec()
         symmelem = RotationAxis(vec, 4)
         vec = normalize(vec)
         self.assertSequenceEqual(
@@ -140,6 +141,17 @@ class TestRotoreflectionAxis(TestCase):
                 Reflection(vec),
                 Rotation(vec, (4 % 3) / 3 * TAU),
                 Rotoreflection(vec, (5 % 3) / 3 * TAU),
+            ],
+        )
+        vec = randvec()
+        symmelem = RotoreflectionAxis(vec, 4)
+        vec = normalize(vec)
+        self.assertSequenceEqual(
+            symmelem.transformations(),
+            [
+                Rotoreflection(vec, 1 / 4 * TAU),
+                Rotation(vec, 2 / 4 * TAU),
+                Rotoreflection(vec, 3 / 4 * TAU),
             ],
         )
 
