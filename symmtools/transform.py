@@ -5,6 +5,8 @@ __all__ = [
     "InvariantTransformable",
     "VecTransformable",
     "DirectionTransformable",
+    "OrderedTransformable",
+    "InfFoldTransformable",
     "Transformation",
     "Identity",
     "Translation",
@@ -20,11 +22,11 @@ from copy import copy
 from numpy import sin, cos, eye
 from numpy.linalg import norm
 
-from .const import INF, PI, TAU
+from .const import INF, TAU
 from .vecop import (
     vector,
-    canon,
     diff,
+    indepunit,
     translate,
     invert,
     move2,
@@ -107,7 +109,7 @@ class Transformable(ABC):
         pass
 
 
-class InvariantTransformable(Transformable, ABC):
+class InvariantTransformable(Transformable):
     """Transformable object that is invariant to any transformation."""
 
     def translate(
@@ -130,7 +132,7 @@ class InvariantTransformable(Transformable, ABC):
         return copy(self)
 
 
-class VecTransformable(Transformable, ABC):
+class VecTransformable(Transformable):
     """Transformable object represented by a real 3D vector."""
 
     def __init__(self, vec: RealVector) -> None:
@@ -192,7 +194,7 @@ class VecTransformable(Transformable, ABC):
         return res
 
 
-class DirectionTransformable(VecTransformable, ABC):
+class DirectionTransformable(VecTransformable):
     """Transformable object represented by a real 3D direction vector."""
 
     def __init__(self, vec: RealVector) -> None:
@@ -203,10 +205,60 @@ class DirectionTransformable(VecTransformable, ABC):
             raise ValueError("zero vector")
         self._vec /= vec_norm
 
+    def diff(self, obj: Any) -> float:
+        res = Transformable.diff(self, obj)
+        if res < INF:
+            res = max(res, indepunit(self._vec, obj.vec))
+        return res
+
     def translate(
         self, translation: "Translation"
     ) -> "DirectionTransformable":
         return copy(self)
+
+
+class OrderedTransformable(DirectionTransformable):
+    """Transformable object represented by a direction vector and an order."""
+
+    def __init__(self, vec: RealVector, order: Int) -> None:
+        """
+        Initialize the instance with a non-zero 3D vector `vec` and a positive
+        order `order`.
+        """
+        super().__init__(vec)
+        if order < 1:
+            raise ValueError("negative order")
+        self._order = order
+
+    @property
+    def order(self) -> Int:
+        """Return the order."""
+        return self._order
+
+    def args(self) -> str:
+        return f"{super().args},{self._order}"
+
+    def diff(self, obj: Any) -> float:
+        res = super().diff(obj)
+        if res < INF and self._order != obj.order:
+            res = INF
+        return res
+
+
+class InfFoldTransformable(DirectionTransformable):
+    """
+    Transformable object represented by a direction vector and an infinite
+    order.
+    """
+
+    def __init__(self, vec: RealVector) -> None:
+        super().__init__(vec)
+        self._order = INF
+
+    @property
+    def order(self) -> Float:
+        """Return the order."""
+        return self._order
 
 
 class Transformation(ABC):
@@ -264,14 +316,9 @@ class Rotation(DirectionTransformable, Transformation):
         angle `angle`.
         """
         super().__init__(vec)
+        angle %= TAU
         if angle == 0:
             raise ValueError("zero angle")
-        angle %= TAU
-        if angle > PI:
-            self._vec = -self._vec
-            angle = TAU - angle
-        elif angle == PI:
-            self._vec = canon(self._vec)
         self._angle = angle
         self._cos = cos(angle)
         self._sin = sin(angle)
@@ -298,9 +345,18 @@ class Rotation(DirectionTransformable, Transformation):
         return obj.rotate(self)
 
     def diff(self, obj: Any) -> float:
-        res = super().diff(obj)
+        res = Transformable.diff(self, obj)
         if res < INF:
-            res = max(res, abs(self._angle - obj.angle))
+            diff1 = diff(self._vec, obj.vec)
+            diff2 = diff(self._vec, -obj.vec)
+            if diff1 < diff2:
+                mindiff = diff1
+                explementary = False
+            else:
+                mindiff = diff2
+                explementary = True
+            angle = TAU - obj.angle if explementary else obj.angle
+            res = max(res, mindiff, abs(self._angle - angle))
         return res
 
     def mat(self) -> Matrix:
@@ -312,10 +368,6 @@ class Rotation(DirectionTransformable, Transformation):
 
 class Reflection(DirectionTransformable, Transformation):
     """Reflection through a plane containing the origin in a real 3D space."""
-
-    def __init__(self, vec: RealVector) -> None:
-        super().__init__(vec)
-        self._vec = canon(self._vec)
 
     def __call__(self, obj: "Transformable") -> "Transformable":
         return obj.reflect(self)
