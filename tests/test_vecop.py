@@ -17,8 +17,9 @@ from .tools import (
 from symmtools import (
     TOL,
     vector,
-    canon,
+    canonicalize,
     normalize,
+    orthogonalize,
     diff,
     same,
     indep,
@@ -48,21 +49,26 @@ class TestVecOp(TestCase):
         self.assertEqual(vec.dtype, float64)
         self.assertListEqual(vec.tolist(), arr)
 
-    def test_canon(self):
+    def test_canonicalize(self):
         vec = randvec()
         for i in range(3):
             while vec[i] == 0:
                 vec[i] = normalvariate(0, 1)
             vec[i] = abs(vec[i])
-            self.assertListEqual(canon(vec).tolist(), vec.tolist())
+            self.assertListEqual(canonicalize(vec).tolist(), vec.tolist())
             vec[i] = -vec[i]
-            self.assertListEqual(canon(vec).tolist(), (-vec).tolist())
+            self.assertListEqual(canonicalize(vec).tolist(), (-vec).tolist())
             vec[i] = 0
-        self.assertListEqual(canon(vec).tolist(), vec.tolist())
+        self.assertListEqual(canonicalize(vec).tolist(), vec.tolist())
 
     def test_normalize(self):
         vec, norm = randne0vec()
         self.assertListEqual(normalize(vec).tolist(), (vec / norm).tolist())
+
+    def test_orthogonalize(self):
+        vec1 = randvec()
+        vec2 = randunitvec()
+        self.assertLessEqual(abs(orthogonalize(vec1, vec2).dot(vec2)), TOL)
 
     def test_diff(self):
         vec1 = randvec()

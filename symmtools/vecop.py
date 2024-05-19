@@ -2,8 +2,9 @@
 
 __all__ = [
     "vector",
-    "canon",
+    "canonicalize",
     "normalize",
+    "orthogonalize",
     "diff",
     "same",
     "indep",
@@ -21,7 +22,7 @@ __all__ = [
     "reflmat",
 ]
 
-from numpy import array, sin, cos, dot, cross
+from numpy import array, sin, cos, cross
 from numpy.linalg import norm
 
 from .typehints import Float, Vector, Matrix, RealVector
@@ -32,7 +33,7 @@ def vector(vec: RealVector) -> Vector:
     return array(vec, dtype=float)
 
 
-def canon(vec: Vector) -> Vector:
+def canonicalize(vec: Vector) -> Vector:
     """
     Canonicalize an unsigned direction vector `vec` by making the first
     non-zero coordinate positive.
@@ -48,6 +49,11 @@ def canon(vec: Vector) -> Vector:
 def normalize(vec: Vector) -> Vector:
     """Normalize a non-zero vector `vec` to a unit vector."""
     return vec / norm(vec)
+
+
+def orthogonalize(vec1: Vector, vec2: Vector) -> Vector:
+    """Orthogonalize a vector `vec1` to a unit vector `vec2`."""
+    return vec1 - vec1.dot(vec2) * vec2
 
 
 def diff(vec1: Vector, vec2: Vector) -> float:
@@ -88,7 +94,7 @@ def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
     Check wether two vectors `vec1` and `vec2` are perpendicular within a
     tolerance `tol`.
     """
-    return abs(dot(vec1, vec2).item()) <= tol
+    return abs(vec1.dot(vec2).item()) <= tol
 
 
 def translate(point: Vector, translation: Vector) -> Vector:
@@ -108,7 +114,7 @@ def move2(point: Vector, normal: Vector, coef1: Float, coef2: Float) -> Vector:
     the projection of the point position on the plane scaled by `coef1` and its
     perpendicular in the plane scaled by `coef2`.
     """
-    base = dot(point, normal) * normal
+    base = point.dot(normal) * normal
     projection = point - base
     perpendicular = cross(normal, projection)
     return base + projection * coef1 + perpendicular * coef2
@@ -135,7 +141,7 @@ def reflect(point: Vector, reflection: Vector) -> Vector:
     Reflect a point `point` through a reflection plane with a normalized normal
     `reflection`.
     """
-    return point - 2 * dot(point, reflection) * reflection
+    return point - 2 * point.dot(reflection) * reflection
 
 
 def reflect_(point: Vector, reflection: Vector) -> Vector:
