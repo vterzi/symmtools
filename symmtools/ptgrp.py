@@ -1,6 +1,6 @@
 from re import fullmatch
 
-from numpy import nan, array, dot, cross
+from numpy import nan, array, cross
 from numpy.linalg import norm
 
 from .const import PHI, TOL, PRIMAX, SECAX
@@ -71,8 +71,8 @@ def symmelems(elems: Elems, tol: float = TOL):
             for i3 in range(i2 + 1, len(elems)):
                 # find the normal of the plane containing the point triplet
                 normal = cross(
-                    elems[i2].pos - elems[i1].pos,
-                    elems[i3].pos - elems[i1].pos,
+                    elems[i2].vec - elems[i1].vec,
+                    elems[i3].vec - elems[i1].vec,
                 )
                 normal_norm = norm(normal)
                 # if the point triplet is collinear
@@ -83,13 +83,13 @@ def symmelems(elems: Elems, tol: float = TOL):
                 rotation = normal / normal_norm
                 if not contains(rotations, rotation):
                     # calculate the distance between the origin and the plane
-                    dist = dot(elems[i1].pos, rotation)
+                    dist = elems[i1].vec.dot(rotation)
                     # initial number of points in the plane
                     max_order = 3
                     # for other points
                     for i4 in range(i3 + 1, len(elems)):
                         # if the point is in the plane
-                        if abs(dot(elems[i4].pos, rotation) - dist) <= tol:
+                        if abs(elems[i4].vec.dot(rotation) - dist) <= tol:
                             # increase the number of points in the plane
                             max_order += 1
                     if (
@@ -110,15 +110,15 @@ def symmelems(elems: Elems, tol: float = TOL):
                         if added:
                             break
             # directed segment between the point pair
-            segment = elems[i1].pos - elems[i2].pos
+            segment = elems[i1].vec - elems[i2].vec
             # midpoint of the segment
-            midpoint = (elems[i1].pos + elems[i2].pos) / 2
+            midpoint = (elems[i1].vec + elems[i2].vec) / 2
             reflection = segment / norm(segment)
             # add rotation with order infinity
             if (
                 collinear
                 and direction is None
-                and parallel(elems[i1].pos, elems[i2].pos, tol)
+                and parallel(elems[i1].vec, elems[i2].vec, tol)
             ):
                 dim = 1
                 direction = reflection

@@ -2,74 +2,28 @@
 
 __all__ = ["Point", "LabeledPoint", "Arrow", "Elems", "Struct"]
 
-from numpy import empty, zeros, sign, dot
+from numpy import empty, zeros, sign
 from numpy.linalg import norm
 from scipy.optimize import linear_sum_assignment
 
 from .const import INF
-from .vecop import vector, normalize, translate, invert, move2, reflect
 from .transform import (
     Transformable,
+    VecTransformable,
+    DirectionTransformable,
     Translation,
 )
 
 
-class Point(Transformable):
+class Point(VecTransformable):
     """Point in a real 3D space."""
 
-    def __init__(self, pos):
-        self._pos = vector(pos)
-
-    def args(self):
-        return str(self._pos.tolist()).replace(" ", "")
-
-    @property
-    def pos(self):
-        return self._pos
-
-    def diff(self, point):
-        diff = super().diff(point)
-        if diff < INF:
-            diff = max(diff, norm(self._pos - point.pos))
-        return diff
-
-    def translate(self, translation):
-        res = self.copy()
-        res._pos = translate(self._pos, translation.vec)
-        return res
-
-    def invert(self):
-        res = self.copy()
-        res._pos = invert(self._pos)
-        return res
-
-    def rotate(self, rotation):
-        res = self.copy()
-        res._pos = move2(self._pos, rotation.vec, rotation.cos, rotation.sin)
-        return res
-
-    def reflect(self, reflection):
-        res = self.copy()
-        res._pos = reflect(self._pos, reflection.vec)
-        return res
-
-    def rotoreflect(self, rotoreflection):
-        res = self.copy()
-        res._pos = reflect(
-            move2(
-                self._pos,
-                rotoreflection.vec,
-                rotoreflection.cos,
-                rotoreflection.sin,
-            ),
-            rotoreflection.vec,
-        )
-        return res
+    pass
 
 
 class LabeledPoint(Point):
-    def __init__(self, pos, label):
-        super().__init__(pos)
+    def __init__(self, vec, label):
+        super().__init__(vec)
         self._label = label
 
     def args(self):
@@ -81,15 +35,15 @@ class LabeledPoint(Point):
         return self._label
 
     def diff(self, point):
-        diff = super().diff(point)
-        if diff < INF:
-            diff = max(diff, 0 if self._label == point.label else INF)
-        return diff
+        res = super().diff(point)
+        if res < INF and self._label != point.label:
+            res = INF
+        return res
 
 
-class Arrow(Transformable):
+class Arrow(DirectionTransformable):
     def __init__(self, vec, fore, back):
-        self._vec = normalize(vector(vec))
+        super().__init__(vec)
         if fore and back:
             self._phase = 1
         elif not fore and not back:
@@ -109,71 +63,33 @@ class Arrow(Transformable):
         else:
             fore = True
             back = False
-        vec = str(self._vec.tolist()).replace(" ", "")
-        return f"{vec},{fore},{back}"
-
-    @property
-    def vec(self):
-        return self._vec
+        return f"{super().args()},{fore},{back}"
 
     @property
     def phase(self):
         return self._phase
 
     def diff(self, arrow):
-        diff = super().diff(arrow)
-        if diff < INF:
-            vec = arrow.vec if dot(self._vec, arrow.vec) >= 0 else -arrow.vec
-            diff = max(
-                diff,
+        res = super().diff(arrow)
+        if res < INF:
+            vec = arrow.vec if self._vec.dot(arrow.vec) >= 0 else -arrow.vec
+            res = max(
+                res,
                 norm(self._vec - vec),
                 (0 if abs(self._phase) == abs(arrow.phase) else INF),
             )
-        return diff
+        return res
 
     def same(self, arrow, tol):
         return (
             (
-                int(sign(dot(self._vec, arrow.vec)))
+                int(sign(self._vec.dot(arrow.vec)))
                 if self._phase == 0
                 else self._phase * arrow.phase
             )
             if self.diff(arrow) <= tol
             else 0
         )
-
-    def translate(self, translation):
-        res = self.copy()
-        res._vec = self._vec.copy()
-        return res
-
-    def invert(self):
-        res = self.copy()
-        res._vec = invert(self._vec)
-        return res
-
-    def rotate(self, rotation):
-        res = self.copy()
-        res._vec = move2(self._vec, rotation.vec, rotation.cos, rotation.sin)
-        return res
-
-    def reflect(self, reflection):
-        res = self.copy()
-        res._vec = reflect(self._vec, reflection.vec)
-        return res
-
-    def rotoreflect(self, rotoreflection):
-        res = self.copy()
-        res._vec = reflect(
-            move2(
-                self._vec,
-                rotoreflection.vec,
-                rotoreflection.cos,
-                rotoreflection.sin,
-            ),
-            rotoreflection.vec,
-        )
-        return res
 
 
 class Elems(Transformable):
@@ -232,13 +148,13 @@ class Elems(Transformable):
         return diff
 
     def diff(self, elems):
-        diff = super().diff(elems)
-        if diff < INF:
+        res = super().diff(elems)
+        if res < INF:
             try:
-                diff = max(diff, elems.sort(self))
+                res = max(res, elems.sort(self))
             except ValueError:
-                diff = INF
-        return diff
+                res = INF
+        return res
 
     def same(self, elems, tol):
         def add(parity1, parity2):
@@ -276,17 +192,17 @@ class Elems(Transformable):
         return res
 
     @property
-    def pos(self):
+    def vec(self):
         centroid = zeros(3)
         for elem in self._elems:
-            centroid += elem.pos
+            centroid += elem.vec
         n = len(self._elems)
         if n > 0:
             centroid /= n
         return centroid
 
     def center(self):
-        return self.translate(Translation(-self.pos))
+        return self.translate(Translation(-self.vec))
 
     def invert(self):
         res = self.copy()
@@ -322,8 +238,8 @@ class Elems(Transformable):
 
 
 class Struct(Point, Elems):
-    def __init__(self, pos, coef=1, arrows=()):
-        Point.__init__(self, pos)
+    def __init__(self, vec, coef=1, arrows=()):
+        Point.__init__(self, vec)
         Elems.__init__(self, arrows)
         self._coef = abs(coef)
         self._phase = int(sign(coef))
@@ -342,10 +258,10 @@ class Struct(Point, Elems):
         return self._phase
 
     def diff(self, struct):
-        diff = max(Point.diff(self, struct), Elems.diff(self, struct))
-        if diff < INF:
-            diff = max(diff, abs(self._coef - struct.coef))
-        return diff
+        res = max(Point.diff(self, struct), Elems.diff(self, struct))
+        if res < INF:
+            res = max(res, abs(self._coef - struct.coef))
+        return res
 
     def same(self, struct, tol):
         return self._phase * struct.phase * Elems.same(self, struct, tol)
