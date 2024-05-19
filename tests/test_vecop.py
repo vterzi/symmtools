@@ -5,6 +5,7 @@ from .tools import (
     normalvariate,
     zeros,
     cross,
+    norm,
     ndarray,
     float64,
     randvec,
@@ -62,13 +63,15 @@ class TestVecOp(TestCase):
         self.assertListEqual(canonicalize(vec).tolist(), vec.tolist())
 
     def test_normalize(self):
-        vec, norm = randne0vec()
-        self.assertListEqual(normalize(vec).tolist(), (vec / norm).tolist())
+        vec = randne0vec()
+        self.assertListEqual(
+            normalize(vec).tolist(), (vec / norm(vec)).tolist()
+        )
 
     def test_orthogonalize(self):
         vec1 = randvec()
         vec2 = randunitvec()
-        self.assertLessEqual(abs(orthogonalize(vec1, vec2).dot(vec2)), TOL)
+        self.assertLessEqual(orthogonalize(vec1, vec2).dot(vec2), TOL)
 
     def test_diff(self):
         vec1 = randvec()
@@ -82,7 +85,7 @@ class TestVecOp(TestCase):
     def test_same(self):
         vec1 = randvec()
         vec2 = vec1
-        while abs(vec1 - vec2).max() <= TOL:
+        while diff(vec1, vec2) <= TOL:
             vec2 = randvec()
         self.assertTrue(same(vec1, vec1, 0))
         self.assertTrue(same(vec2, vec2, 0))
@@ -157,16 +160,14 @@ class TestVecOp(TestCase):
         angle = randangle()
         mat = rotmat(rotation, angle)
         self.assertLessEqual(
-            abs(rotate(vec, rotation, angle) - mat @ vec).max(), TOL
+            diff(rotate(vec, rotation, angle), mat @ vec), TOL
         )
 
     def test_reflect(self):
         vec = randvec()
         reflection = randunitvec()
         mat = reflmat(reflection)
-        self.assertLessEqual(
-            abs(reflect(vec, reflection) - mat @ vec).max(), TOL
-        )
+        self.assertLessEqual(diff(reflect(vec, reflection), mat @ vec), TOL)
 
 
 if __name__ == "__main__":
