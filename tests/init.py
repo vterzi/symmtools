@@ -7,6 +7,7 @@ __all__ = [
     "randint",
     "normalvariate",
     "Tuple",
+    "List",
     "pi",
     "array",
     "zeros",
@@ -31,7 +32,7 @@ __all__ = [
 from unittest import TestCase, main
 
 from random import random, choice, randrange, randint, normalvariate
-from typing import Tuple
+from typing import Tuple, List
 
 from numpy import pi, array, zeros, eye, sin, cos, cross, ndarray, float64
 from numpy.linalg import norm
