@@ -22,7 +22,7 @@ from copy import copy
 from numpy import sin, cos, eye
 from numpy.linalg import norm
 
-from .const import INF, TAU
+from .const import INF, PI, TAU
 from .vecop import (
     vector,
     diff,
@@ -346,13 +346,16 @@ class Rotation(DirectionTransformable, Transformation):
             diff1 = diff(self._vec, obj.vec)
             diff2 = diff(self._vec, -obj.vec)
             if diff1 < diff2:
-                mindiff = diff1
+                vec_diff = diff1
                 explementary = False
             else:
-                mindiff = diff2
+                vec_diff = diff2
                 explementary = True
             angle = TAU - obj.angle if explementary else obj.angle
-            res = max(res, mindiff, abs(self._angle - angle))
+            angle_diff = abs(self._angle - angle)
+            if angle_diff > PI:
+                angle_diff = TAU - angle_diff
+            res = max(res, vec_diff, angle_diff)
         return res
 
     def mat(self) -> Matrix:
