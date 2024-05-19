@@ -1,4 +1,6 @@
 __all__ = [
+    "TestCase",
+    "main",
     "random",
     "choice",
     "randrange",
@@ -25,6 +27,8 @@ __all__ = [
     "randangle",
     "randne0angle",
 ]
+
+from unittest import TestCase, main
 
 from random import random, choice, randrange, randint, normalvariate
 from typing import Tuple

@@ -1,4 +1,4 @@
-from unittest import TestCase, main
+from .init import TestCase, main
 
 from symmtools import (
     ptgrp,

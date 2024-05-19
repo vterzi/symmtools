@@ -1,6 +1,6 @@
-from unittest import TestCase, main
-
-from .tools import (
+from .init import (
+    TestCase,
+    main,
     randint,
     normalvariate,
     zeros,
