@@ -48,6 +48,9 @@ class Transformable(ABC):
     def __repr__(self) -> str:
         return self.__str__()
 
+    def __hash__(self) -> int:
+        return hash(self.__repr__())
+
     def diff(self, obj: Any) -> float:
         """Return the difference between the instance and an object `obj`."""
         return 0.0 if type(self) is type(obj) else INF
