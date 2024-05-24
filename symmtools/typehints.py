@@ -5,6 +5,7 @@ __all__ = [
     "Optional",
     "Any",
     "Sequence",
+    "Set",
     "Tuple",
     "List",
     "Dict",
@@ -26,7 +27,7 @@ __all__ = [
     "RealVectors",
 ]
 
-from typing import Union, Optional, Any, Sequence, Tuple, List, Dict
+from typing import Union, Optional, Any, Sequence, Set, Tuple, List, Dict
 
 from numpy import bool_, signedinteger, floating, complexfloating
 from numpy.typing import NDArray
