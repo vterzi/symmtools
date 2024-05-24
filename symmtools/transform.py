@@ -4,6 +4,7 @@ __all__ = [
     "Transformable",
     "InvariantTransformable",
     "VecTransformable",
+    "PosTransformable",
     "DirectionTransformable",
     "OrderedTransformable",
     "InfFoldTransformable",
@@ -71,6 +72,28 @@ class Transformable(ABC):
     def copy(self) -> "Transformable":
         """Return a copy of the instance."""
         return copy(self)
+
+    def negate(self) -> "Transformable":
+        """Return the instance resulting from the application of a negation."""
+        return copy(self)
+
+    def symmetry(self, obj: Any, tol: float) -> int:
+        """
+        Return the symmetry of the instance in relation to an object `obj`
+        within a tolerance `tol` (`1` for symmetric, `-1` for anti-symmetric,
+        and `0` for asymmetric) if the instance is not invariant to negation,
+        and otherwise check wether the instance is identical to an object `obj`
+        within a tolerance `tol`.
+        """
+        antiself = self.negate()
+        if self == antiself:
+            return self.same(obj, tol)
+        elif self.same(obj, tol):
+            return 1
+        elif antiself.same(obj, tol):
+            return -1
+        else:
+            return 0
 
     @abstractmethod
     def translate(self, translation: "Translation") -> "Transformable":
@@ -152,9 +175,6 @@ class VecTransformable(Transformable):
     def args(self) -> str:
         return str(self._vec.tolist()).replace(" ", "")
 
-    def __getitem__(self, item: Int) -> Float:
-        return self._vec[item]
-
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
         if res < INF:
@@ -195,6 +215,15 @@ class VecTransformable(Transformable):
             rotoreflection.vec,
         )
         return res
+
+
+class PosTransformable(VecTransformable):
+    """Transformable object with a real 3D position vector."""
+
+    @property
+    def pos(self) -> Vector:
+        """Return the position vector."""
+        return self._vec
 
 
 class DirectionTransformable(VecTransformable):
