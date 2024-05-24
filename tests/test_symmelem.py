@@ -154,7 +154,7 @@ class TestRotoreflectionAxis(TestCase):
             symmelem.transformations(),
             [
                 Rotoreflection(vec, 1 / 4 * TAU),
-                Rotation(vec, 2 / 4 * TAU),
+                Inversion(),
                 Rotoreflection(vec, 3 / 4 * TAU),
             ],
         )
