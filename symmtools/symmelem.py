@@ -27,7 +27,7 @@ from .transform import (
     Reflection,
     Rotoreflection,
 )
-from .typehints import Sequence, List
+from .typehints import Sequence, List, Int, RealVector
 
 
 class SymmElem(ABC):
@@ -77,6 +77,17 @@ class InversionCenter(InvariantTransformable, SymmElem):
 class RotationAxis(OrderedTransformable, SymmElem):
     """Rotation axis containing the origin in a real 3D space."""
 
+    def __init__(self, vec: RealVector, order: Int) -> None:
+        """
+        Initialize the instance with a 3D non-zero vector `vec` and a positive
+        order `order` greater than 1.
+        """
+        super().__init__(vec, order)
+        if order == 1:
+            raise ValueError(
+                "a 1-fold rotation axis is identical to an identity element"
+            )
+
     def transformations(self) -> Sequence[Transformation]:
         return tuple(
             Rotation(self._vec, i / self._order * TAU)
@@ -109,6 +120,23 @@ class ReflectionPlane(DirectionTransformable, SymmElem):
 
 class RotoreflectionAxis(OrderedTransformable, SymmElem):
     """Rotoreflection axis containing the origin in a real 3D space."""
+
+    def __init__(self, vec: RealVector, order: Int) -> None:
+        """
+        Initialize the instance with a 3D non-zero vector `vec` and a positive
+        order `order` greater than 2.
+        """
+        super().__init__(vec, order)
+        if order == 1:
+            raise ValueError(
+                "a 1-fold rotoreflection axis is identical to a reflection"
+                + " plane"
+            )
+        elif order == 2:
+            raise ValueError(
+                "a 2-fold rotoreflection axis is identical to an inversion"
+                + " center"
+            )
 
     def transformations(self) -> Sequence[Transformation]:
         transformations: List[Transformation] = []

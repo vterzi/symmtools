@@ -390,6 +390,15 @@ class Rotoreflection(Rotation):
     perpendicular plane containing the origin in a real 3D space.
     """
 
+    def __init__(self, vec: RealVector, angle: Float) -> None:
+        """
+        Initialize the instance with a 3D non-zero vector `vec` and a non-zero
+        angle `angle` that is not equal to a half-turn.
+        """
+        super().__init__(vec, angle)
+        if self._angle == PI:
+            raise ValueError("half-turn angle")
+
     def __call__(self, obj: "Transformable") -> "Transformable":
         return obj.rotoreflect(self)
 
