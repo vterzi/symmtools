@@ -42,10 +42,11 @@ def symmelems(elems: Elems, tol: float = TOL):
 
     def add_rotoreflection(vector, order):
         for factor in (2, 1):
-            rotoreflection = RotoreflectionAxis(vector, factor * order)
-            if rotoreflection.symmetric(elems, tol):
-                rotoreflections.append(rotoreflection)
-                return True
+            if factor * order > 2:
+                rotoreflection = RotoreflectionAxis(vector, factor * order)
+                if rotoreflection.symmetric(elems, tol):
+                    rotoreflections.append(rotoreflection)
+                    return True
         return False
 
     if not elems.check(tol):
