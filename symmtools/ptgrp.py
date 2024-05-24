@@ -49,7 +49,7 @@ def symmelems(elems: Elems, tol: float = TOL):
                     return True
         return False
 
-    if not elems.check(tol):
+    if not elems.nondegen(tol):
         raise ValueError(
             "at least two identical elements in the instance of Elems for the"
             " given tolerance"
