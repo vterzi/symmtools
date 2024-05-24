@@ -11,6 +11,8 @@ __all__ = [
     "PRIMAX",
     "SECAX",
     "TERNAX",
+    "INF_SYMB",
+    "REFL_SYMB",
 ]
 
 from math import inf, pi
@@ -25,3 +27,5 @@ ORIGIN = (0.0, 0.0, 0.0)
 PRIMAX = (0.0, 0.0, 1.0)
 SECAX = (1.0, 0.0, 0.0)
 TERNAX = (0.0, 1.0, 0.0)
+INF_SYMB = "oo"  # "\u221e"
+REFL_SYMB = "s"  # "\u03c3"

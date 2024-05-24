@@ -9,6 +9,7 @@ from .init import (
 from symmtools import (
     TAU,
     TOL,
+    REFL_SYMB,
     IdentityElem,
     InversionCenter,
     RotationAxis,
@@ -112,7 +113,7 @@ class TestReflectionPlane(TestCase):
 
     def test_symb(self):
         symmelem = ReflectionPlane(randunitvec())
-        self.assertEqual(symmelem.symb(), "s")
+        self.assertEqual(symmelem.symb(), REFL_SYMB)
 
     def test_symmetric(self):
         symmelem = ReflectionPlane(randunitvec())

@@ -13,7 +13,7 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 
-from .const import TAU
+from .const import TAU, INF_SYMB, REFL_SYMB
 from .primitive import Elems
 from .transform import (
     InvariantTransformable,
@@ -105,7 +105,7 @@ class InfRotationAxis(InfFoldTransformable, SymmElem):
         raise NotImplementedError()
 
     def symb(self) -> str:
-        return "Coo"  # "C\u221e"
+        return f"C{INF_SYMB}"
 
 
 class ReflectionPlane(DirectionTransformable, SymmElem):
@@ -115,7 +115,7 @@ class ReflectionPlane(DirectionTransformable, SymmElem):
         return (Reflection(self._vec),)
 
     def symb(self) -> str:
-        return "s"  # "\u03c3"
+        return REFL_SYMB
 
 
 class RotoreflectionAxis(OrderedTransformable, SymmElem):
