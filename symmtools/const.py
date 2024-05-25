@@ -15,8 +15,9 @@ __all__ = [
     "REFL_SYMB",
 ]
 
-from math import inf, pi
+from math import nan, inf, pi
 
+NAN = nan
 INF = inf
 PI = pi
 TAU = 2.0 * pi
