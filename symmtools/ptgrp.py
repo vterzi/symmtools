@@ -16,7 +16,7 @@ from .symmelem import (
     InfRotoreflectionAxis,
 )
 from .primitive import Points
-from .vecop import vector, parallel, perpendicular
+from .vecop import vector, parallel, parallelunit, perpendicular
 from .typehints import Union, Sequence, Tuple, List, Dict, Vector
 
 _RotationAxis = Union[RotationAxis, InfRotationAxis]
@@ -33,7 +33,7 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
 ]:
     def contains(array, vector):
         for elem in array:
-            if parallel(elem.vec, vector, tol):
+            if parallelunit(elem.vec, vector, tol):
                 return True
         return False
 
@@ -81,15 +81,16 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
     rotations: List[_RotationAxis] = []
     reflections: List[_ReflectionPlane] = []
     rotoreflections: List[_RotoreflectionAxis] = []
-    if len(points) == 1:
+    n_points = len(points)
+    if n_points == 1:
         dim = 0
     direction = None
     collinear = True
-    for i1 in range(len(points) - 1):
+    for i1 in range(n_points - 1):
         # for all point pairs
-        for i2 in range(i1 + 1, len(points)):
+        for i2 in range(i1 + 1, n_points):
             # for all point triplets
-            for i3 in range(i2 + 1, len(points)):
+            for i3 in range(i2 + 1, n_points):
                 # find the normal of the plane containing the point triplet
                 normal: Vector = cross(
                     points[i2].pos - points[i1].pos,
@@ -108,13 +109,13 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
                     # initial number of points in the plane
                     max_order = 3
                     # for other points
-                    for i4 in range(i3 + 1, len(points)):
+                    for i4 in range(i3 + 1, n_points):
                         # if the point is in the plane
                         if abs(points[i4].pos.dot(rotation) - dist) <= tol:
                             # increase the number of points in the plane
                             max_order += 1
                     if (
-                        max_order == len(points)
+                        max_order == n_points
                         and direction is None
                         and abs(dist) <= tol
                     ):
@@ -198,7 +199,7 @@ def ptgrp(points: Points, tol: float = TOL) -> str:
     if len(reflections) > 0:
         sigma = True
         for reflection in reflections:
-            if parallel(rotation.vec, reflection.vec, tol):
+            if parallelunit(rotation.vec, reflection.vec, tol):
                 h = True
                 break
     if len(rotations) >= 2:
