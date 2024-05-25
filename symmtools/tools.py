@@ -4,15 +4,11 @@ __all__ = [
     "chcoords",
     "signvar",
     "ax3permut",
-    "topoints",
     "generate",
-    "str2elems",
 ]
 
-from re import findall
-
 from .const import ORIGIN, TOL
-from .primitive import Point, LabeledPoint, Points
+from .primitive import Point, Points
 from .transform import Transformation
 from .typehints import (
     Optional,
@@ -25,9 +21,6 @@ from .typehints import (
     RealVector,
     RealVectors,
 )
-
-_LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
-_FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
 
 
 def chcoords(
@@ -93,13 +86,6 @@ def ax3permut(vecs: RealVectors) -> List[List[Real]]:
     return res
 
 
-def topoints(points: RealVectors) -> List[Point]:
-    """
-    Convert a sequence of points `points` to a sequence of `Point` instances.
-    """
-    return [Point(point) for point in points]
-
-
 def generate(
     points: Sequence[Point],
     transformations: Sequence[Transformation] = (),
@@ -125,23 +111,4 @@ def generate(
                     points.append(point)
         fi = li
         li = len(points)
-    return Points(points)
-
-
-def str2elems(string: str) -> Points:
-    """
-    Convert a string `string` to a `Points` instance.  Each three consecutive
-    floating-point numbers are parsed as a `Point` instance.  If they are
-    preceded by a label satisfying the rules of variable names, a
-    `LabeledPoint` instance is created instead.
-    """
-    points = []
-    for match in findall(
-        rf"(?:({_LABEL_RE})\s+)?({_FLOAT_RE})\s+({_FLOAT_RE})\s+({_FLOAT_RE})",
-        string,
-    ):
-        label, x, y, z = match
-        points.append(
-            LabeledPoint((x, y, z), label) if label else Point((x, y, z))
-        )
     return Points(points)

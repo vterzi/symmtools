@@ -2,6 +2,8 @@
 
 __all__ = ["Point", "Points", "LabeledPoint", "Arrow", "StructPoint"]
 
+from re import findall
+
 from numpy import zeros
 
 from .const import INF
@@ -16,7 +18,18 @@ from .transform import (
     Reflection,
     Rotoreflection,
 )
-from .typehints import TypeVar, Any, Sequence, Bool, Vector, RealVector
+from .typehints import (
+    TypeVar,
+    Any,
+    Sequence,
+    Bool,
+    Vector,
+    RealVector,
+    RealVectors,
+)
+
+_LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
+_FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
 
 
 class Point(VectorTransformable):
@@ -26,6 +39,32 @@ class Point(VectorTransformable):
     def pos(self) -> Vector:
         """Return the position."""
         return self._vec
+
+
+class LabeledPoint(Point):
+    """Labeled point in a real 3D space."""
+
+    def __init__(self, vec: RealVector, label: str) -> None:
+        """
+        Initialize the instance with a 3D vector `vec` and a label `label`.
+        """
+        super().__init__(vec)
+        self._label = label
+
+    @property
+    def label(self) -> str:
+        """Return the label."""
+        return self._label
+
+    def args(self):
+        label = self._label.replace('"', '\\"')
+        return f"{super().args()},{label}"
+
+    def diff(self, obj: Any) -> float:
+        res = super().diff(obj)
+        if res < INF and self._label != obj.label:
+            res = INF
+        return res
 
 
 _Points = TypeVar("_Points", bound="Points")
@@ -59,31 +98,28 @@ class Points(Transformables):
         """Center the points at the origin."""
         return self.translate(Translation(-self.pos))
 
+    @classmethod
+    def from_arr(cls, arr: RealVectors) -> "Points":
+        """Construct an instance from an array of 3D vectors `arr`."""
+        return Points(tuple(Point(elem) for elem in arr))
 
-class LabeledPoint(Point):
-    """Labeled point in a real 3D space."""
-
-    def __init__(self, vec: RealVector, label: str) -> None:
+    @classmethod
+    def from_str(cls, string: str) -> "Points":
         """
-        Initialize the instance with a 3D vector `vec` and a label `label`.
+        Construct an instance from a string `string`.  Each three consecutive
+        floating-point numbers are parsed as a `Point` instance.  If they are
+        preceded by a label satisfying the rules of variable names, a
+        `LabeledPoint` instance is created instead.
         """
-        super().__init__(vec)
-        self._label = label
-
-    @property
-    def label(self) -> str:
-        """Return the label."""
-        return self._label
-
-    def args(self):
-        label = self._label.replace('"', '\\"')
-        return f"{super().args()},{label}"
-
-    def diff(self, obj: Any) -> float:
-        res = super().diff(obj)
-        if res < INF and self._label != obj.label:
-            res = INF
-        return res
+        points = []
+        for match in findall(
+            r"(?:({0})\s+)?({1})\s+({1})\s+({1})".format(_LABEL_RE, _FLOAT_RE),
+            string,
+        ):
+            label = match[0]
+            vec = tuple(map(float, match[1:]))
+            points.append(LabeledPoint(vec, label) if label else Point(vec))
+        return Points(points)
 
 
 _Arrow = TypeVar("_Arrow", bound="Arrow")
