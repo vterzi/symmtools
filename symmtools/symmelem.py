@@ -2,7 +2,7 @@
 
 __all__ = [
     "SymmElem",
-    "IdentityElem",
+    "IdentityElement",
     "InversionCenter",
     "RotationAxis",
     "InfRotationAxis",
@@ -54,7 +54,7 @@ class SymmElem(ABC):
         return True
 
 
-class IdentityElem(InvariantTransformable, SymmElem):
+class IdentityElement(InvariantTransformable, SymmElem):
     """Identity element in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:

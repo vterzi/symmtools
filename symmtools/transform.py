@@ -4,7 +4,7 @@ __all__ = [
     "Transformable",
     "Transformables",
     "InvariantTransformable",
-    "VecTransformable",
+    "VectorTransformable",
     "DirectionTransformable",
     "OrderedTransformable",
     "InfFoldTransformable",
@@ -309,10 +309,12 @@ class InvariantTransformable(Transformable):
         return self.copy()
 
 
-_VecTransformable = TypeVar("_VecTransformable", bound="VecTransformable")
+_VectorTransformable = TypeVar(
+    "_VectorTransformable", bound="VectorTransformable"
+)
 
 
-class VecTransformable(Transformable):
+class VectorTransformable(Transformable):
     """Transformable object represented by a real 3D vector."""
 
     def __init__(self, vec: RealVector) -> None:
@@ -336,34 +338,34 @@ class VecTransformable(Transformable):
         return res
 
     def translate(
-        self: _VecTransformable, translation: "Translation"
-    ) -> _VecTransformable:
+        self: _VectorTransformable, translation: "Translation"
+    ) -> _VectorTransformable:
         res = self.copy()
         res._vec = translate(self._vec, translation.vec)
         return res
 
-    def invert(self: _VecTransformable) -> _VecTransformable:
+    def invert(self: _VectorTransformable) -> _VectorTransformable:
         res = self.copy()
         res._vec = invert(self._vec)
         return res
 
     def rotate(
-        self: _VecTransformable, rotation: "Rotation"
-    ) -> _VecTransformable:
+        self: _VectorTransformable, rotation: "Rotation"
+    ) -> _VectorTransformable:
         res = self.copy()
         res._vec = move2(self._vec, rotation.vec, rotation.cos, rotation.sin)
         return res
 
     def reflect(
-        self: _VecTransformable, reflection: "Reflection"
-    ) -> _VecTransformable:
+        self: _VectorTransformable, reflection: "Reflection"
+    ) -> _VectorTransformable:
         res = self.copy()
         res._vec = reflect(self._vec, reflection.vec)
         return res
 
     def rotoreflect(
-        self: _VecTransformable, rotoreflection: "Rotoreflection"
-    ) -> _VecTransformable:
+        self: _VectorTransformable, rotoreflection: "Rotoreflection"
+    ) -> _VectorTransformable:
         res = self.copy()
         res._vec = reflect(
             move2(
@@ -382,7 +384,7 @@ _DirectionTransformable = TypeVar(
 )
 
 
-class DirectionTransformable(VecTransformable):
+class DirectionTransformable(VectorTransformable):
     """Transformable object represented by a real 3D direction vector."""
 
     def __init__(self, vec: RealVector) -> None:
@@ -472,7 +474,7 @@ class Identity(InvariantTransformable, Transformation):
         return eye(3)
 
 
-class Translation(VecTransformable, Transformation):
+class Translation(VectorTransformable, Transformation):
     """Translation in a real 3D space."""
 
     def __call__(self, obj: _Transformable) -> _Transformable:

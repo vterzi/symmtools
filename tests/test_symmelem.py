@@ -10,7 +10,7 @@ from symmtools import (
     TAU,
     TOL,
     REFL_SYMB,
-    IdentityElem,
+    IdentityElement,
     InversionCenter,
     RotationAxis,
     ReflectionPlane,
@@ -26,17 +26,17 @@ from symmtools import (
 )
 
 
-class TestIdentityElem(TestCase):
+class TestIdentityElement(TestCase):
     def test_transformations(self):
-        symmelem = IdentityElem()
+        symmelem = IdentityElement()
         self.assertSequenceEqual(symmelem.transformations(), [Identity()])
 
     def test_symb(self):
-        symmelem = IdentityElem()
+        symmelem = IdentityElement()
         self.assertEqual(symmelem.symb(), "E")
 
     def test_symmetric(self):
-        symmelem = IdentityElem()
+        symmelem = IdentityElement()
         points = [Point(randvec()) for _ in range(3)]
         self.assertTrue(symmelem.symmetric(Points(points), TOL))
 

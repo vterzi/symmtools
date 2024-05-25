@@ -9,7 +9,7 @@ from .vecop import diff, indepunit
 from .transform import (
     Transformable,
     Transformables,
-    VecTransformable,
+    VectorTransformable,
     DirectionTransformable,
     Translation,
     Rotation,
@@ -19,7 +19,7 @@ from .transform import (
 from .typehints import TypeVar, Any, Sequence, Bool, Vector, RealVector
 
 
-class Point(VecTransformable):
+class Point(VectorTransformable):
     """Point in a real 3D space."""
 
     @property
