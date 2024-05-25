@@ -144,9 +144,11 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
             ):
                 dim = 1
                 direction = reflection
-                rotations.append(InfRotationAxis(reflection))
+                rotations.insert(0, InfRotationAxis(reflection))
                 if invertible:
-                    rotoreflections.append(InfRotoreflectionAxis(reflection))
+                    rotoreflections.insert(
+                        0, InfRotoreflectionAxis(reflection)
+                    )
             # if the distance from the origin to the segment doesn't divide it
             #   in halves
             if not perpendicular(segment, midpoint, tol):
