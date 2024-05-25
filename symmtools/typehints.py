@@ -1,6 +1,7 @@
 """Type hints."""
 
 __all__ = [
+    "TypeVar",
     "Union",
     "Optional",
     "Any",
@@ -27,7 +28,17 @@ __all__ = [
     "RealVectors",
 ]
 
-from typing import Union, Optional, Any, Sequence, Set, Tuple, List, Dict
+from typing import (
+    TypeVar,
+    Union,
+    Optional,
+    Any,
+    Sequence,
+    Set,
+    Tuple,
+    List,
+    Dict,
+)
 
 from numpy import bool_, signedinteger, floating, complexfloating
 from numpy.typing import NDArray
