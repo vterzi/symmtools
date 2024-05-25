@@ -15,19 +15,21 @@ from abc import ABC, abstractmethod
 
 from .const import TAU, INF_SYMB, REFL_SYMB
 from .transform import (
+    Transformable,
     Transformables,
     InvariantTransformable,
     DirectionTransformable,
     OrderedTransformable,
     InfFoldTransformable,
     Transformation,
-    Identity,
     Inversion,
     Rotation,
     Reflection,
     Rotoreflection,
 )
-from .typehints import Sequence, List, Int, RealVector
+from .typehints import TypeVar, Sequence, List, Int, RealVector
+
+_Transformable = TypeVar("_Transformable", bound=Transformable)
 
 
 class SymmetryElement(ABC):
@@ -53,12 +55,21 @@ class SymmetryElement(ABC):
                 return False
         return True
 
+    def __call__(
+        self, transformable: _Transformable
+    ) -> Sequence[_Transformable]:
+        """Apply the transformations."""
+        return (transformable,) + tuple(
+            transformation(transformable)
+            for transformation in self.transformations()
+        )
+
 
 class IdentityElement(InvariantTransformable, SymmetryElement):
     """Identity element in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
-        return (Identity(),)
+        return ()
 
     def symb(self) -> str:
         return "E"
