@@ -27,7 +27,6 @@ from symmtools import (
     Rotoreflection,
     Point,
     normalize,
-    diff,
     parallel,
     translate,
     invert,
@@ -281,7 +280,7 @@ class TestRotation(TestCase):
         angle = randne0angle()
         transform = Rotation(vec, angle)
         mat = rotmat(vec, angle)
-        self.assertLessEqual(diff(transform.mat(), mat), TOL)
+        self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
 
     def test_transformation(self):
         vec = randunitvec()
@@ -369,7 +368,7 @@ class TestReflection(TestCase):
         vec = randunitvec()
         transform = Reflection(vec)
         mat = reflmat(vec)
-        self.assertLessEqual(diff(transform.mat(), mat), TOL)
+        self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
 
     def test_transformation(self):
         vec = randunitvec()
@@ -480,7 +479,7 @@ class TestRotoreflection(TestCase):
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)
         mat = reflmat(vec) @ rotmat(vec, angle)
-        self.assertLessEqual(diff(transform.mat(), mat), TOL)
+        self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
 
     def test_transformation(self):
         vec = randunitvec()

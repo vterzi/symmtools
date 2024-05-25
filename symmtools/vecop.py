@@ -26,6 +26,9 @@ from numpy.linalg import norm
 
 from .typehints import Float, Vector, Matrix, RealVector
 
+# `max` is faster than `numpy.ndarray.max`
+# `float` is faster than `numpy.float64.item`
+
 
 def vector(vec: RealVector) -> Vector:
     """Convert a vector `vec` to a NumPy array of floating-point numbers."""
@@ -57,7 +60,8 @@ def orthogonalize(vec1: Vector, vec2: Vector) -> Vector:
 
 def diff(vec1: Vector, vec2: Vector) -> float:
     """Calculate the difference between two vectors `vec1` and `vec2`."""
-    return abs(vec1 - vec2).max().item()  # norm(vec1 - vec2)
+    # `norm(vec1 - vec2)` is slower
+    return float(max(abs(vec1 - vec2)))
 
 
 def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
@@ -70,13 +74,15 @@ def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
 
 def indep(vec1: Vector, vec2: Vector) -> float:
     """Calculate the linear independence of two vectors `vec1` and `vec2`."""
-    return abs(cross(vec1, vec2)).max().item()  # norm(cross(vec1, vec2))
+    # `norm(cross(vec1, vec2))` is slower
+    return float(max(abs(cross(vec1, vec2))))
 
 
 def indepunit(vec1: Vector, vec2: Vector) -> float:
     """
     Calculate the linear independence of two unit vectors `vec1` and `vec2`.
     """
+    # `abs(abs(vec1.dot(vec2)) - 1)` is faster but less accurate
     return min(diff(vec1, vec2), diff(vec1, -vec2))
 
 
@@ -93,7 +99,7 @@ def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
     Check wether two vectors `vec1` and `vec2` are perpendicular within a
     tolerance `tol`.
     """
-    return abs(vec1.dot(vec2).item()) <= tol
+    return abs(float(vec1.dot(vec2))) <= tol
 
 
 def translate(vec: Vector, translation: Vector) -> Vector:

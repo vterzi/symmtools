@@ -12,6 +12,7 @@ from .init import (
     randunitvec,
     randne0vec,
     perturb,
+    orthperturb,
     randangle,
 )
 
@@ -116,7 +117,9 @@ class TestVecOp(TestCase):
         self.assertTrue(parallel(vec, 2.0 * vec, 0.0))
         self.assertTrue(parallel(vec, 0.0 * vec, 0.0))
         self.assertTrue(parallel(vec, vec + perturb(), 4.0 * TOL))
-        self.assertFalse(parallel(vec, vec + 2.0 * perturb(), TOL))
+        self.assertFalse(
+            parallel(vec, vec + 4.0 * orthperturb(normalize(vec)), TOL)
+        )
 
     def test_perpendicular(self):
         vec1 = randvec()
