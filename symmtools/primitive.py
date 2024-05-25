@@ -1,30 +1,63 @@
 """Classes for primitive objects in a real 3D space."""
 
-__all__ = ["Point", "LabeledPoint", "Arrow", "Elems", "Struct"]
+__all__ = ["Point", "Points", "LabeledPoint", "Arrow", "StructPoint"]
 
-from copy import copy
-
-from numpy import empty, zeros
-from scipy.optimize import linear_sum_assignment
+from numpy import zeros
 
 from .const import INF
-from .vecop import diff, indepunit, translate, invert, move2, reflect
+from .vecop import diff, indepunit
 from .transform import (
     Transformable,
-    PosTransformable,
+    Transformables,
+    VecTransformable,
     DirectionTransformable,
     Translation,
     Rotation,
     Reflection,
     Rotoreflection,
 )
-from .typehints import Any, Sequence, Bool, RealVector
+from .typehints import TypeVar, Any, Sequence, Bool, Vector, RealVector
 
 
-class Point(PosTransformable):
+class Point(VecTransformable):
     """Point in a real 3D space."""
 
-    pass
+    @property
+    def pos(self) -> Vector:
+        """Return the position."""
+        return self._vec
+
+
+_Points = TypeVar("_Points", bound="Points")
+
+
+class Points(Transformables):
+    """Set of points."""
+
+    _elems: Sequence[Point] = ()
+
+    def __init__(self, points: Sequence[Point]) -> None:
+        """Initialize the instance with a set of points `points`."""
+        super().__init__(points)
+
+    @property
+    def pos(self) -> Vector:
+        """Return the centroid of the points."""
+        centroid = zeros(3)
+        n = 0
+        for elem in self._elems:
+            centroid += elem.pos
+            n += 1
+        if n > 0:
+            centroid /= n
+        return centroid
+
+    def __getitem__(self, item: int) -> Point:
+        return self._elems[item]
+
+    def center(self: _Points) -> _Points:
+        """Center the points at the origin."""
+        return self.translate(Translation(-self.pos))
 
 
 class LabeledPoint(Point):
@@ -51,6 +84,9 @@ class LabeledPoint(Point):
         if res < INF and self._label != obj.label:
             res = INF
         return res
+
+
+_Arrow = TypeVar("_Arrow", bound="Arrow")
 
 
 class Arrow(DirectionTransformable):
@@ -109,8 +145,8 @@ class Arrow(DirectionTransformable):
                 res = max(res, indepunit(self._vec, obj.vec))
         return res
 
-    def negate(self) -> "Arrow":
-        res = copy(self)
+    def negate(self: _Arrow) -> _Arrow:
+        res = self.copy()
         if self._form == 0:
             res._vec = -self._vec
         else:
@@ -118,195 +154,71 @@ class Arrow(DirectionTransformable):
         return res
 
 
-class Elems(PosTransformable):
-    """Set of elements."""
-
-    _elems: Sequence[Transformable] = ()
-
-    def __init__(self, elems: Sequence[Transformable]) -> None:
-        """Initialize the instance with a set of elements `elems`."""
-        self._elems = tuple(elems)
-        centroid = zeros(3)
-        n = 0
-        for elem in self._elems:
-            if isinstance(elem, PosTransformable):
-                centroid += elem.pos
-                n += 1
-        if n > 0:
-            centroid /= n
-        super().__init__(centroid)
-
-    @property
-    def elems(self) -> Sequence[Transformable]:
-        """Return the set of elements."""
-        return self._elems
-
-    def args(self) -> str:
-        return (
-            "["
-            + (
-                ""
-                if not self._elems
-                else "\n  "
-                + ",\n  ".join(
-                    str(elem).replace("\n", "\n  ") for elem in self._elems
-                )
-                + ",\n"
-            )
-            + "]"
-        )
-
-    def __getitem__(self, item: int) -> Transformable:
-        return self._elems[item]
-
-    def __len__(self) -> int:
-        return len(self._elems)
-
-    def sort(self, obj: "Elems") -> float:
-        """
-        Sort the elements of the instance minimizing the difference to another
-        instance `obj` and return the resulting difference.
-        """
-        n = len(self._elems)
-        if n != len(obj.elems):
-            raise ValueError("different number of elements")
-        diffs = empty((n, n))
-        for i1 in range(n):
-            elem = self._elems[i1]
-            for i2 in range(n):
-                diffs[i1, i2] = elem.diff(obj.elems[i2])
-        try:
-            order = linear_sum_assignment(diffs)[1]
-        except ValueError:
-            raise ValueError("different number of elements of the same type")
-        idxs = n * [n]
-        for i in range(n):
-            idxs[order[i]] = i
-        self._elems = tuple(self._elems[idxs[i]] for i in range(n))
-        diff = 0.0
-        for i in range(n):
-            diff = max(diff, diffs[i, order[i]])
-        return diff
-
-    def diff(self, obj: Any) -> float:
-        res = super().diff(obj)
-        if res < INF:
-            try:
-                res = max(res, obj.sort(self))
-            except ValueError:
-                res = INF
-        return res
-
-    def negate(self) -> "Elems":
-        res = copy(self)
-        res._elems = tuple(elem.negate() for elem in self._elems)
-        return res
-
-    def nondegen(self, tol: float) -> bool:
-        """
-        Check wether no two elements are the same within a tolerance `tol`.
-        """
-        n = len(self._elems)
-        for i1 in range(n - 1):
-            elem = self._elems[i1]
-            for i2 in range(i1 + 1, n):
-                if elem.same(self._elems[i2], tol):
-                    return False
-        return True
-
-    def center(self):
-        return self.translate(Translation(-self.pos))
-
-    def translate(self, translation: Translation) -> "Elems":
-        return type(self)(
-            tuple(elem.translate(translation) for elem in self._elems)
-        )
-
-    def invert(self) -> "Elems":
-        return type(self)(tuple(elem.invert() for elem in self._elems))
-
-    def rotate(self, rotation: Rotation) -> "Elems":
-        return type(self)(tuple(elem.rotate(rotation) for elem in self._elems))
-
-    def reflect(self, reflection: Reflection) -> "Elems":
-        return type(self)(
-            tuple(elem.reflect(reflection) for elem in self._elems)
-        )
-
-    def rotoreflect(self, rotoreflection: Rotoreflection) -> "Elems":
-        return type(self)(
-            tuple(elem.rotoreflect(rotoreflection) for elem in self._elems)
-        )
+_StructPoint = TypeVar("_StructPoint", bound="StructPoint")
 
 
-class Struct(Elems):
-    """Set of arrows with a coefficient."""
+class StructPoint(Point):
+    """Point with a coefficient and a set of arrows."""
 
     def __init__(
         self, vec: RealVector, coef: float = 1.0, arrows: Sequence[Arrow] = ()
     ) -> None:
         """
-        Initialize the instance with a 3D position vector `vec`, a coefficient
-        `coef`, and a set of arrows `arrows`.
+        Initialize the instance with a 3D position vector `vec`, a non-zero
+        coefficient `coef`, and a set of arrows `arrows`.
         """
-        super().__init__(arrows)
-        PosTransformable.__init__(self, vec)
-        self._coef = coef
+        super().__init__(vec)
+        if coef == 0.0:
+            raise ValueError("zero coefficient")
+        self._arrows = Transformables(arrows)
+        if coef < 0.0:
+            self._arrows = self._arrows.negate()
+        self._coef = abs(coef)
 
     @property
     def coef(self) -> float:
         """Return the coefficient."""
         return self._coef
 
+    @property
+    def arrows(self) -> Transformables:
+        """Return the set of arrows."""
+        return self._arrows
+
     def args(self) -> str:
-        return f"{PosTransformable.args(self)},{self._coef},{super().args()}"
+        return f"{super().args()},{self._coef},{self._arrows.args()}"
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
         if res < INF:
-            res = max(res, abs(self._coef - obj.coef))
+            res = max(
+                res, abs(self._coef - obj.coef), self._arrows.diff(obj.arrows)
+            )
         return res
 
-    def negate(self) -> "Struct":
-        res = copy(self)
-        res._coef = -self._coef
+    def negate(self: _StructPoint) -> _StructPoint:
+        res = super().negate()
+        res._arrows = self._arrows.negate()
         return res
 
-    def translate(self, translation: Translation) -> "Struct":
-        res = copy(self)
-        res._vec = translate(self._vec, translation.vec)
+    def invert(self: _StructPoint) -> _StructPoint:
+        res = super().invert()
+        res._arrows = self._arrows.invert()
         return res
 
-    def invert(self) -> "Struct":
-        res = copy(self)
-        res._vec = invert(self._vec)
-        res._elems = tuple(elem.invert() for elem in self._elems)
+    def rotate(self: _StructPoint, rotation: Rotation) -> _StructPoint:
+        res = super().rotate(rotation)
+        res._arrows = self._arrows.rotate(rotation)
         return res
 
-    def rotate(self, rotation: Rotation) -> "Struct":
-        res = copy(self)
-        res._vec = move2(self._vec, rotation.vec, rotation.cos, rotation.sin)
-        res._elems = tuple(elem.rotate(rotation) for elem in self._elems)
+    def reflect(self: _StructPoint, reflection: Reflection) -> _StructPoint:
+        res = super().reflect(reflection)
+        res._arrows = self._arrows.reflect(reflection)
         return res
 
-    def reflect(self, reflection: Reflection) -> "Struct":
-        res = copy(self)
-        res._vec = reflect(self._vec, reflection.vec)
-        res._elems = tuple(elem.reflect(reflection) for elem in self._elems)
-        return res
-
-    def rotoreflect(self, rotoreflection: Rotoreflection) -> "Struct":
-        res = copy(self)
-        res._vec = reflect(
-            move2(
-                self._vec,
-                rotoreflection.vec,
-                rotoreflection.cos,
-                rotoreflection.sin,
-            ),
-            rotoreflection.vec,
-        )
-        res._elems = tuple(
-            elem.rotoreflect(rotoreflection) for elem in self._elems
-        )
+    def rotoreflect(
+        self: _StructPoint, rotoreflection: Rotoreflection
+    ) -> _StructPoint:
+        res = super().rotoreflect(rotoreflection)
+        res._arrows = self._arrows.rotoreflect(rotoreflection)
         return res

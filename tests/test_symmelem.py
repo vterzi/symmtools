@@ -15,14 +15,13 @@ from symmtools import (
     RotationAxis,
     ReflectionPlane,
     RotoreflectionAxis,
-    Transformable,
     Identity,
     Inversion,
     Rotation,
     Reflection,
     Rotoreflection,
     Point,
-    Elems,
+    Points,
     normalize,
 )
 
@@ -39,7 +38,7 @@ class TestIdentityElem(TestCase):
     def test_symmetric(self):
         symmelem = IdentityElem()
         points = [Point(randvec()) for _ in range(3)]
-        self.assertTrue(symmelem.symmetric(Elems(points), TOL))
+        self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
 
 class TestInversionCenter(TestCase):
@@ -53,13 +52,13 @@ class TestInversionCenter(TestCase):
 
     def test_symmetric(self):
         symmelem = InversionCenter()
-        points: List[Transformable] = []
+        points: List[Point] = []
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
             for transform in symmelem.transformations():
                 points.append(transform(points[i]))
-        self.assertTrue(symmelem.symmetric(Elems(points), TOL))
+        self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
 
 class TestRotationAxis(TestCase):
@@ -95,13 +94,13 @@ class TestRotationAxis(TestCase):
 
     def test_symmetric(self):
         symmelem = RotationAxis(randunitvec(), 3)
-        points: List[Transformable] = []
+        points: List[Point] = []
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
             for transform in symmelem.transformations():
                 points.append(transform(points[i]))
-        self.assertTrue(symmelem.symmetric(Elems(points), TOL))
+        self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
 
 class TestReflectionPlane(TestCase):
@@ -117,13 +116,13 @@ class TestReflectionPlane(TestCase):
 
     def test_symmetric(self):
         symmelem = ReflectionPlane(randunitvec())
-        points: List[Transformable] = []
+        points: List[Point] = []
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
             for transform in symmelem.transformations():
                 points.append(transform(points[i]))
-        self.assertTrue(symmelem.symmetric(Elems(points), TOL))
+        self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
 
 class TestRotoreflectionAxis(TestCase):
@@ -166,13 +165,13 @@ class TestRotoreflectionAxis(TestCase):
 
     def test_symmetric(self):
         symmelem = RotoreflectionAxis(randunitvec(), 3)
-        points: List[Transformable] = []
+        points: List[Point] = []
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
             for transform in symmelem.transformations():
                 points.append(transform(points[i]))
-        self.assertTrue(symmelem.symmetric(Elems(points), TOL))
+        self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
 
 if __name__ == "__main__":

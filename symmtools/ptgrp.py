@@ -14,12 +14,12 @@ from .symmelem import (
     RotoreflectionAxis,
     InfRotoreflectionAxis,
 )
-from .primitive import Elems
+from .primitive import Points
 from .vecop import parallel, perpendicular
 from .typehints import Union, List, Dict
 
 
-def symmelems(elems: Elems, tol: float = TOL):
+def symmelems(points: Points, tol: float = TOL):
     def contains(array, vector):
         for elem in array:
             if parallel(elem.vec, vector, tol):
@@ -28,14 +28,14 @@ def symmelems(elems: Elems, tol: float = TOL):
 
     def add_rotation(vector, order):
         rotation = RotationAxis(vector, order)
-        if rotation.symmetric(elems, tol):
+        if rotation.symmetric(points, tol):
             rotations.append(rotation)
             return True
         return False
 
     def add_reflection(vector):
         reflection = ReflectionPlane(vector)
-        if reflection.symmetric(elems, tol):
+        if reflection.symmetric(points, tol):
             reflections.append(reflection)
             return True
         return False
@@ -44,36 +44,37 @@ def symmelems(elems: Elems, tol: float = TOL):
         for factor in (2, 1):
             if factor * order > 2:
                 rotoreflection = RotoreflectionAxis(vector, factor * order)
-                if rotoreflection.symmetric(elems, tol):
+                if rotoreflection.symmetric(points, tol):
                     rotoreflections.append(rotoreflection)
                     return True
         return False
 
-    if not elems.nondegen(tol):
+    if not points.nondegen(tol):
         raise ValueError(
-            "at least two identical elements in the instance of Elems for the"
-            " given tolerance"
+            "at least two identical elements in the instance of "
+            + points.__class__.__name__
+            + " for the given tolerance"
         )
     dim = 3
-    invertible = InversionCenter().symmetric(elems, tol)
+    invertible = InversionCenter().symmetric(points, tol)
     rotations: List[Union[RotationAxis, InfRotationAxis]] = []
     reflections: List[ReflectionPlane] = []
     rotoreflections: List[Union[RotoreflectionAxis, InfRotoreflectionAxis]] = (
         []
     )
-    if len(elems) == 1:
+    if len(points) == 1:
         dim = 0
     direction = None
     collinear = True
-    for i1 in range(len(elems) - 1):
+    for i1 in range(len(points) - 1):
         # for all point pairs
-        for i2 in range(i1 + 1, len(elems)):
+        for i2 in range(i1 + 1, len(points)):
             # for all point triplets
-            for i3 in range(i2 + 1, len(elems)):
+            for i3 in range(i2 + 1, len(points)):
                 # find the normal of the plane containing the point triplet
                 normal = cross(
-                    elems[i2].vec - elems[i1].vec,
-                    elems[i3].vec - elems[i1].vec,
+                    points[i2].vec - points[i1].vec,
+                    points[i3].vec - points[i1].vec,
                 )
                 normal_norm = norm(normal)
                 # if the point triplet is collinear
@@ -84,17 +85,17 @@ def symmelems(elems: Elems, tol: float = TOL):
                 rotation = normal / normal_norm
                 if not contains(rotations, rotation):
                     # calculate the distance between the origin and the plane
-                    dist = elems[i1].vec.dot(rotation)
+                    dist = points[i1].vec.dot(rotation)
                     # initial number of points in the plane
                     max_order = 3
                     # for other points
-                    for i4 in range(i3 + 1, len(elems)):
+                    for i4 in range(i3 + 1, len(points)):
                         # if the point is in the plane
-                        if abs(elems[i4].vec.dot(rotation) - dist) <= tol:
+                        if abs(points[i4].vec.dot(rotation) - dist) <= tol:
                             # increase the number of points in the plane
                             max_order += 1
                     if (
-                        max_order == len(elems)
+                        max_order == len(points)
                         and direction is None
                         and abs(dist) <= tol
                     ):
@@ -111,15 +112,15 @@ def symmelems(elems: Elems, tol: float = TOL):
                         if added:
                             break
             # directed segment between the point pair
-            segment = elems[i1].vec - elems[i2].vec
+            segment = points[i1].vec - points[i2].vec
             # midpoint of the segment
-            midpoint = (elems[i1].vec + elems[i2].vec) / 2
+            midpoint = (points[i1].vec + points[i2].vec) / 2
             reflection = segment / norm(segment)
             # add rotation with order infinity
             if (
                 collinear
                 and direction is None
-                and parallel(elems[i1].vec, elems[i2].vec, tol)
+                and parallel(points[i1].vec, points[i2].vec, tol)
             ):
                 dim = 1
                 direction = reflection
@@ -152,9 +153,9 @@ def symmelems(elems: Elems, tol: float = TOL):
     )
 
 
-def ptgrp(elems, tol=TOL):
+def ptgrp(points, tol=TOL):
     dim, invertible, rotations, reflections, rotoreflections = symmelems(
-        elems, tol
+        points, tol
     )
     if dim == 0:
         return "Kh"  # 'K'

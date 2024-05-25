@@ -5,7 +5,7 @@ from symmtools import (
     chcoords,
     signvar,
     topoints,
-    Elems,
+    Points,
     generate,
     Point,
     Rotation,
@@ -19,16 +19,16 @@ from symmtools import (
 class TestPtGrp(TestCase):
     def test_ptgrp(self):
         point = chcoords([[]])
-        self.assertEqual(ptgrp(Elems(topoints(point))), "Kh")
+        self.assertEqual(ptgrp(Points(topoints(point))), "Kh")
         segment = chcoords(signvar([1]))
-        self.assertEqual(ptgrp(Elems(topoints(segment))), "Dooh")
+        self.assertEqual(ptgrp(Points(topoints(segment))), "Dooh")
         collinear = segment + chcoords([[2]])
-        self.assertEqual(ptgrp(Elems(topoints(collinear))), "Coov")
+        self.assertEqual(ptgrp(Points(topoints(collinear))), "Coov")
         triangle = generate(
             [Point([1, 0, 0])], [Rotation([0, 0, 1], 2 * PI / 3)], TOL
         )
         self.assertEqual(ptgrp(triangle), "D3h")
-        square = Elems(topoints(chcoords(signvar([1, 1]))))
+        square = Points(topoints(chcoords(signvar([1, 1]))))
         self.assertEqual(ptgrp(square), "D4h")
         pentagon = generate(
             [Point([1, 0, 0])], [Rotation([0, 0, 1], 2 * PI / 5)], TOL
@@ -38,15 +38,15 @@ class TestPtGrp(TestCase):
             [Point([1, 0, 0])], [Rotation([0, 0, 1], PI / 3)], TOL
         )
         self.assertEqual(ptgrp(hexagon), "D6h")
-        tetrahedron = Elems(topoints(signvar([1, 1, 1], 1)))
+        tetrahedron = Points(topoints(signvar([1, 1, 1], 1)))
         self.assertEqual(ptgrp(tetrahedron), "Td")
-        cube = Elems(topoints(signvar([1, 1, 1])))
+        cube = Points(topoints(signvar([1, 1, 1])))
         self.assertEqual(ptgrp(cube), "Oh")
-        octahedron = Elems(topoints(ax3permut(signvar([1]))))
+        octahedron = Points(topoints(ax3permut(signvar([1]))))
         self.assertEqual(ptgrp(octahedron), "Oh")
-        icosahedron = Elems(topoints(ax3permut(signvar([PHI, 1]))))
+        icosahedron = Points(topoints(ax3permut(signvar([PHI, 1]))))
         self.assertEqual(ptgrp(icosahedron), "Ih")
-        dodecahedron = Elems(
+        dodecahedron = Points(
             topoints(
                 signvar([PHI, PHI, PHI]) + ax3permut(signvar([PHI + 1, 1]))
             )

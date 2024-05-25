@@ -14,8 +14,8 @@ __all__ = [
 from abc import ABC, abstractmethod
 
 from .const import TAU, INF_SYMB, REFL_SYMB
-from .primitive import Elems
 from .transform import (
+    Transformables,
     InvariantTransformable,
     DirectionTransformable,
     OrderedTransformable,
@@ -43,13 +43,13 @@ class SymmElem(ABC):
         """Return the symbol."""
         pass
 
-    def symmetric(self, elems: Elems, tol: float) -> bool:
+    def symmetric(self, transformables: Transformables, tol: float) -> bool:
         """
-        Check wether a set of elements `elems` is symmetric within a tolerance
-        `tol`.
+        Check wether a set of transformables `transformables` is symmetric
+        within a tolerance `tol`.
         """
         for transformation in self.transformations():
-            if not elems.same(transformation(elems), tol):
+            if not transformables.same(transformation(transformables), tol):
                 return False
         return True
 

@@ -12,7 +12,7 @@ __all__ = [
 from re import findall
 
 from .const import ORIGIN, TOL
-from .primitive import Point, LabeledPoint, Elems
+from .primitive import Point, LabeledPoint, Points
 from .transform import Transformation
 from .typehints import (
     Optional,
@@ -20,7 +20,6 @@ from .typehints import (
     List,
     Bool,
     Int,
-    Float,
     Real,
     Ints,
     RealVector,
@@ -104,11 +103,11 @@ def topoints(points: RealVectors) -> List[Point]:
 def generate(
     points: Sequence[Point],
     transformations: Sequence[Transformation] = (),
-    tol: Float = TOL,
-) -> Elems:
+    tol: float = TOL,
+) -> Points:
     """
     Generate all unique points by applying transformations `transformations` to
-    points `points` and return them as an `Elems` instance.
+    points `points` and return them as a `Points` instance.
     """
     points = list(points)
     fi = 0
@@ -126,23 +125,23 @@ def generate(
                     points.append(point)
         fi = li
         li = len(points)
-    return Elems(points)
+    return Points(points)
 
 
-def str2elems(string: str) -> Elems:
+def str2elems(string: str) -> Points:
     """
-    Convert a string `string` to an `Elems` instance.  Each three
-    consecutive floating point numbers are parsed as a `Point` instance.  If
-    they are preceded by a label satisfying the rules of variable names, a
+    Convert a string `string` to a `Points` instance.  Each three consecutive
+    floating-point numbers are parsed as a `Point` instance.  If they are
+    preceded by a label satisfying the rules of variable names, a
     `LabeledPoint` instance is created instead.
     """
-    elems = []
+    points = []
     for match in findall(
         rf"(?:({_LABEL_RE})\s+)?({_FLOAT_RE})\s+({_FLOAT_RE})\s+({_FLOAT_RE})",
         string,
     ):
         label, x, y, z = match
-        elems.append(
+        points.append(
             LabeledPoint((x, y, z), label) if label else Point((x, y, z))
         )
-    return Elems(elems)
+    return Points(points)
