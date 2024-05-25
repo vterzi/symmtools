@@ -10,6 +10,7 @@ __all__ = [
     "indep",
     "indepunit",
     "parallel",
+    "parallelunit",
     "perpendicular",
     "translate",
     "invert",
@@ -92,6 +93,14 @@ def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
     `tol`.
     """
     return indep(vec1, vec2) <= tol
+
+
+def parallelunit(vec1: Vector, vec2: Vector, tol: float) -> bool:
+    """
+    Check wether two unit vectors `vec1` and `vec2` are parallel within a
+    tolerance `tol`.
+    """
+    return indepunit(vec1, vec2) <= tol
 
 
 def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
