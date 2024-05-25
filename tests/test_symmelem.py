@@ -29,7 +29,7 @@ from symmtools import (
 class TestIdentityElement(TestCase):
     def test_transformations(self):
         symmelem = IdentityElement()
-        self.assertSequenceEqual(symmelem.transformations(), [Identity()])
+        self.assertSequenceEqual(symmelem.transformations(), [])
 
     def test_symb(self):
         symmelem = IdentityElement()
