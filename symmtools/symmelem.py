@@ -169,4 +169,4 @@ class InfRotoreflectionAxis(InfFoldTransformable, SymmElem):
         raise NotImplementedError()
 
     def symb(self) -> str:
-        return "Soo"  # "S\u221e"
+        return "S{INF_SYMB}"
