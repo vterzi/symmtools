@@ -1,7 +1,7 @@
 """Classes for symmetry elements in a real 3D space."""
 
 __all__ = [
-    "SymmElem",
+    "SymmetryElement",
     "IdentityElement",
     "InversionCenter",
     "RotationAxis",
@@ -30,7 +30,7 @@ from .transform import (
 from .typehints import Sequence, List, Int, RealVector
 
 
-class SymmElem(ABC):
+class SymmetryElement(ABC):
     """Symmetry element."""
 
     @abstractmethod
@@ -54,7 +54,7 @@ class SymmElem(ABC):
         return True
 
 
-class IdentityElement(InvariantTransformable, SymmElem):
+class IdentityElement(InvariantTransformable, SymmetryElement):
     """Identity element in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
@@ -64,7 +64,7 @@ class IdentityElement(InvariantTransformable, SymmElem):
         return "E"
 
 
-class InversionCenter(InvariantTransformable, SymmElem):
+class InversionCenter(InvariantTransformable, SymmetryElement):
     """Inversion center in the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
@@ -74,7 +74,7 @@ class InversionCenter(InvariantTransformable, SymmElem):
         return "i"
 
 
-class RotationAxis(OrderedTransformable, SymmElem):
+class RotationAxis(OrderedTransformable, SymmetryElement):
     """Rotation axis containing the origin in a real 3D space."""
 
     def __init__(self, vec: RealVector, order: Int) -> None:
@@ -98,7 +98,7 @@ class RotationAxis(OrderedTransformable, SymmElem):
         return f"C{self._order}"
 
 
-class InfRotationAxis(InfFoldTransformable, SymmElem):
+class InfRotationAxis(InfFoldTransformable, SymmetryElement):
     """Infinite-fold rotation axis containing the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
@@ -108,7 +108,7 @@ class InfRotationAxis(InfFoldTransformable, SymmElem):
         return f"C{INF_SYMB}"
 
 
-class ReflectionPlane(DirectionTransformable, SymmElem):
+class ReflectionPlane(DirectionTransformable, SymmetryElement):
     """Reflection plane containing the origin in a real 3D space."""
 
     def transformations(self) -> Sequence[Transformation]:
@@ -118,7 +118,7 @@ class ReflectionPlane(DirectionTransformable, SymmElem):
         return REFL_SYMB
 
 
-class RotoreflectionAxis(OrderedTransformable, SymmElem):
+class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
     """Rotoreflection axis containing the origin in a real 3D space."""
 
     def __init__(self, vec: RealVector, order: Int) -> None:
@@ -160,7 +160,7 @@ class RotoreflectionAxis(OrderedTransformable, SymmElem):
         return f"S{self._order}"
 
 
-class InfRotoreflectionAxis(InfFoldTransformable, SymmElem):
+class InfRotoreflectionAxis(InfFoldTransformable, SymmetryElement):
     """
     Infinite-fold rotoreflaction axis containing the origin in a real 3D space.
     """

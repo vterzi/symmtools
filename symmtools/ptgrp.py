@@ -6,7 +6,7 @@ from numpy.linalg import norm
 from .const import PHI, TOL, PRIMAX, SECAX
 from .tools import signvar, ax3permut
 from .symmelem import (
-    SymmElem,
+    SymmetryElement,
     InversionCenter,
     RotationAxis,
     InfRotationAxis,
@@ -199,7 +199,7 @@ def symb2grp(symb):
         raise ValueError("unknown point group")
     rotation, order, reflection = match.groups()
     n = (int(order) if order != "oo" else inf) if order else nan
-    group: Dict[str, SymmElem] = {"E": Identity()}
+    group: Dict[str, SymmetryElement] = {"E": Identity()}
     if rotation == "S" and order and not reflection:
         if n % 2 == 1 or n == inf:
             return symb2grp(f"C{order}h")
