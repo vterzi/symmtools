@@ -85,9 +85,9 @@ class TestPtGrp(TestCase):
         self.assertFalse(inv)
         self.assertListEqual([rot.order for rot in rots], 4 * [3] + 3 * [2])
         self.assertEqual(len(refls), 6)
-        # self.assertListEqual(
-        #     [rotorefl.order for rotorefl in rotorefls], 3 * [4]
-        # )
+        self.assertListEqual(
+            [rotorefl.order for rotorefl in rotorefls], 3 * [4]
+        )
         dim, inv, rots, refls, rotorefls = symmelems(cube)
         self.assertEqual(dim, 3)
         self.assertTrue(inv)
