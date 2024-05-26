@@ -19,6 +19,7 @@ from symmtools import (
     INF,
     TAU,
     TOL,
+    Transformation,
     Identity,
     Translation,
     Inversion,
@@ -38,18 +39,18 @@ from symmtools import (
 
 
 class TestIdentity(TestCase):
-    def test_call(self):
+    def test_call(self) -> None:
         transform = Identity()
         point = Point(randvec())
         self.assertEqual(transform(point), point)
 
-    def test_representation(self):
+    def test_representation(self) -> None:
         transform = Identity()
         string = "Identity()"
         self.assertEqual(str(transform), string)
         self.assertEqual(repr(transform), string)
 
-    def test_comparison(self):
+    def test_comparison(self) -> None:
         transform = Identity()
         point = Point(randvec())
         self.assertEqual(transform.diff(transform), 0.0)
@@ -59,12 +60,13 @@ class TestIdentity(TestCase):
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
 
-    def test_mat(self):
+    def test_mat(self) -> None:
         transform = Identity()
         mat = eye(3)
         self.assertTrue((transform.mat() == mat).all())
 
-    def test_transformation(self):
+    def test_transformation(self) -> None:
+        transform_: Transformation
         transform = Identity()
         self.assertEqual(transform.copy(), transform)
         transform_ = Identity()
@@ -82,7 +84,7 @@ class TestIdentity(TestCase):
 
 
 class TestTranslation(TestCase):
-    def test_init(self):
+    def test_init(self) -> None:
         vec = randvec().tolist()
         transform = Translation(vec)
         self.assertIsInstance(transform.vec, ndarray)
@@ -90,14 +92,14 @@ class TestTranslation(TestCase):
         self.assertListEqual(transform.vec.tolist(), vec)
         self.assertRaises(ValueError, Translation, vec[:2])
 
-    def test_call(self):
+    def test_call(self) -> None:
         vec = randvec()
         transform = Translation(vec)
         pos = randvec()
         point = Point(pos)
         self.assertEqual(transform(point), Point(pos + vec))
 
-    def test_representation(self):
+    def test_representation(self) -> None:
         vec = randvec()
         transform = Translation(vec)
         string = f"Translation({vec.tolist()})"
@@ -105,7 +107,7 @@ class TestTranslation(TestCase):
         self.assertEqual(str(transform), string)
         self.assertEqual(repr(transform), string)
 
-    def test_comparison(self):
+    def test_comparison(self) -> None:
         vec = randvec()
         transform = Translation(vec)
         point = Point(randvec())
@@ -121,14 +123,15 @@ class TestTranslation(TestCase):
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
 
-    def test_mat(self):
+    def test_mat(self) -> None:
         vec = randvec()
         transform = Translation(vec)
         mat = eye(4)
         mat[:3, 3] = vec
         self.assertTrue((transform.mat() == mat).all())
 
-    def test_transformation(self):
+    def test_transformation(self) -> None:
+        transform_: Transformation
         vec = randvec()
         transform = Translation(vec)
         self.assertEqual(transform.copy(), transform)
@@ -165,19 +168,19 @@ class TestTranslation(TestCase):
 
 
 class TestInversion(TestCase):
-    def test_call(self):
+    def test_call(self) -> None:
         transform = Inversion()
         pos = randvec()
         point = Point(pos)
         self.assertEqual(transform(point), Point(-pos))
 
-    def test_representation(self):
+    def test_representation(self) -> None:
         transform = Inversion()
         string = "Inversion()"
         self.assertEqual(str(transform), string)
         self.assertEqual(repr(transform), string)
 
-    def test_comparison(self):
+    def test_comparison(self) -> None:
         transform = Inversion()
         point = Point(randvec())
         self.assertEqual(transform.diff(transform), 0.0)
@@ -187,12 +190,13 @@ class TestInversion(TestCase):
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
 
-    def test_mat(self):
+    def test_mat(self) -> None:
         transform = Inversion()
         mat = -eye(3)
         self.assertTrue((transform.mat() == mat).all())
 
-    def test_transformation(self):
+    def test_transformation(self) -> None:
+        transform_: Transformation
         transform = Inversion()
         self.assertEqual(transform.copy(), transform)
         transform_ = Identity()
@@ -210,14 +214,14 @@ class TestInversion(TestCase):
 
 
 class TestRotation(TestCase):
-    def test_init(self):
+    def test_init(self) -> None:
         vec = randne0vec().tolist()
         angle = randne0angle()
         transform = Rotation(vec, angle)
         self.assertIsInstance(transform.vec, ndarray)
         self.assertEqual(transform.vec.dtype, float64)
         self.assertTrue(parallel(transform.vec, vec, TOL))
-        self.assertAlmostEqual(norm(transform.vec), 1, delta=TOL)
+        self.assertAlmostEqual(float(norm(transform.vec)), 1.0, delta=TOL)
         self.assertEqual(transform.angle, angle)
         self.assertAlmostEqual(
             Rotation(vec, angle + TAU).angle, angle, delta=TOL
@@ -230,7 +234,7 @@ class TestRotation(TestCase):
         self.assertRaises(ValueError, Rotation, vec, 0.0)
         self.assertRaises(ValueError, Rotation, vec, TAU)
 
-    def test_call(self):
+    def test_call(self) -> None:
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotation(vec, angle)
@@ -239,7 +243,7 @@ class TestRotation(TestCase):
         mat = rotmat(vec, angle)
         self.assertTrue(transform(point).same(Point(mat @ pos), TOL))
 
-    def test_representation(self):
+    def test_representation(self) -> None:
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotation(vec, angle)
@@ -248,7 +252,7 @@ class TestRotation(TestCase):
         self.assertEqual(str(transform), string)
         self.assertEqual(repr(transform), string)
 
-    def test_comparison(self):
+    def test_comparison(self) -> None:
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotation(vec, angle)
@@ -275,14 +279,15 @@ class TestRotation(TestCase):
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
 
-    def test_mat(self):
+    def test_mat(self) -> None:
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotation(vec, angle)
         mat = rotmat(vec, angle)
         self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
 
-    def test_transformation(self):
+    def test_transformation(self) -> None:
+        transform_: Transformation
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotation(vec, angle)
@@ -320,17 +325,17 @@ class TestRotation(TestCase):
 
 
 class TestReflection(TestCase):
-    def test_init(self):
+    def test_init(self) -> None:
         vec = randne0vec().tolist()
         transform = Reflection(vec)
         self.assertIsInstance(transform.vec, ndarray)
         self.assertEqual(transform.vec.dtype, float64)
         self.assertTrue(parallel(transform.vec, vec, TOL))
-        self.assertAlmostEqual(norm(transform.vec), 1, delta=TOL)
+        self.assertAlmostEqual(float(norm(transform.vec)), 1.0, delta=TOL)
         self.assertRaises(ValueError, Reflection, vec[:2])
         self.assertRaises(ValueError, Reflection, zeros(3))
 
-    def test_call(self):
+    def test_call(self) -> None:
         vec = randunitvec()
         transform = Reflection(vec)
         pos = randvec()
@@ -338,7 +343,7 @@ class TestReflection(TestCase):
         mat = reflmat(vec)
         self.assertTrue(transform(point).same(Point(mat @ pos), TOL))
 
-    def test_representation(self):
+    def test_representation(self) -> None:
         vec = randunitvec()
         transform = Reflection(vec)
         string = f"Reflection({normalize(vec).tolist()})"
@@ -346,7 +351,7 @@ class TestReflection(TestCase):
         self.assertEqual(str(transform), string)
         self.assertEqual(repr(transform), string)
 
-    def test_comparison(self):
+    def test_comparison(self) -> None:
         vec = randunitvec()
         transform = Reflection(vec)
         point = Point(randvec())
@@ -364,13 +369,14 @@ class TestReflection(TestCase):
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
 
-    def test_mat(self):
+    def test_mat(self) -> None:
         vec = randunitvec()
         transform = Reflection(vec)
         mat = reflmat(vec)
         self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
 
-    def test_transformation(self):
+    def test_transformation(self) -> None:
+        transform_: Transformation
         vec = randunitvec()
         transform = Reflection(vec)
         self.assertEqual(transform.copy(), transform)
@@ -405,14 +411,14 @@ class TestReflection(TestCase):
 
 
 class TestRotoreflection(TestCase):
-    def test_init(self):
+    def test_init(self) -> None:
         vec = randne0vec().tolist()
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)
         self.assertIsInstance(transform.vec, ndarray)
         self.assertEqual(transform.vec.dtype, float64)
         self.assertTrue(parallel(transform.vec, vec, TOL))
-        self.assertAlmostEqual(norm(transform.vec), 1.0, delta=TOL)
+        self.assertAlmostEqual(float(norm(transform.vec)), 1.0, delta=TOL)
         self.assertEqual(transform.angle, angle)
         self.assertAlmostEqual(
             Rotoreflection(vec, angle + TAU).angle, angle, delta=TOL
@@ -425,7 +431,7 @@ class TestRotoreflection(TestCase):
         self.assertRaises(ValueError, Rotoreflection, vec, 0.0)
         self.assertRaises(ValueError, Rotoreflection, vec, TAU)
 
-    def test_call(self):
+    def test_call(self) -> None:
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)
@@ -434,7 +440,7 @@ class TestRotoreflection(TestCase):
         mat = reflmat(vec) @ rotmat(vec, angle)
         self.assertTrue(transform(point).same(Point(mat @ pos), TOL))
 
-    def test_representation(self):
+    def test_representation(self) -> None:
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)
@@ -443,7 +449,7 @@ class TestRotoreflection(TestCase):
         self.assertEqual(str(transform), string)
         self.assertEqual(repr(transform), string)
 
-    def test_comparison(self):
+    def test_comparison(self) -> None:
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)
@@ -474,14 +480,15 @@ class TestRotoreflection(TestCase):
         self.assertEqual(transform, transform)
         self.assertNotEqual(transform, point)
 
-    def test_mat(self):
+    def test_mat(self) -> None:
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)
         mat = reflmat(vec) @ rotmat(vec, angle)
         self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
 
-    def test_transformation(self):
+    def test_transformation(self) -> None:
+        transform_: Transformation
         vec = randunitvec()
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)

@@ -39,7 +39,7 @@ from symmtools import (
 
 
 class TestVecOp(TestCase):
-    def test_vector(self):
+    def test_vector(self) -> None:
         arr = [randint(-8, 8) for _ in range(3)]
         vec = vector(arr)
         self.assertIsInstance(vec, ndarray)
@@ -51,7 +51,7 @@ class TestVecOp(TestCase):
         self.assertEqual(vec.dtype, float64)
         self.assertListEqual(vec.tolist(), arr)
 
-    def test_canonicalize(self):
+    def test_canonicalize(self) -> None:
         vec = randvec()
         for i in range(3):
             while vec[i] == 0.0:
@@ -63,18 +63,18 @@ class TestVecOp(TestCase):
             vec[i] = 0.0
         self.assertListEqual(canonicalize(vec).tolist(), vec.tolist())
 
-    def test_normalize(self):
+    def test_normalize(self) -> None:
         vec = randne0vec()
         self.assertListEqual(
             normalize(vec).tolist(), (vec / norm(vec)).tolist()
         )
 
-    def test_orthogonalize(self):
+    def test_orthogonalize(self) -> None:
         vec1 = randvec()
         vec2 = randunitvec()
         self.assertLessEqual(orthogonalize(vec1, vec2).dot(vec2), TOL)
 
-    def test_diff(self):
+    def test_diff(self) -> None:
         vec1 = randvec()
         vec2 = vec1
         while (vec1 == vec2).all():
@@ -83,7 +83,7 @@ class TestVecOp(TestCase):
         self.assertEqual(diff(vec2, vec2), 0.0)
         self.assertGreaterEqual(diff(vec1, vec2), abs(vec1 - vec2).max())
 
-    def test_same(self):
+    def test_same(self) -> None:
         vec1 = randvec()
         vec2 = vec1
         while diff(vec1, vec2) <= TOL:
@@ -96,7 +96,7 @@ class TestVecOp(TestCase):
         self.assertFalse(same(vec1, vec1 + 2.0 * perturb(), TOL))
         self.assertFalse(same(vec2, vec2 + 2.0 * perturb(), TOL))
 
-    def test_indep(self):
+    def test_indep(self) -> None:
         vec = randvec()
         self.assertEqual(indep(vec, vec), 0.0)
         self.assertEqual(indep(vec, -vec), 0.0)
@@ -104,13 +104,13 @@ class TestVecOp(TestCase):
         self.assertEqual(indep(vec, 0.0 * vec), 0.0)
         self.assertGreater(indep(vec, vec + perturb()), 0.0)
 
-    def test_indepunit(self):
+    def test_indepunit(self) -> None:
         vec = randunitvec()
         self.assertEqual(indepunit(vec, vec), 0.0)
         self.assertEqual(indepunit(vec, -vec), 0.0)
         self.assertGreater(indep(vec, vec + perturb()), 0.0)
 
-    def test_parallel(self):
+    def test_parallel(self) -> None:
         vec = randvec()
         self.assertTrue(parallel(vec, vec, 0.0))
         self.assertTrue(parallel(vec, -vec, 0.0))
@@ -121,7 +121,7 @@ class TestVecOp(TestCase):
             parallel(vec, vec + 4.0 * orthperturb(normalize(vec)), TOL)
         )
 
-    def test_perpendicular(self):
+    def test_perpendicular(self) -> None:
         vec1 = randvec()
         vec2 = zeros(3)
         while (vec2 == 0.0).all():
@@ -134,18 +134,18 @@ class TestVecOp(TestCase):
         self.assertTrue(perpendicular(vec1, vec2, TOL))
         self.assertTrue(perpendicular(vec1, vec2 + perturb(), 4.0 * TOL))
 
-    def test_translate(self):
+    def test_translate(self) -> None:
         vec = randvec()
         translation = randvec()
         self.assertListEqual(
             translate(vec, translation).tolist(), (vec + translation).tolist()
         )
 
-    def test_invert(self):
+    def test_invert(self) -> None:
         vec = randvec()
         self.assertListEqual(invert(vec).tolist(), (-vec).tolist())
 
-    def test_move2(self):
+    def test_move2(self) -> None:
         vec = randvec()
         normal = randunitvec()
         coef1, coef2 = [normalvariate(0.0, 1.0) for _ in range(2)]
@@ -157,7 +157,7 @@ class TestVecOp(TestCase):
             move2(vec, normal, coef1, coef2).tolist(), res.tolist()
         )
 
-    def test_rotate(self):
+    def test_rotate(self) -> None:
         vec = randvec()
         rotation = randunitvec()
         angle = randangle()
@@ -166,7 +166,7 @@ class TestVecOp(TestCase):
             diff(rotate(vec, rotation, angle), mat @ vec), TOL
         )
 
-    def test_reflect(self):
+    def test_reflect(self) -> None:
         vec = randvec()
         reflection = randunitvec()
         mat = reflmat(reflection)

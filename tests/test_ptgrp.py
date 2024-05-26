@@ -33,7 +33,7 @@ dodecahedron = Points.from_arr(
 
 
 class TestPtGrp(TestCase):
-    def test_symmelems(self):
+    def test_symmelems(self) -> None:
         dim, inv, rots, refls, rotorefls = symmelems(point)
         self.assertEqual(dim, 0)
         self.assertTrue(inv)
@@ -129,7 +129,7 @@ class TestPtGrp(TestCase):
         #     [rotorefl.order for rotorefl in rotorefls], 6 * [10] + 10 * [6]
         # )
 
-    def test_ptgrp(self):
+    def test_ptgrp(self) -> None:
         self.assertEqual(ptgrp(point), "Kh")
         self.assertEqual(ptgrp(segment), "Dooh")
         self.assertEqual(ptgrp(collinear), "Coov")

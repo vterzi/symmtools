@@ -26,30 +26,30 @@ from symmtools import (
 
 
 class TestIdentityElement(TestCase):
-    def test_transformations(self):
+    def test_transformations(self) -> None:
         symmelem = IdentityElement()
         self.assertSequenceEqual(symmelem.transformations(), [])
 
-    def test_symb(self):
+    def test_symb(self) -> None:
         symmelem = IdentityElement()
         self.assertEqual(symmelem.symb(), "E")
 
-    def test_symmetric(self):
+    def test_symmetric(self) -> None:
         symmelem = IdentityElement()
         points = [Point(randvec()) for _ in range(3)]
         self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
 
 class TestInversionCenter(TestCase):
-    def test_transformations(self):
+    def test_transformations(self) -> None:
         symmelem = InversionCenter()
         self.assertSequenceEqual(symmelem.transformations(), [Inversion()])
 
-    def test_symb(self):
+    def test_symb(self) -> None:
         symmelem = InversionCenter()
         self.assertEqual(symmelem.symb(), "i")
 
-    def test_symmetric(self):
+    def test_symmetric(self) -> None:
         symmelem = InversionCenter()
         points: List[Point] = []
         for _ in range(3):
@@ -61,12 +61,12 @@ class TestInversionCenter(TestCase):
 
 
 class TestRotationAxis(TestCase):
-    def test_init(self):
+    def test_init(self) -> None:
         self.assertRaises(ValueError, RotationAxis, randunitvec(), -1)
         self.assertRaises(ValueError, RotationAxis, randunitvec(), 0)
         self.assertRaises(ValueError, RotationAxis, randunitvec(), 1)
 
-    def test_transformations(self):
+    def test_transformations(self) -> None:
         vec = randunitvec()
         symmelem = RotationAxis(vec, 3)
         vec = normalize(vec)
@@ -86,12 +86,12 @@ class TestRotationAxis(TestCase):
             ],
         )
 
-    def test_symb(self):
+    def test_symb(self) -> None:
         order = 3
         symmelem = RotationAxis(randunitvec(), order)
         self.assertEqual(symmelem.symb(), f"C{order}")
 
-    def test_symmetric(self):
+    def test_symmetric(self) -> None:
         symmelem = RotationAxis(randunitvec(), 3)
         points: List[Point] = []
         for _ in range(3):
@@ -103,17 +103,17 @@ class TestRotationAxis(TestCase):
 
 
 class TestReflectionPlane(TestCase):
-    def test_transformations(self):
+    def test_transformations(self) -> None:
         vec = randunitvec()
         symmelem = ReflectionPlane(vec)
         vec = normalize(vec)
         self.assertSequenceEqual(symmelem.transformations(), [Reflection(vec)])
 
-    def test_symb(self):
+    def test_symb(self) -> None:
         symmelem = ReflectionPlane(randunitvec())
         self.assertEqual(symmelem.symb(), REFL_SYMB)
 
-    def test_symmetric(self):
+    def test_symmetric(self) -> None:
         symmelem = ReflectionPlane(randunitvec())
         points: List[Point] = []
         for _ in range(3):
@@ -125,13 +125,13 @@ class TestReflectionPlane(TestCase):
 
 
 class TestRotoreflectionAxis(TestCase):
-    def test_init(self):
+    def test_init(self) -> None:
         self.assertRaises(ValueError, RotoreflectionAxis, randunitvec(), -1)
         self.assertRaises(ValueError, RotoreflectionAxis, randunitvec(), 0)
         self.assertRaises(ValueError, RotoreflectionAxis, randunitvec(), 1)
         self.assertRaises(ValueError, RotoreflectionAxis, randunitvec(), 2)
 
-    def test_transformations(self):
+    def test_transformations(self) -> None:
         vec = randunitvec()
         symmelem = RotoreflectionAxis(vec, 3)
         vec = normalize(vec)
@@ -187,12 +187,12 @@ class TestRotoreflectionAxis(TestCase):
             ],
         )
 
-    def test_symb(self):
+    def test_symb(self) -> None:
         order = 3
         symmelem = RotoreflectionAxis(randunitvec(), order)
         self.assertEqual(symmelem.symb(), f"S{order}")
 
-    def test_symmetric(self):
+    def test_symmetric(self) -> None:
         symmelem = RotoreflectionAxis(randunitvec(), 3)
         points: List[Point] = []
         for _ in range(3):
