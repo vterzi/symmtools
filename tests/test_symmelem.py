@@ -152,8 +152,38 @@ class TestRotoreflectionAxis(TestCase):
             symmelem.transformations(),
             [
                 Rotoreflection(vec, 1 / 4 * TAU),
-                Inversion(),
+                Rotation(vec, 2 / 4 * TAU),
                 Rotoreflection(vec, 3 / 4 * TAU),
+            ],
+        )
+        vec = randunitvec()
+        symmelem = RotoreflectionAxis(vec, 5)
+        vec = normalize(vec)
+        self.assertSequenceEqual(
+            symmelem.transformations(),
+            [
+                Rotoreflection(vec, 1 / 5 * TAU),
+                Rotation(vec, 2 / 5 * TAU),
+                Rotoreflection(vec, 3 / 5 * TAU),
+                Rotation(vec, 4 / 5 * TAU),
+                Reflection(vec),
+                Rotation(vec, (6 % 5) / 5 * TAU),
+                Rotoreflection(vec, (7 % 5) / 5 * TAU),
+                Rotation(vec, (8 % 5) / 5 * TAU),
+                Rotoreflection(vec, (9 % 5) / 5 * TAU),
+            ],
+        )
+        vec = randunitvec()
+        symmelem = RotoreflectionAxis(vec, 6)
+        vec = normalize(vec)
+        self.assertSequenceEqual(
+            symmelem.transformations(),
+            [
+                Rotoreflection(vec, 1 / 6 * TAU),
+                Rotation(vec, 2 / 6 * TAU),
+                Inversion(),
+                Rotation(vec, 4 / 6 * TAU),
+                Rotoreflection(vec, 5 / 6 * TAU),
             ],
         )
 
