@@ -125,9 +125,9 @@ class TestPtGrp(TestCase):
             [rot.order for rot in rots], 6 * [5] + 10 * [3] + 15 * [2]
         )
         self.assertEqual(len(refls), 15)
-        # self.assertListEqual(
-        #     [rotorefl.order for rotorefl in rotorefls], 6 * [10] + 10 * [6]
-        # )
+        self.assertListEqual(
+            [rotorefl.order for rotorefl in rotorefls], 6 * [10] + 10 * [6]
+        )
 
     def test_ptgrp(self) -> None:
         self.assertEqual(ptgrp(point), "Kh")

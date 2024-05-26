@@ -31,13 +31,14 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
     Sequence[_ReflectionPlane],
     Sequence[_RotoreflectionAxis],
 ]:
-    def contains(array, vector):
+    def contains(array: List[Vector], vector: Vector) -> bool:
         for elem in array:
-            if parallelunit(elem.vec, vector, tol):
+            if parallelunit(elem, vector, tol):
                 return True
+        array.append(vector)
         return False
 
-    def add_rotation(vector, order):
+    def add_rotation(vector: Vector, order: int) -> bool:
         rotation = RotationAxis(vector, order)
         if rotation.symmetric(points, tol):
             i = 0
@@ -47,14 +48,14 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
             return True
         return False
 
-    def add_reflection(vector):
+    def add_reflection(vector: Vector) -> bool:
         reflection = ReflectionPlane(vector)
         if reflection.symmetric(points, tol):
             reflections.append(reflection)
             return True
         return False
 
-    def add_rotoreflection(vector, order):
+    def add_rotoreflection(vector: Vector, order: int) -> bool:
         for factor in (2, 1):
             order_ = factor * order
             if order_ > 2:
@@ -84,6 +85,8 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
     n_points = len(points)
     if n_points == 1:
         dim = 0
+    axes: List[Vector] = []
+    planes: List[Vector] = []
     direction = None
     collinear = True
     for i1 in range(n_points - 1):
@@ -103,7 +106,7 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
                 # not all points are collinear
                 collinear = False
                 rotation = normal / normal_norm
-                if not contains(rotations, rotation):
+                if not contains(axes, rotation):
                     # calculate the distance between the origin and the plane
                     dist = points[i1].pos.dot(rotation)
                     # initial number of points in the plane
@@ -125,12 +128,13 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
                         # add reflection (described by the plane containing
                         #   all points)
                         reflections.append(ReflectionPlane(rotation))
-                    added = False
                     # for all possible orders > 2 starting from the highest
                     for order in range(max_order, 2, -1):
-                        added |= add_rotation(rotation, order)
-                        added |= add_rotoreflection(rotation, order)
-                        if added:
+                        if add_rotoreflection(rotation, order):
+                            break
+                    # for all possible orders > 1 starting from the highest
+                    for order in range(max_order, 1, -1):
+                        if add_rotation(rotation, order):
                             break
             # directed segment between the point pair
             segment = points[i1].pos - points[i2].pos
@@ -154,20 +158,20 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
             #   in halves
             if not perpendicular(segment, midpoint, tol):
                 continue
-            len_midpoint = norm(midpoint)
+            midpoint_norm = norm(midpoint)
             # if the distance from the origin to the midpoint is not zero or
             #   all points are in one plane
-            if len_midpoint > tol or dim == 2:
+            if midpoint_norm > tol or dim == 2:
                 rotation = (
-                    midpoint / len_midpoint
+                    midpoint / midpoint_norm
                     if direction is None
                     else cross(direction, reflection)
                 )
-                if not contains(rotations, rotation):
+                if not contains(axes, rotation):
                     order = 2
-                    add_rotation(rotation, order)
                     add_rotoreflection(rotation, order)
-            if not contains(reflections, reflection):
+                    add_rotation(rotation, order)
+            if not contains(planes, reflection):
                 add_reflection(reflection)
     return (
         dim,
