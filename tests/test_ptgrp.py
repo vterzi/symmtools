@@ -37,111 +37,95 @@ class TestPtGrp(TestCase):
         dim, inv, rots, refls, rotorefls = symmelems(point)
         self.assertEqual(dim, 0)
         self.assertTrue(inv)
-        self.assertSequenceEqual([rot.order for rot in rots], [])
+        self.assertListEqual([rot.order for rot in rots], [])
         self.assertEqual(len(refls), 0)
-        self.assertSequenceEqual(
-            [rotorefl.order for rotorefl in rotorefls], []
-        )
+        self.assertListEqual([rotorefl.order for rotorefl in rotorefls], [])
         dim, inv, rots, refls, rotorefls = symmelems(segment)
         self.assertEqual(dim, 1)
         self.assertTrue(inv)
-        self.assertSequenceEqual([rot.order for rot in rots], [INF])
+        self.assertListEqual([rot.order for rot in rots], [INF])
         self.assertEqual(len(refls), 1)
-        self.assertSequenceEqual(
-            [rotorefl.order for rotorefl in rotorefls], [INF]
-        )
+        self.assertListEqual([rotorefl.order for rotorefl in rotorefls], [INF])
         dim, inv, rots, refls, rotorefls = symmelems(collinear)
         self.assertEqual(dim, 1)
         self.assertFalse(inv)
-        self.assertSequenceEqual([rot.order for rot in rots], [INF])
+        self.assertListEqual([rot.order for rot in rots], [INF])
         self.assertEqual(len(refls), 0)
-        self.assertSequenceEqual(
-            [rotorefl.order for rotorefl in rotorefls], []
-        )
+        self.assertListEqual([rotorefl.order for rotorefl in rotorefls], [])
         dim, inv, rots, refls, rotorefls = symmelems(triangle)
         n = 3
         self.assertEqual(dim, 2)
         self.assertFalse(inv)
-        self.assertSequenceEqual([rot.order for rot in rots], [n] + n * [2])
+        self.assertListEqual([rot.order for rot in rots], [n] + n * [2])
         self.assertEqual(len(refls), n + 1)
-        self.assertSequenceEqual(
-            [rotorefl.order for rotorefl in rotorefls], [n]
-        )
+        self.assertListEqual([rotorefl.order for rotorefl in rotorefls], [n])
         dim, inv, rots, refls, rotorefls = symmelems(square)
         n = 4
         self.assertEqual(dim, 2)
         self.assertTrue(inv)
-        self.assertSequenceEqual([rot.order for rot in rots], [n] + n * [2])
+        self.assertListEqual([rot.order for rot in rots], [n] + n * [2])
         self.assertEqual(len(refls), n + 1)
-        self.assertSequenceEqual(
-            [rotorefl.order for rotorefl in rotorefls], [n]
-        )
+        self.assertListEqual([rotorefl.order for rotorefl in rotorefls], [n])
         dim, inv, rots, refls, rotorefls = symmelems(pentagon)
         n = 5
         self.assertEqual(dim, 2)
         self.assertFalse(inv)
-        self.assertSequenceEqual([rot.order for rot in rots], [n] + n * [2])
+        self.assertListEqual([rot.order for rot in rots], [n] + n * [2])
         self.assertEqual(len(refls), n + 1)
-        self.assertSequenceEqual(
-            [rotorefl.order for rotorefl in rotorefls], [n]
-        )
+        self.assertListEqual([rotorefl.order for rotorefl in rotorefls], [n])
         dim, inv, rots, refls, rotorefls = symmelems(hexagon)
         n = 6
         self.assertEqual(dim, 2)
         self.assertTrue(inv)
-        self.assertSequenceEqual([rot.order for rot in rots], [n] + n * [2])
+        self.assertListEqual([rot.order for rot in rots], [n] + n * [2])
         self.assertEqual(len(refls), n + 1)
-        self.assertSequenceEqual(
-            [rotorefl.order for rotorefl in rotorefls], [n]
-        )
+        self.assertListEqual([rotorefl.order for rotorefl in rotorefls], [n])
         dim, inv, rots, refls, rotorefls = symmelems(tetrahedron)
         self.assertEqual(dim, 3)
         self.assertFalse(inv)
-        self.assertSequenceEqual(
-            [rot.order for rot in rots], 4 * [3] + 3 * [2]
-        )
+        self.assertListEqual([rot.order for rot in rots], 4 * [3] + 3 * [2])
         self.assertEqual(len(refls), 6)
-        # self.assertSequenceEqual(
+        # self.assertListEqual(
         #     [rotorefl.order for rotorefl in rotorefls], 3 * [4]
         # )
         dim, inv, rots, refls, rotorefls = symmelems(cube)
         self.assertEqual(dim, 3)
         self.assertTrue(inv)
-        self.assertSequenceEqual(
+        self.assertListEqual(
             [rot.order for rot in rots], 3 * [4] + 4 * [3] + 6 * [2]
         )
         self.assertEqual(len(refls), 9)
-        self.assertSequenceEqual(
+        self.assertListEqual(
             [rotorefl.order for rotorefl in rotorefls], 4 * [6] + 3 * [4]
         )
         dim, inv, rots, refls, rotorefls = symmelems(octahedron)
         self.assertEqual(dim, 3)
         self.assertTrue(inv)
-        self.assertSequenceEqual(
+        self.assertListEqual(
             [rot.order for rot in rots], 3 * [4] + 4 * [3] + 6 * [2]
         )
         self.assertEqual(len(refls), 9)
-        self.assertSequenceEqual(
+        self.assertListEqual(
             [rotorefl.order for rotorefl in rotorefls], 4 * [6] + 3 * [4]
         )
         dim, inv, rots, refls, rotorefls = symmelems(icosahedron)
         self.assertEqual(dim, 3)
         self.assertTrue(inv)
-        self.assertSequenceEqual(
+        self.assertListEqual(
             [rot.order for rot in rots], 6 * [5] + 10 * [3] + 15 * [2]
         )
         self.assertEqual(len(refls), 15)
-        self.assertSequenceEqual(
+        self.assertListEqual(
             [rotorefl.order for rotorefl in rotorefls], 6 * [10] + 10 * [6]
         )
         dim, inv, rots, refls, rotorefls = symmelems(dodecahedron)
         self.assertEqual(dim, 3)
         self.assertTrue(inv)
-        self.assertSequenceEqual(
+        self.assertListEqual(
             [rot.order for rot in rots], 6 * [5] + 10 * [3] + 15 * [2]
         )
         self.assertEqual(len(refls), 15)
-        # self.assertSequenceEqual(
+        # self.assertListEqual(
         #     [rotorefl.order for rotorefl in rotorefls], 6 * [10] + 10 * [6]
         # )
 
