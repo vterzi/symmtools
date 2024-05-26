@@ -429,7 +429,7 @@ class OrderedTransformable(DirectionTransformable):
         return self._order
 
     def args(self) -> str:
-        return f"{super().args},{self._order}"
+        return f"{super().args()},{self._order}"
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
