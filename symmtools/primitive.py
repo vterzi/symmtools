@@ -57,8 +57,8 @@ class LabeledPoint(Point):
         return self._label
 
     def args(self):
-        label = self._label.replace('"', '\\"')
-        return f"{super().args()},{label}"
+        label = self._label.replace("'", r"\'")
+        return f"{super().args()},'{label}'"
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
