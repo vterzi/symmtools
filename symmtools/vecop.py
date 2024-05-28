@@ -6,13 +6,13 @@ __all__ = [
     "normalize",
     "orthogonalize",
     "angle",
-    "angleunit",
+    "unitangle",
     "diff",
     "same",
     "indep",
-    "indepunit",
+    "unitindep",
     "parallel",
-    "parallelunit",
+    "unitparallel",
     "perpendicular",
     "translate",
     "invert",
@@ -68,7 +68,7 @@ def angle(vec1: Vector, vec2: Vector) -> Float:
     )
 
 
-def angleunit(unitvec1: Vector, unitvec2: Vector) -> Float:
+def unitangle(unitvec1: Vector, unitvec2: Vector) -> Float:
     """
     Calculate the angle between two unit vectors `unitvec1` and `unitvec2`.
     """
@@ -95,7 +95,7 @@ def indep(vec1: Vector, vec2: Vector) -> float:
     return float(max(abs(cross(vec1, vec2))))
 
 
-def indepunit(unitvec1: Vector, unitvec2: Vector) -> float:
+def unitindep(unitvec1: Vector, unitvec2: Vector) -> float:
     """
     Calculate the linear independence of two unit vectors `unitvec1` and
     `unitvec2`.
@@ -112,12 +112,12 @@ def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
     return indep(vec1, vec2) <= tol
 
 
-def parallelunit(unitvec1: Vector, unitvec2: Vector, tol: float) -> bool:
+def unitparallel(unitvec1: Vector, unitvec2: Vector, tol: float) -> bool:
     """
     Check wether two unit vectors `unitvec1` and `unitvec2` are parallel within
     a tolerance `tol`.
     """
-    return indepunit(unitvec1, unitvec2) <= tol
+    return unitindep(unitvec1, unitvec2) <= tol
 
 
 def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:

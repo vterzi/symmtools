@@ -7,7 +7,7 @@ from re import findall
 from numpy import zeros
 
 from .const import INF
-from .vecop import diff, indepunit
+from .vecop import diff, unitindep
 from .transform import (
     Transformable,
     Transformables,
@@ -178,7 +178,7 @@ class Arrow(DirectionTransformable):
             elif self._form == 0:
                 res = max(res, diff(self._vec, obj.vec))
             else:
-                res = max(res, indepunit(self._vec, obj.vec))
+                res = max(res, unitindep(self._vec, obj.vec))
         return res
 
     def negate(self: _Arrow) -> _Arrow:

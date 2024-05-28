@@ -28,7 +28,7 @@ from .const import INF, PI, TAU
 from .vecop import (
     vector,
     diff,
-    indepunit,
+    unitindep,
     translate,
     invert,
     move2,
@@ -398,7 +398,7 @@ class DirectionTransformable(VectorTransformable):
     def diff(self, obj: Any) -> float:
         res = Transformable.diff(self, obj)
         if res < INF:
-            res = max(res, indepunit(self._vec, obj.vec))
+            res = max(res, unitindep(self._vec, obj.vec))
         return res
 
     def translate(

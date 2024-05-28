@@ -16,7 +16,7 @@ from .symmelem import (
     InfRotoreflectionAxis,
 )
 from .primitive import Points
-from .vecop import vector, parallel, parallelunit, perpendicular
+from .vecop import vector, parallel, unitparallel, perpendicular
 from .typehints import Union, Sequence, Tuple, List, Dict, Vector
 
 _RotationAxis = Union[RotationAxis, InfRotationAxis]
@@ -33,7 +33,7 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
 ]:
     def contains(array: List[Vector], vector: Vector) -> bool:
         for elem in array:
-            if parallelunit(elem, vector, tol):
+            if unitparallel(elem, vector, tol):
                 return True
         array.append(vector)
         return False
@@ -202,7 +202,7 @@ def ptgrp(points: Points, tol: float = TOL) -> str:
     h = False
     if sigma:
         for reflection in reflections:
-            if parallelunit(rotation.vec, reflection.vec, tol):
+            if unitparallel(rotation.vec, reflection.vec, tol):
                 h = True
                 break
     if len(rotations) >= 2:
