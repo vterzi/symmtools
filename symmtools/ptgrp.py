@@ -190,18 +190,17 @@ def ptgrp(points: Points, tol: float = TOL) -> str:
         return "Kh"  # 'K'
     if dim == 1:
         return f"D{INF_SYMB}h" if invertible else f"C{INF_SYMB}v"
+    sigma = len(reflections) > 0
     if len(rotations) == 0:
-        if len(reflections) > 0:
+        if sigma:
             return "Cs"
         if invertible:
             return "Ci"
         return "C1"
     rotation = rotations[0]
     order = rotations[0].order
-    sigma = False
     h = False
-    if len(reflections) > 0:
-        sigma = True
+    if sigma:
         for reflection in reflections:
             if parallelunit(rotation.vec, reflection.vec, tol):
                 h = True
