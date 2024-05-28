@@ -5,6 +5,8 @@ __all__ = [
     "canonicalize",
     "normalize",
     "orthogonalize",
+    "angle",
+    "angleunit",
     "diff",
     "same",
     "indep",
@@ -22,13 +24,13 @@ __all__ = [
     "reflmat",
 ]
 
-from numpy import array, sin, cos, cross
-from numpy.linalg import norm
+from numpy import array, clip, sqrt, sin, cos, arccos, cross
 
 from .typehints import Float, Vector, Matrix, RealVector
 
 # `max` is faster than `numpy.ndarray.max`
 # `float` is faster than `numpy.float64.item`
+# `numpy.sqrt` with `numpy.ndarray.dot` is faster than `numpy.linalg.norm`
 
 
 def vector(vec: RealVector) -> Vector:
@@ -51,12 +53,26 @@ def canonicalize(vec: Vector) -> Vector:
 
 def normalize(vec: Vector) -> Vector:
     """Normalize a non-zero vector `vec` to a unit vector."""
-    return vec / norm(vec)
+    return vec / sqrt(vec.dot(vec))
 
 
-def orthogonalize(vec1: Vector, vec2: Vector) -> Vector:
-    """Orthogonalize a vector `vec1` to a unit vector `vec2`."""
-    return vec1 - vec1.dot(vec2) * vec2
+def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
+    """Orthogonalize a vector `vec` to a unit vector `unitvec`."""
+    return vec - vec.dot(unitvec) * unitvec
+
+
+def angle(vec1: Vector, vec2: Vector) -> Float:
+    """Calculate the angle between two vectors `vec1` and `vec2`."""
+    return arccos(
+        clip(vec1.dot(vec2) / sqrt(vec1.dot(vec1) * vec2.dot(vec2)), -1.0, 1.0)
+    )
+
+
+def angleunit(unitvec1: Vector, unitvec2: Vector) -> Float:
+    """
+    Calculate the angle between two unit vectors `unitvec1` and `unitvec2`.
+    """
+    return arccos(clip(unitvec1.dot(unitvec2), -1.0, 1.0))
 
 
 def diff(vec1: Vector, vec2: Vector) -> float:
@@ -79,12 +95,13 @@ def indep(vec1: Vector, vec2: Vector) -> float:
     return float(max(abs(cross(vec1, vec2))))
 
 
-def indepunit(vec1: Vector, vec2: Vector) -> float:
+def indepunit(unitvec1: Vector, unitvec2: Vector) -> float:
     """
-    Calculate the linear independence of two unit vectors `vec1` and `vec2`.
+    Calculate the linear independence of two unit vectors `unitvec1` and
+    `unitvec2`.
     """
-    # `abs(abs(vec1.dot(vec2)) - 1)` is faster but less accurate
-    return min(diff(vec1, vec2), diff(vec1, -vec2))
+    # `abs(abs(unitvec1.dot(unitvec2)) - 1)` is faster but less accurate
+    return min(diff(unitvec1, unitvec2), diff(unitvec1, -unitvec2))
 
 
 def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
@@ -95,12 +112,12 @@ def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
     return indep(vec1, vec2) <= tol
 
 
-def parallelunit(vec1: Vector, vec2: Vector, tol: float) -> bool:
+def parallelunit(unitvec1: Vector, unitvec2: Vector, tol: float) -> bool:
     """
-    Check wether two unit vectors `vec1` and `vec2` are parallel within a
-    tolerance `tol`.
+    Check wether two unit vectors `unitvec1` and `unitvec2` are parallel within
+    a tolerance `tol`.
     """
-    return indepunit(vec1, vec2) <= tol
+    return indepunit(unitvec1, unitvec2) <= tol
 
 
 def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
@@ -144,7 +161,7 @@ def rotate(vec: Vector, rotation: Vector, angle: Float) -> Vector:
 
 def vecrotate(vec: Vector, rotation: Vector) -> Vector:
     """Rotate a 3D vector `vec` by a rotation vector `rotation`."""
-    length = norm(rotation)
+    length = sqrt(rotation.dot(rotation))
     if length > 0.0:
         vec = rotate(vec, rotation / length, length)
     return vec
