@@ -4,15 +4,11 @@ __all__ = [
     "chcoords",
     "signvar",
     "ax3permut",
-    "generate",
 ]
 
-from .const import ORIGIN, TOL
-from .primitive import Point, Points
-from .transform import Transformation
+from .const import ORIGIN
 from .typehints import (
     Optional,
-    Sequence,
     List,
     Bool,
     Int,
@@ -84,31 +80,3 @@ def ax3permut(vecs: RealVectors) -> List[List[Real]]:
         for vec in vecs:
             res.append([vec[i % 3], vec[(i + 1) % 3], vec[(i + 2) % 3]])
     return res
-
-
-def generate(
-    points: Sequence[Point],
-    transformations: Sequence[Transformation] = (),
-    tol: float = TOL,
-) -> Points:
-    """
-    Generate all unique points by applying transformations `transformations` to
-    points `points` and return them as a `Points` instance.
-    """
-    points = list(points)
-    fi = 0
-    li = len(points)
-    while fi < li:
-        for transformation in transformations:
-            for i in range(fi, li):
-                point = transformation(points[i])
-                new = True
-                for ref_point in points:
-                    if point.same(ref_point, tol):
-                        new = False
-                        break
-                if new:
-                    points.append(point)
-        fi = li
-        li = len(points)
-    return Points(points)

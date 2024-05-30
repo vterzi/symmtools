@@ -6,12 +6,8 @@ from symmtools import (
     chcoords,
     signvar,
     Points,
-    generate,
-    Point,
-    Rotation,
+    RotationAxis,
     INF,
-    PI,
-    TOL,
     PHI,
     ax3permut,
 )
@@ -19,10 +15,10 @@ from symmtools import (
 point = Points.from_arr(chcoords([[]]))
 segment = Points.from_arr(chcoords(signvar([1])))
 collinear = Points.from_arr(chcoords(signvar([1])) + chcoords([[2]]))
-triangle = generate([Point([1, 0, 0])], [Rotation([0, 0, 1], 2 * PI / 3)], TOL)
+triangle = Points.from_symm([[1, 0, 0]], [RotationAxis([0, 0, 1], 3)])
 square = Points.from_arr(chcoords(signvar([1, 1])))
-pentagon = generate([Point([1, 0, 0])], [Rotation([0, 0, 1], 2 * PI / 5)], TOL)
-hexagon = generate([Point([1, 0, 0])], [Rotation([0, 0, 1], PI / 3)], TOL)
+pentagon = Points.from_symm([[1, 0, 0]], [RotationAxis([0, 0, 1], 5)])
+hexagon = Points.from_symm([[1, 0, 0]], [RotationAxis([0, 0, 1], 6)])
 tetrahedron = Points.from_arr(signvar([1, 1, 1], 1))
 cube = Points.from_arr(signvar([1, 1, 1]))
 octahedron = Points.from_arr(ax3permut(signvar([1])))

@@ -18,6 +18,7 @@ from .transform import (
     Reflection,
     Rotoreflection,
 )
+from .symmelem import SymmetryElement
 from .typehints import (
     TypeVar,
     Any,
@@ -99,9 +100,9 @@ class Points(Transformables):
         return self.translate(Translation(-self.pos))
 
     @classmethod
-    def from_arr(cls, arr: RealVectors) -> "Points":
-        """Construct an instance from an array of 3D vectors `arr`."""
-        return Points(tuple(Point(elem) for elem in arr))
+    def from_arr(cls, vecs: RealVectors) -> "Points":
+        """Construct an instance from an array of 3D vectors `vecs`."""
+        return Points(tuple(Point(vec) for vec in vecs))
 
     @classmethod
     def from_str(cls, string: str) -> "Points":
@@ -119,6 +120,23 @@ class Points(Transformables):
             label = match[0]
             vec = tuple(map(float, match[1:]))
             points.append(LabeledPoint(vec, label) if label else Point(vec))
+        return Points(points)
+
+    @classmethod
+    def from_symm(
+        cls, vecs: RealVectors, symm_elems: Sequence[SymmetryElement]
+    ) -> "Points":
+        """
+        Construct an instance by applying the symmetry elements `symm_elems`
+        to the array of 3D vectors `vecs`.
+        """
+        points = []
+        for vec in vecs:
+            point = Point(vec)
+            points.append(point)
+            for symm_elem in symm_elems:
+                for transformation in symm_elem.transformations():
+                    points.append(transformation(point))
         return Points(points)
 
 
