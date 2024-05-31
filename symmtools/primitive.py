@@ -102,7 +102,7 @@ class Points(Transformables):
     @classmethod
     def from_arr(cls, vecs: RealVectors) -> "Points":
         """Construct an instance from an array of 3D vectors `vecs`."""
-        return Points(tuple(Point(vec) for vec in vecs))
+        return cls(tuple(Point(vec) for vec in vecs))
 
     @classmethod
     def from_str(cls, string: str) -> "Points":
@@ -120,7 +120,7 @@ class Points(Transformables):
             label = match[0]
             vec = tuple(map(float, match[1:]))
             points.append(LabeledPoint(vec, label) if label else Point(vec))
-        return Points(points)
+        return cls(points)
 
     @classmethod
     def from_symm(
@@ -137,7 +137,7 @@ class Points(Transformables):
             for symm_elem in symm_elems:
                 for transformation in symm_elem.transformations():
                     points.append(transformation(point))
-        return Points(points)
+        return cls(points)
 
 
 _Arrow = TypeVar("_Arrow", bound="Arrow")

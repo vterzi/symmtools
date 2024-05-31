@@ -139,7 +139,7 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
             # directed segment between the point pair
             segment = points[i1].pos - points[i2].pos
             # midpoint of the segment
-            midpoint = (points[i1].pos + points[i2].pos) / 2
+            midpoint = 0.5 * (points[i1].pos + points[i2].pos)
             reflection = segment / norm(segment)
             # add rotation with order infinity
             if (
@@ -247,7 +247,7 @@ def symb2grp(
         if order and not reflection:
             if n > 1:
                 group[f"C{order}"] = RotationAxis(PRIMAX, n)
-        elif not order and reflection == REFL_SYMB:
+        elif not order and reflection == "s":
             group[REFL_SYMB] = ReflectionPlane(PRIMAX)
         elif reflection == "i":
             if not order or n == 1:
