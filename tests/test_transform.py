@@ -268,7 +268,7 @@ class TestRotation(TestCase):
         self.assertTrue(transform.same(Rotation(vec, angle - TAU), TOL))
         self.assertTrue(transform.same(Rotation(-vec, TAU - angle), TOL))
         self.assertTrue(
-            Rotation(vec, TOL / 2.0).same(Rotation(vec, TAU - TOL / 2.0), TOL)
+            Rotation(vec, 0.5 * TOL).same(Rotation(vec, TAU - 0.5 * TOL), TOL)
         )
         self.assertTrue(
             transform.same(Rotation(vec + orthperturb(vec), angle), TOL)
@@ -465,8 +465,8 @@ class TestRotoreflection(TestCase):
         self.assertTrue(transform.same(Rotoreflection(vec, angle - TAU), TOL))
         self.assertTrue(transform.same(Rotoreflection(-vec, TAU - angle), TOL))
         self.assertTrue(
-            Rotoreflection(vec, TOL / 2.0).same(
-                Rotoreflection(vec, TAU - TOL / 2.0), TOL
+            Rotoreflection(vec, 0.5 * TOL).same(
+                Rotoreflection(vec, TAU - 0.5 * TOL), TOL
             )
         )
         self.assertTrue(
