@@ -2,13 +2,15 @@
 
 __all__ = ["Quaternion"]
 
-from numpy import sin, cos, cross
+from numpy import sin, cos, arctan2, cross
 
 from .const import INF
+from .vecop import norm, normalize
 from .transform import VectorTransformable, Rotation
 from .primitive import Point
-from .typehints import TypeVar, Any, Float, RealVector
+from .typehints import TypeVar, Any, Float, Vector, RealVector
 
+_Quaternion = TypeVar("_Quaternion", bound="Quaternion")
 _VectorTransformable = TypeVar(
     "_VectorTransformable", bound=VectorTransformable
 )
@@ -38,6 +40,18 @@ class Quaternion(VectorTransformable):
             res = max(res, abs(self._scalar - obj.scalar))
         return res
 
+    def axis(self) -> Vector:
+        """Return the axis of rotation."""
+        return normalize(self._vec)
+
+    def angle(self) -> Float:
+        """Return the angle of rotation."""
+        return 2.0 * arctan2(norm(self._vec), self._scalar)
+
+    def conjugate(self: _Quaternion) -> _Quaternion:
+        """Return the conjugate of the instance."""
+        return self.invert()
+
     def __mul__(self, other: "Quaternion") -> "Quaternion":
         return Quaternion(
             self._scalar * other.scalar - self.vec.dot(other.vec),
@@ -47,9 +61,14 @@ class Quaternion(VectorTransformable):
         )
 
     def __call__(self, obj: _VectorTransformable) -> _VectorTransformable:
-        """Apply the rotation to a transformable object `obj`."""
+        """
+        Transform the transformable object `obj` by multiplying its vector by
+        the instance from the left and by the conjugate of the instance from
+        the right.  This transformation is a rotation, if the instance is
+        normalized.
+        """
         res = obj.copy()
-        res._vec = (self * Quaternion(0.0, obj.vec) * self.invert()).vec
+        res._vec = (self * Quaternion(0.0, obj.vec) * self.conjugate()).vec
         return res
 
     @classmethod
