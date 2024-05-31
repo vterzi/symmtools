@@ -24,13 +24,15 @@ __all__ = [
     "reflmat",
 ]
 
-from numpy import array, clip, sqrt, sin, cos, arccos, cross
+from math import sqrt
+from numpy import array, clip, sin, cos, arccos, cross
 
 from .typehints import Float, Vector, Matrix, RealVector
 
 # `max` is faster than `numpy.ndarray.max`
 # `float` is faster than `numpy.float64.item`
-# `numpy.sqrt` with `numpy.ndarray.dot` is faster than `numpy.linalg.norm`
+# `math.sqrt` is faster than `numpy.sqrt`
+# `math.sqrt` with `numpy.ndarray.dot` is faster than `numpy.linalg.norm`
 
 
 def vector(vec: RealVector) -> Vector:
