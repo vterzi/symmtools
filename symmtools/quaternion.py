@@ -2,13 +2,13 @@
 
 __all__ = ["Quaternion"]
 
-from numpy import sin, cos, arctan2, cross
+from numpy import eye, sin, cos, arctan2, cross
 
 from .const import INF
 from .vecop import norm, normalize
 from .transform import VectorTransformable, Rotation
 from .primitive import Point
-from .typehints import TypeVar, Any, Float, Vector, RealVector
+from .typehints import TypeVar, Any, Float, Vector, Matrix, RealVector
 
 _Quaternion = TypeVar("_Quaternion", bound="Quaternion")
 _VectorTransformable = TypeVar(
@@ -70,6 +70,13 @@ class Quaternion(VectorTransformable):
         res = obj.copy()
         res._vec = (self * Quaternion(0.0, obj.vec) * self.conjugate()).vec
         return res
+
+    def mat(self) -> Matrix:
+        """Return the transformation matrix."""
+        res = eye(3)
+        for i in range(3):
+            res[i, :] = self(Point(res[i, :])).vec
+        return res.T
 
     @classmethod
     def from_point(cls, point: Point) -> "Quaternion":
