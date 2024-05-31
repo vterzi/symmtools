@@ -21,12 +21,12 @@ from abc import ABC, abstractmethod
 from copy import copy
 
 from numpy import sin, cos, empty, eye
-from numpy.linalg import norm
 from scipy.optimize import linear_sum_assignment  # type: ignore
 
 from .const import INF, PI, TAU
 from .vecop import (
     vector,
+    norm,
     diff,
     unitindep,
     translate,

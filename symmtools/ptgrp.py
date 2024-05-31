@@ -1,7 +1,6 @@
 from re import fullmatch
 
 from numpy import cross
-from numpy.linalg import norm
 
 from .const import NAN, PHI, TOL, PRIMAX, SECAX, INF_SYMB, REFL_SYMB
 from .tools import signvar, ax3permut
@@ -16,7 +15,7 @@ from .symmelem import (
     InfRotoreflectionAxis,
 )
 from .primitive import Points
-from .vecop import vector, parallel, unitparallel, perpendicular
+from .vecop import vector, norm, parallel, unitparallel, perpendicular
 from .typehints import Union, Sequence, Tuple, List, Dict, Vector
 
 _RotationAxis = Union[RotationAxis, InfRotationAxis]

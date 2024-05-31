@@ -2,6 +2,7 @@
 
 __all__ = [
     "vector",
+    "norm",
     "canonicalize",
     "normalize",
     "orthogonalize",
@@ -40,6 +41,11 @@ def vector(vec: RealVector) -> Vector:
     return array(vec, dtype=float)
 
 
+def norm(vec: Vector) -> Float:
+    """Calculate the norm of a vector `vec`."""
+    return sqrt(vec.dot(vec))
+
+
 def canonicalize(vec: Vector) -> Vector:
     """
     Canonicalize an unsigned direction vector `vec` by making the first
@@ -55,7 +61,7 @@ def canonicalize(vec: Vector) -> Vector:
 
 def normalize(vec: Vector) -> Vector:
     """Normalize a non-zero vector `vec` to a unit vector."""
-    return vec / sqrt(vec.dot(vec))
+    return vec / norm(vec)
 
 
 def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
