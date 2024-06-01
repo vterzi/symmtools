@@ -9,6 +9,11 @@ __all__ = [
     "ReflectionPlane",
     "RotoreflectionAxis",
     "InfRotoreflectionAxis",
+    "AxisRotationAxes",
+    "CenterRotationAxes",
+    "AxisReflectionPlanes",
+    "CenterReflectionPlanes",
+    "CenterRotoreflectionAxes",
 ]
 
 from abc import ABC, abstractmethod
@@ -180,4 +185,58 @@ class InfRotoreflectionAxis(InfFoldTransformable, SymmetryElement):
         raise NotImplementedError()
 
     def symb(self) -> str:
-        return "S{INF_SYMB}"
+        return f"S{INF_SYMB}"
+
+
+class AxisRotationAxes(DirectionTransformable, SymmetryElement):
+    """
+    All two-fold rotation axes perpendicular to an infinite-fold rotation axis.
+    """
+
+    def transformations(self) -> Sequence[Transformation]:
+        raise NotImplementedError()
+
+    def symb(self) -> str:
+        return "C2"
+
+
+class CenterRotationAxes(InvariantTransformable, SymmetryElement):
+    """
+    All infinite-fold rotation axes containing a rotationally invariant center.
+    """
+
+    def transformations(self) -> Sequence[Transformation]:
+        raise NotImplementedError()
+
+    def symb(self) -> str:
+        return f"C{INF_SYMB}"
+
+
+class AxisReflectionPlanes(ReflectionPlane):
+    """All reflection planes containing an infinite-fold rotation axis."""
+
+    def transformations(self) -> Sequence[Transformation]:
+        raise NotImplementedError()
+
+
+class CenterReflectionPlanes(InvariantTransformable, SymmetryElement):
+    """All reflection planes containing a rotationally invariant center."""
+
+    def transformations(self) -> Sequence[Transformation]:
+        raise NotImplementedError()
+
+    def symb(self) -> str:
+        return REFL_SYMB
+
+
+class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
+    """
+    All infinite-fold rotoreflection axes containing a rotationally invariant
+    center.
+    """
+
+    def transformations(self) -> Sequence[Transformation]:
+        raise NotImplementedError()
+
+    def symb(self) -> str:
+        return f"S{INF_SYMB}"
