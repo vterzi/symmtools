@@ -6,7 +6,15 @@ from numpy import cross
 
 from .const import INF, PHI, TOL, PRIMAX, SECAX, INF_SYMB
 from .tools import signvar, ax3permut
-from .transform import Transformable, Transformation, Identity
+from .transform import (
+    Transformable,
+    Transformation,
+    Identity,
+    Translation,
+    Rotation,
+    Reflection,
+    Rotoreflection,
+)
 from .symmelem import (
     SymmetryElement,
     InversionCenter,
@@ -23,7 +31,7 @@ from .symmelem import (
 )
 from .primitive import Points
 from .vecop import norm, parallel, unitparallel, perpendicular
-from .typehints import Any, Union, Sequence, Tuple, List, Vector
+from .typehints import TypeVar, Any, Union, Sequence, Tuple, List, Vector
 
 _RotationAxis = Union[RotationAxis, InfRotationAxis]
 _ReflectionPlane = ReflectionPlane
@@ -512,6 +520,9 @@ def symb2symmelems(
     return symb, tuple(symmelems), tuple(labels)
 
 
+_PointGroup = TypeVar("_PointGroup", bound="PointGroup")
+
+
 class PointGroup(Transformable):
     """Point group."""
 
@@ -546,7 +557,7 @@ class PointGroup(Transformable):
         return self._transformation
 
     def args(self) -> str:
-        res = self._symb
+        res = f"'{self._symb}'"
         if not isinstance(self._transformation, Identity):
             res += f",{self._transformation}"
         return res
@@ -559,3 +570,29 @@ class PointGroup(Transformable):
             else:
                 res = max(res, self._transformation.diff(obj.transformation))
         return res
+
+    def translate(self: _PointGroup, translation: Translation) -> _PointGroup:
+        return self.copy()
+
+    def invert(self: _PointGroup) -> _PointGroup:
+        res = self.copy()
+        res._transformation = self._transformation.invert()
+        return res
+
+    def rotate(self: _PointGroup, rotation: Rotation) -> _PointGroup:
+        res = self.copy()
+        res._transformation = self._transformation.rotate(rotation)
+        return res
+
+    def reflect(self: _PointGroup, reflection: Reflection) -> _PointGroup:
+        res = self.copy()
+        res._transformation = self._transformation.reflect(reflection)
+        return res
+
+    def rotoreflect(
+        self: _PointGroup, rotoreflection: Rotoreflection
+    ) -> _PointGroup:
+        res = self.copy()
+        res._transformation = self._transformation.rotoreflect(rotoreflection)
+        return res
+
