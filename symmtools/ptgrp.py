@@ -459,7 +459,7 @@ def symb2symmelems(
             n = 6
             for vec in vecs3:
                 add(RotoreflectionAxis(vec, n))
-        else:
+        elif reflection:
             raise ValueError(
                 "a symbol starting with 'T' can end only with '', 'd', or 'h'"
             )
@@ -467,9 +467,13 @@ def symb2symmelems(
         vecs4 = ax3permut([[1]])
         vecs3 = signvar([1, 1, 1], 1)
         vecs2 = ax3permut(signvar([1, 1], 0, True))
-        for n, vecs in ((4, vecs4), (3, vecs3), (2, vecs2)):
+        for n, vecs, label in (
+            (4, vecs4, ""),
+            (3, vecs3, ""),
+            (2, vecs2, "'"),
+        ):
             for vec in vecs:
-                add(RotationAxis(vec, n))
+                add(RotationAxis(vec, n), label)
         if reflection == "h":
             for vec in vecs4:
                 add(ReflectionPlane(vec), "h")
@@ -479,7 +483,7 @@ def symb2symmelems(
             for n, vecs in ((6, vecs3), (4, vecs4)):
                 for vec in vecs:
                     add(RotoreflectionAxis(vec, n))
-        else:
+        elif reflection:
             raise ValueError(
                 "a symbol starting with 'O' can end only with '' or 'h'"
             )
@@ -499,7 +503,7 @@ def symb2symmelems(
             for n, vecs in ((10, vecs5), (6, vecs3)):
                 for vec in vecs:
                     add(RotoreflectionAxis(vec, n))
-        else:
+        elif reflection:
             raise ValueError(
                 "a symbol starting with 'I' can end only with '' or 'h'"
             )
