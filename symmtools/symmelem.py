@@ -50,6 +50,11 @@ class SymmetryElement(ABC):
         """Return the symbol."""
         pass
 
+    @abstractmethod
+    def id(self) -> int:
+        """Return the ID."""
+        pass
+
     def symmetric(self, transformables: Transformables, tol: float) -> bool:
         """
         Check wether a set of transformables `transformables` is symmetric
@@ -79,6 +84,9 @@ class IdentityElement(InvariantTransformable, SymmetryElement):
     def symb(self) -> str:
         return "E"
 
+    def id(self) -> int:
+        return 1
+
 
 class InversionCenter(InvariantTransformable, SymmetryElement):
     """Inversion center in the origin in a real 3D space."""
@@ -88,6 +96,9 @@ class InversionCenter(InvariantTransformable, SymmetryElement):
 
     def symb(self) -> str:
         return "i"
+
+    def id(self) -> int:
+        return -2
 
 
 class RotationAxis(OrderedTransformable, SymmetryElement):
@@ -113,6 +124,9 @@ class RotationAxis(OrderedTransformable, SymmetryElement):
     def symb(self) -> str:
         return f"C{self._order}"
 
+    def id(self) -> int:
+        return self._order
+
 
 class InfRotationAxis(InfFoldTransformable, SymmetryElement):
     """Infinite-fold rotation axis containing the origin in a real 3D space."""
@@ -123,6 +137,9 @@ class InfRotationAxis(InfFoldTransformable, SymmetryElement):
     def symb(self) -> str:
         return f"C{INF_SYMB}"
 
+    def id(self) -> int:
+        return 0
+
 
 class ReflectionPlane(DirectionTransformable, SymmetryElement):
     """Reflection plane containing the origin in a real 3D space."""
@@ -132,6 +149,9 @@ class ReflectionPlane(DirectionTransformable, SymmetryElement):
 
     def symb(self) -> str:
         return REFL_SYMB
+
+    def id(self) -> int:
+        return -1
 
 
 class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
@@ -175,6 +195,9 @@ class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
     def symb(self) -> str:
         return f"S{self._order}"
 
+    def id(self) -> int:
+        return -self._order
+
 
 class InfRotoreflectionAxis(InfFoldTransformable, SymmetryElement):
     """
@@ -186,6 +209,9 @@ class InfRotoreflectionAxis(InfFoldTransformable, SymmetryElement):
 
     def symb(self) -> str:
         return f"S{INF_SYMB}"
+
+    def id(self) -> int:
+        return 0
 
 
 class AxisRotationAxes(DirectionTransformable, SymmetryElement):
@@ -199,6 +225,9 @@ class AxisRotationAxes(DirectionTransformable, SymmetryElement):
     def symb(self) -> str:
         return "C2"
 
+    def id(self) -> int:
+        return 2
+
 
 class CenterRotationAxes(InvariantTransformable, SymmetryElement):
     """
@@ -210,6 +239,9 @@ class CenterRotationAxes(InvariantTransformable, SymmetryElement):
 
     def symb(self) -> str:
         return f"C{INF_SYMB}"
+
+    def id(self) -> int:
+        return 0
 
 
 class AxisReflectionPlanes(ReflectionPlane):
@@ -228,6 +260,9 @@ class CenterReflectionPlanes(InvariantTransformable, SymmetryElement):
     def symb(self) -> str:
         return REFL_SYMB
 
+    def id(self) -> int:
+        return -1
+
 
 class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
     """
@@ -240,3 +275,6 @@ class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
 
     def symb(self) -> str:
         return f"S{INF_SYMB}"
+
+    def id(self) -> int:
+        return 0
