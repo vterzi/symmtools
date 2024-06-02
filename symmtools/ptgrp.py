@@ -1,8 +1,12 @@
+"""Class for point groups."""
+
+__all__ = ["symmelems", "ptgrp", "symb2symmelems", "PointGroup"]
+
 from numpy import cross
 
-from .const import PHI, TOL, PRIMAX, SECAX, INF_SYMB
+from .const import INF, PHI, TOL, PRIMAX, SECAX, INF_SYMB
 from .tools import signvar, ax3permut
-from .transform import Transformable, Rotation
+from .transform import Transformable, Transformation, Identity
 from .symmelem import (
     SymmetryElement,
     InversionCenter,
@@ -19,7 +23,7 @@ from .symmelem import (
 )
 from .primitive import Points
 from .vecop import norm, parallel, unitparallel, perpendicular
-from .typehints import Union, Sequence, Tuple, List, Dict, Vector
+from .typehints import Any, Union, Sequence, Tuple, List, Vector
 
 _RotationAxis = Union[RotationAxis, InfRotationAxis]
 _ReflectionPlane = ReflectionPlane
@@ -223,7 +227,13 @@ def ptgrp(points: Points, tol: float = TOL) -> str:
         return f"C{order}"
 
 
-def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
+def symb2symmelems(
+    symb: str,
+) -> Tuple[str, Sequence[SymmetryElement], Sequence[str]]:
+    """
+    Return the standardized symbol, all symmetry elements in the standardized
+    space orientation, and their labels for a point group with a symbol `symb`.
+    """
     if not symb:
         raise ValueError("empty symbol")
     rotation = symb[0]
@@ -248,12 +258,18 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
             n = 0
         inf = False
         reflection = subscript[i:]
-    symmelems: Dict[SymmetryElement, str] = {}
+    symmelems: List[SymmetryElement] = []
+    labels: List[str] = []
+
+    def add(symmelem: SymmetryElement, label: str = "") -> None:
+        symmelems.append(symmelem)
+        labels.append(label)
+
     if rotation == "C":
         if order:
             if not reflection:
                 if n > 1:
-                    symmelems[RotationAxis(PRIMAX, n)] = ""
+                    add(RotationAxis(PRIMAX, n))
             elif reflection == "i":
                 if n == 1:
                     return symb2symmelems("Ci")
@@ -268,7 +284,7 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
                     return symb2symmelems("Cs")
                 else:
                     if not inf:
-                        symmelems[RotationAxis(PRIMAX, n)] = ""
+                        add(RotationAxis(PRIMAX, n))
                         plane = ReflectionPlane(SECAX)
                         transforms = RotationAxis(
                             PRIMAX, 2 * n
@@ -279,42 +295,42 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
                         )
                         if n % 2 == 1:
                             for plane in planes:
-                                symmelems[plane] = "v"
+                                add(plane, "v")
                         else:
                             n_planes = len(planes)
                             for i in range(0, n_planes, 2):
-                                symmelems[planes[i]] = "v"
+                                add(planes[i], "v")
                             for i in range(1, n_planes, 2):
-                                symmelems[planes[i]] = "d"
-                            symmelems[InversionCenter()] = ""
+                                add(planes[i], "d")
+                            add(InversionCenter())
                     else:
-                        symmelems[InfRotationAxis(PRIMAX)] = ""
-                        symmelems[AxisReflectionPlanes(SECAX)] = "v"
+                        add(InfRotationAxis(PRIMAX))
+                        add(AxisReflectionPlanes(SECAX), "v")
             elif reflection == "h":
                 if n == 1:
                     return symb2symmelems("Cs")
                 else:
                     if not inf:
-                        symmelems[RotationAxis(PRIMAX, n)] = ""
-                        symmelems[ReflectionPlane(PRIMAX)] = "h"
+                        add(RotationAxis(PRIMAX, n))
+                        add(ReflectionPlane(PRIMAX), "h")
                         if n % 2 == 0:
-                            symmelems[InversionCenter()] = ""
+                            add(InversionCenter())
                         if n > 2:
-                            symmelems[RotoreflectionAxis(PRIMAX, n)] = ""
+                            add(RotoreflectionAxis(PRIMAX, n))
                     else:
-                        symmelems[InfRotationAxis(PRIMAX)] = ""
-                        symmelems[ReflectionPlane(PRIMAX)] = "h"
-                        symmelems[InversionCenter()] = ""
-                        symmelems[InfRotoreflectionAxis(PRIMAX)] = ""
+                        add(InfRotationAxis(PRIMAX))
+                        add(ReflectionPlane(PRIMAX), "h")
+                        add(InversionCenter())
+                        add(InfRotoreflectionAxis(PRIMAX))
             else:
                 raise ValueError(
                     "a symbol starting with 'C' and an order can end only with"
                     + " '', 'i', 'v', or 'h'"
                 )
         elif reflection == "s":
-            symmelems[ReflectionPlane(PRIMAX)] = ""
+            add(ReflectionPlane(PRIMAX))
         elif reflection == "i":
-            symmelems[InversionCenter()] = ""
+            add(InversionCenter())
         else:
             raise ValueError(
                 "a symbol starting with 'C' should have an order or end with"
@@ -330,15 +346,15 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
         elif n == 2:
             return symb2symmelems("Ci")
         elif n > 0:
-            symmelems[RotoreflectionAxis(PRIMAX, n)] = ""
-            symmelems[RotationAxis(PRIMAX, n // 2)] = ""
+            add(RotoreflectionAxis(PRIMAX, n))
+            add(RotationAxis(PRIMAX, n // 2))
             if (n // 2) % 2 == 1:
-                symmelems[InversionCenter()] = ""
+                add(InversionCenter())
         else:
             raise ValueError("a symbol starting with 'S' should have an order")
     elif rotation == "D":
         if n > 0:
-            symmelems[RotationAxis(PRIMAX, n)] = ""
+            add(RotationAxis(PRIMAX, n))
             transforms = RotationAxis(PRIMAX, 2 * n).transformations()
             axis = RotationAxis(SECAX, 2)
             axes = (axis,) + tuple(
@@ -346,23 +362,23 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
             )
             if n % 2 == 1:
                 for axis in axes:
-                    symmelems[axis] = "'"
+                    add(axis, "'")
             else:
                 n_axes = len(axes)
                 for i in range(0, n_axes, 2):
-                    symmelems[axes[i]] = "'"
+                    add(axes[i], "'")
                 for i in range(0, n_axes, 2):
-                    symmelems[axes[i]] = "''"
+                    add(axes[i], "''")
         elif inf:
-            symmelems[InfRotationAxis(PRIMAX)] = ""
-            symmelems[AxisRotationAxes(PRIMAX)] = ""
+            add(InfRotationAxis(PRIMAX))
+            add(AxisRotationAxes(PRIMAX))
         else:
             raise ValueError("a symbol starting with 'D' should have an order")
         if not reflection:
             if n == 1:
                 return symb2symmelems(f"C{2 * n}")
             elif inf:
-                symmelems[InversionCenter()] = ""
+                add(InversionCenter())
         elif reflection == "d":
             if n == 1:
                 return symb2symmelems(f"C{2 * n}h")
@@ -373,15 +389,15 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
                 transforms = RotationAxis(PRIMAX, 2 * n).transformations()
                 planes = tuple(transforms[i](plane) for i in range(1, n, 2))
                 for plane in planes:
-                    symmelems[plane] = "d"
+                    add(plane, "d")
                 if n % 2 == 1:
-                    symmelems[InversionCenter()] = ""
-                symmelems[RotoreflectionAxis(PRIMAX, 2 * n)] = ""
+                    add(InversionCenter())
+                add(RotoreflectionAxis(PRIMAX, 2 * n))
         elif reflection == "h":
             if n == 1:
                 return symb2symmelems(f"C{2 * n}v")
             else:
-                symmelems[ReflectionPlane(PRIMAX)] = "h"
+                add(ReflectionPlane(PRIMAX), "h")
                 if not inf:
                     plane = ReflectionPlane(SECAX)
                     transforms = RotationAxis(PRIMAX, 2 * n).transformations()
@@ -390,18 +406,18 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
                     )
                     if n % 2 == 1:
                         for plane in planes:
-                            symmelems[plane] = "v"
+                            add(plane, "v")
                     else:
                         n_planes = len(planes)
                         for i in range(0, n_planes, 2):
-                            symmelems[planes[i]] = "v"
+                            add(planes[i], "v")
                         for i in range(1, n_planes, 2):
-                            symmelems[planes[i]] = "d"
-                        symmelems[InversionCenter()] = ""
+                            add(planes[i], "d")
+                        add(InversionCenter())
                     if n > 2:
-                        symmelems[RotoreflectionAxis(PRIMAX, n)] = ""
+                        add(RotoreflectionAxis(PRIMAX, n))
                 else:
-                    symmelems[AxisReflectionPlanes(PRIMAX)] = "v"
+                    add(AxisReflectionPlanes(PRIMAX), "v")
     elif order:
         raise ValueError(
             "only the symbols starting with 'C', 'S', or 'D' can have an order"
@@ -411,20 +427,20 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
         vecs2 = ax3permut([[1]])
         for n, vecs in ((3, vecs3), (2, vecs2)):
             for vec in vecs:
-                symmelems[RotationAxis(vec, n)] = ""
+                add(RotationAxis(vec, n))
         if reflection == "d":
             for vec in ax3permut(signvar([1, 1], 0, True)):
-                symmelems[ReflectionPlane(vec)] = "d"
+                add(ReflectionPlane(vec), "d")
             n = 4
             for vec in vecs2:
-                symmelems[RotoreflectionAxis(vec, n)] = ""
+                add(RotoreflectionAxis(vec, n))
         elif reflection == "h":
             for vec in vecs2:
-                symmelems[ReflectionPlane(vec)] = "h"
-            symmelems[InversionCenter()] = ""
+                add(ReflectionPlane(vec), "h")
+            add(InversionCenter())
             n = 6
             for vec in vecs3:
-                symmelems[RotoreflectionAxis(vec, n)] = ""
+                add(RotoreflectionAxis(vec, n))
         else:
             raise ValueError(
                 "a symbol starting with 'T' can end only with '', 'd', or 'h'"
@@ -435,16 +451,16 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
         vecs2 = ax3permut(signvar([1, 1], 0, True))
         for n, vecs in ((4, vecs4), (3, vecs3), (2, vecs2)):
             for vec in vecs:
-                symmelems[RotationAxis(vec, n)] = ""
+                add(RotationAxis(vec, n))
         if reflection == "h":
             for vec in vecs4:
-                symmelems[ReflectionPlane(vec)] = "h"
+                add(ReflectionPlane(vec), "h")
             for vec in vecs2:
-                symmelems[ReflectionPlane(vec)] = "d"
-            symmelems[InversionCenter()] = ""
+                add(ReflectionPlane(vec), "d")
+            add(InversionCenter())
             for n, vecs in ((6, vecs3), (4, vecs4)):
                 for vec in vecs:
-                    symmelems[RotoreflectionAxis(vec, n)] = ""
+                    add(RotoreflectionAxis(vec, n))
         else:
             raise ValueError(
                 "a symbol starting with 'O' can end only with '' or 'h'"
@@ -457,24 +473,24 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
         vecs2 = ax3permut([[1], *signvar([1, PHI, 1 + PHI], 0, True)])
         for n, vecs in ((5, vecs5), (3, vecs3), (2, vecs2)):
             for vec in vecs:
-                symmelems[RotationAxis(vec, n)] = ""
+                add(RotationAxis(vec, n))
         if reflection == "h":
             for vec in vecs2:
-                symmelems[ReflectionPlane(vec)] = ""
-            symmelems[InversionCenter()] = ""
+                add(ReflectionPlane(vec))
+            add(InversionCenter())
             for n, vecs in ((10, vecs5), (6, vecs3)):
                 for vec in vecs:
-                    symmelems[RotoreflectionAxis(vec, n)] = ""
+                    add(RotoreflectionAxis(vec, n))
         else:
             raise ValueError(
                 "a symbol starting with 'I' can end only with '' or 'h'"
             )
     elif rotation == "K":
-        symmelems[CenterRotationAxes()] = ""
+        add(CenterRotationAxes())
         if reflection == "h":
-            symmelems[CenterReflectionPlanes()] = ""
-            symmelems[InversionCenter()] = ""
-            symmelems[CenterRotoreflectionAxes()] = ""
+            add(CenterReflectionPlanes())
+            add(InversionCenter())
+            add(CenterRotoreflectionAxes())
         else:
             raise ValueError(
                 "a symbol starting with 'K' can end only with '' or 'h'"
@@ -484,21 +500,26 @@ def symb2symmelems(symb: str) -> Tuple[str, Dict[SymmetryElement, str]]:
             "a symbol can start only with 'C', 'S', 'D', 'T', 'O', 'I', or"
             + " 'K'"
         )
-    return symb, symmelems
+    return symb, tuple(symmelems), tuple(labels)
 
 
 class PointGroup(Transformable):
     """Point group."""
 
-    def __init__(self, symb: str, orientation: Rotation) -> None:
+    def __init__(
+        self, symb: str, transformation: Transformation = Identity()
+    ) -> None:
         """
-        Initialize the instance with a symbol `symb` and an orientation
-        `orientation`.
+        Initialize the instance with a symbol `symb` and a transformation
+        `transformation` describing the orientation in space.
         """
-        symb, symmelems = symb2symmelems(symb)
+        symb, symmelems, labels = symb2symmelems(symb)
         self._symb = symb
-        self._symmelems = symmelems
-        self._orientation = orientation
+        self._symmelems = tuple(
+            transformation(symmelem) for symmelem in symmelems
+        )
+        self._labels = labels
+        self._transformation = transformation
 
     @property
     def symb(self) -> str:
@@ -506,11 +527,26 @@ class PointGroup(Transformable):
         return self._symb
 
     @property
-    def symmelems(self) -> Dict[SymmetryElement, str]:
+    def symmelems(self) -> Sequence[SymmetryElement]:
         """Return the symmetry elements."""
         return self._symmelems
 
     @property
-    def orientation(self) -> Rotation:
-        """Return the space orientation."""
-        return self._orientation
+    def transformation(self) -> Transformation:
+        """Return the transformation describing the orientation in space."""
+        return self._transformation
+
+    def args(self) -> str:
+        res = self._symb
+        if not isinstance(self._transformation, Identity):
+            res += f",{self._transformation}"
+        return res
+
+    def diff(self, obj: Any) -> float:
+        res = super().diff(obj)
+        if res < INF:
+            if self._symb != obj.symb:
+                res = INF
+            else:
+                res = max(res, self._transformation.diff(obj.transformation))
+        return res
