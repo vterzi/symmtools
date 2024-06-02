@@ -450,11 +450,18 @@ class InfFoldTransformable(DirectionTransformable):
         return INF
 
 
+_Any = TypeVar("_Any", bound=Any)
+
+
 class Transformation(ABC):
     """Transformation."""
 
     @abstractmethod
-    def __call__(self, obj: _Transformable) -> _Transformable:
+    def diff(self, obj: Any) -> float:
+        pass
+
+    @abstractmethod
+    def __call__(self, obj: _Any) -> _Any:
         """Apply the transformation."""
         pass
 
