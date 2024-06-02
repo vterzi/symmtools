@@ -37,6 +37,12 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
     Sequence[_ReflectionPlane],
     Sequence[_RotoreflectionAxis],
 ]:
+    """
+    Determine dimensionality, ivertibility, rotation axes, reflection planes,
+    and rotoreflection axes of a set of points `points` within a tolerance
+    `tol`.
+    """
+
     def contains(array: List[Vector], vector: Vector) -> bool:
         for elem in array:
             if unitparallel(elem, vector, tol):
@@ -189,6 +195,10 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
 
 
 def ptgrp(points: Points, tol: float = TOL) -> str:
+    """
+    Determine the point group symbol of a set of points `points` within a
+    tolerance `tol`.
+    """
     dim, invertible, rotations, reflections, rotoreflections = symmelems(
         points, tol
     )
