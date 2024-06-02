@@ -214,7 +214,7 @@ def ptgrp(points: Points, tol: float = TOL) -> str:
             return "Ci"
         return "C1"
     rotation = rotations[0]
-    order = rotations[0].order
+    order = rotation.order
     h = False
     if sigma:
         for reflection in reflections:
@@ -507,8 +507,7 @@ def symb2symmelems(
             )
     else:
         raise ValueError(
-            "a symbol can start only with 'C', 'S', 'D', 'T', 'O', 'I', or"
-            + " 'K'"
+            "a symbol can start only with 'C', 'S', 'D', 'T', 'O', 'I', or 'K'"
         )
     return symb, tuple(symmelems), tuple(labels)
 
