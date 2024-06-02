@@ -54,7 +54,7 @@ def vector(vec: RealVector) -> Vector:
     return array(vec, dtype=float)
 
 
-def norm(vec: Vector) -> Float:
+def norm(vec: Vector) -> float:
     """Calculate the norm of a vector `vec`."""
     # `numpy.linalg.norm` is slower
     return sqrt(vec.dot(vec))
@@ -95,7 +95,7 @@ def cross(vec1: Vector, vec2: Vector) -> Vector:
     return vec
 
 
-def angle(vec1: Vector, vec2: Vector) -> Float:
+def angle(vec1: Vector, vec2: Vector) -> float:
     """Calculate the angle between two vectors `vec1` and `vec2`."""
     # `acos(clamp(unitvec1.dot(unitvec2), -1.0, 1.0))` is less accurate
     return acos(
@@ -105,7 +105,7 @@ def angle(vec1: Vector, vec2: Vector) -> Float:
     )
 
 
-def intersectangle(vec1: Vector, vec2: Vector) -> Float:
+def intersectangle(vec1: Vector, vec2: Vector) -> float:
     """
     Calculate the intersection angle between two lines described by two vectors
     `vec1` and `vec2`.
