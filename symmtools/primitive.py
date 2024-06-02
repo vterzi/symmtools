@@ -6,7 +6,7 @@ from re import findall
 
 from numpy import zeros
 
-from .const import INF
+from .const import INF, LABEL_RE, FLOAT_RE
 from .vecop import diff, unitindep
 from .transform import (
     Transformable,
@@ -28,9 +28,6 @@ from .typehints import (
     RealVector,
     RealVectors,
 )
-
-_LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
-_FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
 
 
 class Point(VectorTransformable):
@@ -114,7 +111,7 @@ class Points(Transformables):
         """
         points = []
         for match in findall(
-            r"(?:({0})\s+)?({1})\s+({1})\s+({1})".format(_LABEL_RE, _FLOAT_RE),
+            r"(?:({0})\s+)?({1})\s+({1})\s+({1})".format(LABEL_RE, FLOAT_RE),
             string,
         ):
             label = match[0]

@@ -13,6 +13,8 @@ __all__ = [
     "TERNAX",
     "INF_SYMB",
     "REFL_SYMB",
+    "LABEL_RE",
+    "FLOAT_RE",
 ]
 
 from math import nan, inf, pi
@@ -30,3 +32,5 @@ SECAX = (1.0, 0.0, 0.0)
 TERNAX = (0.0, 1.0, 0.0)
 INF_SYMB = "oo"  # "\u221e"
 REFL_SYMB = "s"  # "\u03c3"
+LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
+FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
