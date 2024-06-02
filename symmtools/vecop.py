@@ -1,11 +1,13 @@
 """Functions for basic vector operations."""
 
 __all__ = [
+    "clamp",
     "vector",
     "norm",
     "canonicalize",
     "normalize",
     "orthogonalize",
+    "cross",
     "angle",
     "unitangle",
     "diff",
@@ -25,8 +27,8 @@ __all__ = [
     "reflmat",
 ]
 
-from math import sqrt
-from numpy import array, clip, sin, cos, arccos, cross
+from math import sqrt, sin, cos, acos
+from numpy import array, empty
 
 from .typehints import Float, Vector, Matrix, RealVector
 
@@ -34,6 +36,16 @@ from .typehints import Float, Vector, Matrix, RealVector
 # `float` is faster than `numpy.float64.item`
 # `math.sqrt` is faster than `numpy.sqrt`
 # `math.sqrt` with `numpy.ndarray.dot` is faster than `numpy.linalg.norm`
+
+
+def clamp(val: Float, low: Float, high: Float) -> Float:
+    """Clamp a value `val` within the interval between `low` and `high`."""
+    if val < low:
+        return low
+    elif val > high:
+        return high
+    else:
+        return val
 
 
 def vector(vec: RealVector) -> Vector:
@@ -69,10 +81,22 @@ def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
     return vec - vec.dot(unitvec) * unitvec
 
 
+def cross(vec1, vec2):
+    x1, y1, z1 = vec1
+    x2, y2, z2 = vec2
+    vec = empty(3)
+    vec[0] = y1 * z2 - z1 * y2
+    vec[1] = z1 * x2 - x1 * z2
+    vec[2] = x1 * y2 - y1 * x2
+    return vec
+
+
 def angle(vec1: Vector, vec2: Vector) -> Float:
     """Calculate the angle between two vectors `vec1` and `vec2`."""
-    return arccos(
-        clip(vec1.dot(vec2) / sqrt(vec1.dot(vec1) * vec2.dot(vec2)), -1.0, 1.0)
+    return acos(
+        clamp(
+            vec1.dot(vec2) / sqrt(vec1.dot(vec1) * vec2.dot(vec2)), -1.0, 1.0
+        )
     )
 
 
@@ -80,7 +104,7 @@ def unitangle(unitvec1: Vector, unitvec2: Vector) -> Float:
     """
     Calculate the angle between two unit vectors `unitvec1` and `unitvec2`.
     """
-    return arccos(clip(unitvec1.dot(unitvec2), -1.0, 1.0))
+    return acos(clamp(unitvec1.dot(unitvec2), -1.0, 1.0))
 
 
 def diff(vec1: Vector, vec2: Vector) -> float:
@@ -201,13 +225,17 @@ def rotmat(rotation: Vector, angle: Float) -> Matrix:
     xyc = x * yc
     yzc = y * zc
     zxc = z * xc
-    return array(
-        [
-            [c + x * xc, xyc - zs, zxc + ys],
-            [xyc + zs, c + y * yc, yzc - xs],
-            [zxc - ys, yzc + xs, c + z * zc],
-        ]
-    )
+    mat = empty((3, 3))
+    mat[0, 0] = c + x * xc
+    mat[0, 1] = xyc - zs
+    mat[0, 2] = zxc + ys
+    mat[1, 0] = xyc + zs
+    mat[1, 1] = c + y * yc
+    mat[1, 2] = yzc - xs
+    mat[2, 0] = zxc - ys
+    mat[2, 1] = yzc + xs
+    mat[2, 2] = c + z * zc
+    return mat
 
 
 def reflmat(reflection: Vector) -> Matrix:
@@ -223,10 +251,14 @@ def reflmat(reflection: Vector) -> Matrix:
     xy = -x * y_
     yz = -y * z_
     zx = -z * x_
-    return array(
-        [
-            [1.0 - x * x_, xy, zx],
-            [xy, 1.0 - y * y_, yz],
-            [zx, yz, 1.0 - z * z_],
-        ]
-    )
+    mat = empty((3, 3))
+    mat[0, 0] = 1.0 - x * x_
+    mat[0, 1] = xy
+    mat[0, 2] = zx
+    mat[1, 0] = xy
+    mat[1, 1] = 1.0 - y * y_
+    mat[1, 2] = yz
+    mat[2, 0] = zx
+    mat[2, 1] = yz
+    mat[2, 2] = 1.0 - z * z_
+    return mat

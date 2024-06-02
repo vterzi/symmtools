@@ -2,10 +2,12 @@
 
 __all__ = ["Quaternion"]
 
-from numpy import eye, sin, cos, arctan2, cross
+from math import sin, cos, atan2
+
+from numpy import eye
 
 from .const import INF
-from .vecop import norm, normalize
+from .vecop import norm, normalize, cross
 from .transform import VectorTransformable, Rotation
 from .primitive import Point
 from .typehints import TypeVar, Any, Float, Vector, Matrix, RealVector
@@ -23,11 +25,11 @@ class Quaternion(VectorTransformable):
         """
         Initialize the instance with a scalar `scalar` and a 3D vector `vec`.
         """
-        self._scalar = scalar
+        self._scalar = float(scalar)
         super().__init__(vec)
 
     @property
-    def scalar(self) -> Float:
+    def scalar(self) -> float:
         """Return the scalar part."""
         return self._scalar
 
@@ -44,9 +46,9 @@ class Quaternion(VectorTransformable):
         """Return the axis of rotation."""
         return normalize(self._vec)
 
-    def angle(self) -> Float:
+    def angle(self) -> float:
         """Return the angle of rotation."""
-        return 2.0 * arctan2(norm(self._vec), self._scalar)
+        return 2.0 * atan2(norm(self._vec), self._scalar)
 
     def conjugate(self: _Quaternion) -> _Quaternion:
         """Return the conjugate of the instance."""

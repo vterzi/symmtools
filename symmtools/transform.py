@@ -19,8 +19,9 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 from copy import copy
+from math import sin, cos
 
-from numpy import sin, cos, empty, eye
+from numpy import empty, eye
 from scipy.optimize import linear_sum_assignment  # type: ignore
 
 from .const import INF, PI, TAU
@@ -421,10 +422,10 @@ class OrderedTransformable(DirectionTransformable):
         super().__init__(vec)
         if order < 1:
             raise ValueError("negative order")
-        self._order = order
+        self._order = int(order)
 
     @property
-    def order(self) -> Int:
+    def order(self) -> int:
         """Return the order."""
         return self._order
 
@@ -445,7 +446,7 @@ class InfFoldTransformable(DirectionTransformable):
     """
 
     @property
-    def order(self) -> Float:
+    def order(self) -> float:
         """Return the order."""
         return INF
 
@@ -536,22 +537,23 @@ class Rotation(DirectionTransformable, Transformation):
         angle %= TAU
         if angle == 0.0:
             raise ValueError("zero angle")
+        angle = float(angle)
         self._angle = angle
         self._cos = cos(angle)
         self._sin = sin(angle)
 
     @property
-    def angle(self) -> Float:
+    def angle(self) -> float:
         """Return the rotation angle."""
         return self._angle
 
     @property
-    def cos(self) -> Float:
+    def cos(self) -> float:
         """Return the cosine of the rotation angle."""
         return self._cos
 
     @property
-    def sin(self) -> Float:
+    def sin(self) -> float:
         """Return the sine of the rotation angle."""
         return self._sin
 
