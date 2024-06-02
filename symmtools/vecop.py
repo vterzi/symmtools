@@ -10,6 +10,7 @@ __all__ = [
     "cross",
     "angle",
     "unitangle",
+    "intersectangle",
     "diff",
     "same",
     "indep",
@@ -30,6 +31,7 @@ __all__ = [
 from math import sqrt, sin, cos, acos
 from numpy import array, empty
 
+from .const import PI, PI_2
 from .typehints import Float, Vector, Matrix, RealVector
 
 # `max` is faster than `numpy.ndarray.max`
@@ -106,6 +108,17 @@ def unitangle(unitvec1: Vector, unitvec2: Vector) -> Float:
     Calculate the angle between two unit vectors `unitvec1` and `unitvec2`.
     """
     return acos(clamp(unitvec1.dot(unitvec2), -1.0, 1.0))
+
+
+def intersectangle(unitvec1: Vector, unitvec2: Vector) -> Float:
+    """
+    Calculate the intersection angle between two lines described by two unit
+    vectors `unitvec1` and `unitvec2`.
+    """
+    angle = unitangle(unitvec1, unitvec2)
+    if angle > PI_2:
+        angle = PI - angle
+    return angle
 
 
 def diff(vec1: Vector, vec2: Vector) -> float:

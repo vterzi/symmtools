@@ -4,6 +4,7 @@ __all__ = [
     "INF",
     "PI",
     "TAU",
+    "PI_2",
     "EPS",
     "TOL",
     "PHI",
@@ -23,6 +24,7 @@ NAN = nan
 INF = inf
 PI = pi
 TAU = 2.0 * pi
+PI_2 = 0.5 * pi
 EPS = 7.0 / 3.0 - 4.0 / 3.0 - 1.0
 TOL = 2**4 * EPS
 PHI = 0.5 * (1.0 + 5.0**0.5)
