@@ -81,7 +81,8 @@ def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
     return vec - vec.dot(unitvec) * unitvec
 
 
-def cross(vec1, vec2):
+def cross(vec1: Vector, vec2: Vector) -> Vector:
+    """Calculate the cross product of two 3D vectors `vec1` and `vec2`."""
     x1, y1, z1 = vec1
     x2, y2, z2 = vec2
     vec = empty(3)
