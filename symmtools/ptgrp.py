@@ -2,9 +2,17 @@
 
 __all__ = ["symmelems", "ptgrp", "symb2symmelems", "PointGroup"]
 
-from numpy import cross
+from math import sqrt, atan
 
-from .const import INF, PHI, TOL, PRIMAX, SECAX, INF_SYMB
+from .const import INF, PI, PHI, TOL, PRIMAX, SECAX, INF_SYMB
+from .vecop import (
+    norm,
+    cross,
+    parallel,
+    unitparallel,
+    perpendicular,
+    intersectangle,
+)
 from .tools import signvar, ax3permut
 from .transform import (
     Transformable,
@@ -30,8 +38,16 @@ from .symmelem import (
     CenterRotoreflectionAxes,
 )
 from .primitive import Points
-from .vecop import norm, parallel, unitparallel, perpendicular
-from .typehints import TypeVar, Any, Union, Sequence, Tuple, List, Vector
+from .typehints import (
+    TypeVar,
+    Any,
+    Union,
+    Sequence,
+    Tuple,
+    List,
+    Dict,
+    Vector,
+)
 
 _RotationAxis = Union[RotationAxis, InfRotationAxis]
 _ReflectionPlane = ReflectionPlane
@@ -522,6 +538,163 @@ def symb2symmelems(
             "a symbol can start only with 'C', 'S', 'D', 'T', 'O', 'I', or 'K'"
         )
     return symb, tuple(symmelems), tuple(labels)
+
+
+_SPECIAL_ANGLES = (
+    0.0,
+    atan(1.0 / PHI**2),
+    atan(1.0 / PHI),
+    atan(sqrt(2.0) / 2.0),
+    PI / 5.0,
+    atan(2.0 / PHI**2),
+    atan(2.0 / sqrt(5.0)),
+    PI / 4.0,
+    atan(sqrt(2.0)),
+    atan(PHI),
+    PI / 3.0,
+    atan(2.0),
+    atan(PHI**2),
+    atan(2.0 * sqrt(2.0)),
+    2.0 * PI / 5.0,
+    atan(2.0 * PHI**2),
+    PI / 2.0,
+)
+
+
+class PointGroupInfo:
+    """Point group information."""
+
+    def __init__(self, symb: str) -> None:
+        """Initialize the instance with a point group symbol `symb`."""
+        group = PointGroup(symb)
+        invertible = False
+        symmelems: List[
+            Union[
+                RotationAxis,
+                InfRotationAxis,
+                ReflectionPlane,
+                RotoreflectionAxis,
+                InfRotoreflectionAxis,
+            ]
+        ] = []
+        for symmelem in group.symmelems:
+            if isinstance(
+                symmelem,
+                (
+                    RotationAxis,
+                    InfRotationAxis,
+                    ReflectionPlane,
+                    RotoreflectionAxis,
+                    InfRotoreflectionAxis,
+                ),
+            ):
+                symmelems.append(symmelem)
+            elif isinstance(symmelem, InversionCenter):
+                invertible = True
+            else:
+                raise NotImplementedError()
+        nums: Dict[int, int] = {}
+        for symmelem in symmelems:
+            id_ = symmelem.id()
+            if id_ not in nums:
+                nums[id_] = 0
+            nums[id_] += 1
+        angles: Dict[Tuple[int, int], Dict[float, int]] = {}
+        n_symmelems = len(symmelems)
+        for i1 in range(n_symmelems - 1):
+            symmelem = symmelems[i1]
+            vec1 = symmelem.vec
+            id1 = symmelem.id()
+            for i2 in range(i1 + 1, n_symmelems):
+                symmelem = symmelems[i2]
+                vec2 = symmelem.vec
+                id2 = symmelem.id()
+                key = (id1, id2) if id1 >= id2 else (id2, id1)
+                angle = intersectangle(vec1, vec2)
+                found = False
+                for ref_angle in _SPECIAL_ANGLES:
+                    diff = abs(angle - ref_angle)
+                    if diff <= TOL:
+                        found = True
+                        angle = ref_angle
+                        break
+                if not found:
+                    raise NotImplementedError()
+                if key not in angles:
+                    angles[key] = {}
+                if angle not in angles[key]:
+                    angles[key][angle] = 0
+                angles[key][angle] += 1
+        self._symb = group.symb
+        self._invertible = invertible
+        self._nums = nums
+        self._angles = angles
+
+    @property
+    def symb(self) -> str:
+        """Return the symbol."""
+        return self._symb
+
+    def issubset(
+        self,
+        invertible: bool,
+        symmelems: Sequence[
+            Union[
+                RotationAxis,
+                InfRotationAxis,
+                ReflectionPlane,
+                RotoreflectionAxis,
+                InfRotoreflectionAxis,
+            ]
+        ],
+        tol: float,
+    ) -> bool:
+        """
+        Check whether a symmetry `invertible` with respect to an inversion
+        matches the instance and a set of symmetry elements `symmelems` is a
+        subset of the symmetry elements of the instance within a tolerance
+        `tol`.
+        """
+        if invertible != self._invertible:
+            return False
+        nums: Dict[int, int] = {}
+        for symmelem in symmelems:
+            id_ = symmelem.id()
+            if id_ not in nums:
+                nums[id_] = 0
+            nums[id_] += 1
+        for order, num in nums.items():
+            if order not in self._nums or self._nums[order] < num:
+                return False
+        angles: Dict[Tuple[int, int], Dict[float, int]] = {}
+        n_symmelems = len(symmelems)
+        for i1 in range(n_symmelems - 1):
+            symmelem = symmelems[i1]
+            vec1 = symmelem.vec
+            id1 = symmelem.id()
+            for i2 in range(i1 + 1, n_symmelems):
+                symmelem = symmelems[i2]
+                vec2 = symmelem.vec
+                id2 = symmelem.id()
+                key = (id1, id2) if id1 >= id2 else (id2, id1)
+                angle = intersectangle(vec1, vec2)
+                found = True
+                for ref_angle in self._angles[key]:
+                    if abs(angle - ref_angle) <= tol:
+                        found = True
+                        if key not in angles:
+                            angles[key] = {}
+                        if ref_angle not in angles[key]:
+                            angles[key][ref_angle] = 0
+                        angles[key][ref_angle] += 1
+                        if (
+                            self._angles[key][ref_angle]
+                            < angles[key][ref_angle]
+                        ):
+                            return False
+                if not found:
+                    return False
+        return True
 
 
 _PointGroup = TypeVar("_PointGroup", bound="PointGroup")
