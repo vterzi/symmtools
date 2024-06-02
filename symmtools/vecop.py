@@ -9,7 +9,6 @@ __all__ = [
     "orthogonalize",
     "cross",
     "angle",
-    "unitangle",
     "intersectangle",
     "diff",
     "same",
@@ -36,12 +35,12 @@ from .typehints import Float, Vector, Matrix, RealVector
 
 # `max` is faster than `numpy.ndarray.max`
 # `float` is faster than `numpy.float64.item`
-# `math.sqrt` is faster than `numpy.sqrt`
-# `math.sqrt` with `numpy.ndarray.dot` is faster than `numpy.linalg.norm`
+# `sqrt`, `sin`, `cos`, `acos` from `math` are faster than from `numpy`
 
 
 def clamp(val: Float, low: Float, high: Float) -> Float:
     """Clamp a value `val` within the interval between `low` and `high`."""
+    # `numpy.clip` is slower
     if val < low:
         return low
     elif val > high:
@@ -57,6 +56,7 @@ def vector(vec: RealVector) -> Vector:
 
 def norm(vec: Vector) -> Float:
     """Calculate the norm of a vector `vec`."""
+    # `numpy.linalg.norm` is slower
     return sqrt(vec.dot(vec))
 
 
@@ -85,6 +85,7 @@ def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
 
 def cross(vec1: Vector, vec2: Vector) -> Vector:
     """Calculate the cross product of two 3D vectors `vec1` and `vec2`."""
+    # `numpy.cross` is slower
     x1, y1, z1 = vec1
     x2, y2, z2 = vec2
     vec = empty(3)
@@ -96,6 +97,7 @@ def cross(vec1: Vector, vec2: Vector) -> Vector:
 
 def angle(vec1: Vector, vec2: Vector) -> Float:
     """Calculate the angle between two vectors `vec1` and `vec2`."""
+    # `acos(clamp(unitvec1.dot(unitvec2), -1.0, 1.0))` is less accurate
     return acos(
         clamp(
             vec1.dot(vec2) / sqrt(vec1.dot(vec1) * vec2.dot(vec2)), -1.0, 1.0
@@ -103,22 +105,15 @@ def angle(vec1: Vector, vec2: Vector) -> Float:
     )
 
 
-def unitangle(unitvec1: Vector, unitvec2: Vector) -> Float:
+def intersectangle(vec1: Vector, vec2: Vector) -> Float:
     """
-    Calculate the angle between two unit vectors `unitvec1` and `unitvec2`.
+    Calculate the intersection angle between two lines described by two vectors
+    `vec1` and `vec2`.
     """
-    return acos(clamp(unitvec1.dot(unitvec2), -1.0, 1.0))
-
-
-def intersectangle(unitvec1: Vector, unitvec2: Vector) -> Float:
-    """
-    Calculate the intersection angle between two lines described by two unit
-    vectors `unitvec1` and `unitvec2`.
-    """
-    angle = unitangle(unitvec1, unitvec2)
-    if angle > PI_2:
-        angle = PI - angle
-    return angle
+    ang = angle(vec1, vec2)
+    if ang > PI_2:
+        ang = PI - ang
+    return ang
 
 
 def diff(vec1: Vector, vec2: Vector) -> float:
@@ -136,32 +131,40 @@ def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
 
 
 def indep(vec1: Vector, vec2: Vector) -> float:
-    """Calculate the linear independence of two vectors `vec1` and `vec2`."""
+    """
+    Calculate the linear independence of two 3D vectors `vec1` and `vec2`.
+    """
     # `norm(cross(vec1, vec2))` is slower
     return float(max(abs(cross(vec1, vec2))))
 
 
 def unitindep(unitvec1: Vector, unitvec2: Vector) -> float:
     """
-    Calculate the linear independence of two unit vectors `unitvec1` and
+    Calculate the linear independence of two 3D unit vectors `unitvec1` and
     `unitvec2`.
     """
     # `abs(abs(unitvec1.dot(unitvec2)) - 1)` is faster but less accurate
-    return min(diff(unitvec1, unitvec2), diff(unitvec1, -unitvec2))
+    # `min(diff(unitvec1, unitvec2), diff(unitvec1, -unitvec2))` is slower
+    x1, y1, z1 = unitvec1
+    x2, y2, z2 = unitvec2
+    return min(
+        max(abs(x1 - x2), abs(y1 - y2), abs(z1 - z2)),
+        max(abs(x1 + x2), abs(y1 + y2), abs(z1 + z2)),
+    )
 
 
 def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
-    Check wether two vectors `vec1` and `vec2` are parallel within a tolerance
-    `tol`.
+    Check wether two 3D vectors `vec1` and `vec2` are parallel within a
+    tolerance `tol`.
     """
     return indep(vec1, vec2) <= tol
 
 
 def unitparallel(unitvec1: Vector, unitvec2: Vector, tol: float) -> bool:
     """
-    Check wether two unit vectors `unitvec1` and `unitvec2` are parallel within
-    a tolerance `tol`.
+    Check wether two 3D unit vectors `unitvec1` and `unitvec2` are parallel
+    within a tolerance `tol`.
     """
     return unitindep(unitvec1, unitvec2) <= tol
 
