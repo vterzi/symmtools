@@ -451,6 +451,7 @@ class InfFoldTransformable(DirectionTransformable):
 
 
 _Any = TypeVar("_Any", bound=Any)
+_Transformation = TypeVar("_Transformation", bound="Transformation")
 
 
 class Transformation(ABC):
@@ -458,6 +459,26 @@ class Transformation(ABC):
 
     @abstractmethod
     def diff(self, obj: Any) -> float:
+        pass
+
+    @abstractmethod
+    def translate(self: _Any, translation: "Translation") -> _Any:
+        pass
+
+    @abstractmethod
+    def invert(self: _Any) -> _Any:
+        pass
+
+    @abstractmethod
+    def rotate(self: _Any, rotation: "Rotation") -> _Any:
+        pass
+
+    @abstractmethod
+    def reflect(self: _Any, reflection: "Reflection") -> _Any:
+        pass
+
+    @abstractmethod
+    def rotoreflect(self: _Any, rotoreflection: "Rotoreflection") -> _Any:
         pass
 
     @abstractmethod
