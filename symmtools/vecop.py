@@ -4,12 +4,10 @@ __all__ = [
     "clamp",
     "vector",
     "norm",
-    "canonicalize",
+    "cross",
     "normalize",
     "orthogonalize",
-    "cross",
-    "angle",
-    "intersectangle",
+    "canonicalize",
     "diff",
     "same",
     "indep",
@@ -17,6 +15,8 @@ __all__ = [
     "parallel",
     "unitparallel",
     "perpendicular",
+    "angle",
+    "intersectangle",
     "translate",
     "invert",
     "move2",
@@ -60,16 +60,15 @@ def norm(vec: Vector) -> float:
     return sqrt(vec.dot(vec))
 
 
-def canonicalize(vec: Vector) -> Vector:
-    """
-    Canonicalize an unsigned direction vector `vec` by making the first
-    non-zero coordinate positive.
-    """
-    for coord in vec:
-        if coord < 0.0:
-            vec = -vec
-        if coord != 0.0:
-            break
+def cross(vec1: Vector, vec2: Vector) -> Vector:
+    """Calculate the cross product of two 3D vectors `vec1` and `vec2`."""
+    # `numpy.cross` is slower
+    x1, y1, z1 = vec1
+    x2, y2, z2 = vec2
+    vec = empty(3)
+    vec[0] = y1 * z2 - z1 * y2
+    vec[1] = z1 * x2 - x1 * z2
+    vec[2] = x1 * y2 - y1 * x2
     return vec
 
 
@@ -83,37 +82,17 @@ def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
     return vec - vec.dot(unitvec) * unitvec
 
 
-def cross(vec1: Vector, vec2: Vector) -> Vector:
-    """Calculate the cross product of two 3D vectors `vec1` and `vec2`."""
-    # `numpy.cross` is slower
-    x1, y1, z1 = vec1
-    x2, y2, z2 = vec2
-    vec = empty(3)
-    vec[0] = y1 * z2 - z1 * y2
-    vec[1] = z1 * x2 - x1 * z2
-    vec[2] = x1 * y2 - y1 * x2
+def canonicalize(vec: Vector) -> Vector:
+    """
+    Canonicalize an unsigned direction vector `vec` by making the first
+    non-zero coordinate positive.
+    """
+    for coord in vec:
+        if coord < 0.0:
+            vec = -vec
+        if coord != 0.0:
+            break
     return vec
-
-
-def angle(vec1: Vector, vec2: Vector) -> float:
-    """Calculate the angle between two vectors `vec1` and `vec2`."""
-    # `acos(clamp(unitvec1.dot(unitvec2), -1.0, 1.0))` is less accurate
-    return acos(
-        clamp(
-            vec1.dot(vec2) / sqrt(vec1.dot(vec1) * vec2.dot(vec2)), -1.0, 1.0
-        )
-    )
-
-
-def intersectangle(vec1: Vector, vec2: Vector) -> float:
-    """
-    Calculate the intersection angle between two lines described by two vectors
-    `vec1` and `vec2`.
-    """
-    ang = angle(vec1, vec2)
-    if ang > PI_2:
-        ang = PI - ang
-    return ang
 
 
 def diff(vec1: Vector, vec2: Vector) -> float:
@@ -175,6 +154,27 @@ def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
     tolerance `tol`.
     """
     return abs(float(vec1.dot(vec2))) <= tol
+
+
+def angle(vec1: Vector, vec2: Vector) -> float:
+    """Calculate the angle between two vectors `vec1` and `vec2`."""
+    # `acos(clamp(unitvec1.dot(unitvec2), -1.0, 1.0))` is less accurate
+    return acos(
+        clamp(
+            vec1.dot(vec2) / sqrt(vec1.dot(vec1) * vec2.dot(vec2)), -1.0, 1.0
+        )
+    )
+
+
+def intersectangle(vec1: Vector, vec2: Vector) -> float:
+    """
+    Calculate the intersection angle between two lines described by two vectors
+    `vec1` and `vec2`.
+    """
+    ang = angle(vec1, vec2)
+    if ang > PI_2:
+        ang = PI - ang
+    return ang
 
 
 def translate(vec: Vector, translation: Vector) -> Vector:
