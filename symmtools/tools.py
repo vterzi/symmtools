@@ -1,6 +1,7 @@
 """Miscellaneous functions."""
 
 __all__ = [
+    "rational",
     "chcoords",
     "signvar",
     "ax3permut",
@@ -9,6 +10,7 @@ __all__ = [
 from .const import ORIGIN
 from .typehints import (
     Optional,
+    Tuple,
     List,
     Bool,
     Int,
@@ -17,6 +19,27 @@ from .typehints import (
     RealVector,
     RealVectors,
 )
+
+
+def rational(num: float, tol: float) -> Tuple[int, int]:
+    """
+    Determine the rational representation (nominator and denominator) of a
+    decimal number `num` within a tolerance `tol`.
+    """
+    negative = num < 0.0
+    num = abs(num)
+    nom = 0
+    denom = 1
+    diff = num - nom / denom
+    while abs(diff) > tol:
+        if diff > 0.0:
+            nom += 1
+        else:
+            denom += 1
+        diff = num - nom / denom
+    if negative:
+        nom = -nom
+    return nom, denom
 
 
 def chcoords(
