@@ -13,7 +13,7 @@ from .vecop import (
     perpendicular,
     intersectangle,
 )
-from .tools import signvar, ax3permut
+from .tools import rational, signvar, ax3permut
 from .transform import (
     Transformable,
     Transformation,
@@ -541,158 +541,129 @@ def symb2symmelems(
 
 
 _SPECIAL_ANGLES = (
-    0.0,
     atan(1.0 / PHI**2),
     atan(1.0 / PHI),
-    atan(sqrt(2.0) / 2.0),
-    PI / 5.0,
+    atan(1.0 / sqrt(2.0)),
     atan(2.0 / PHI**2),
     atan(2.0 / sqrt(5.0)),
-    PI / 4.0,
     atan(sqrt(2.0)),
     atan(PHI),
-    PI / 3.0,
     atan(2.0),
     atan(PHI**2),
     atan(2.0 * sqrt(2.0)),
-    2.0 * PI / 5.0,
     atan(2.0 * PHI**2),
-    PI / 2.0,
 )
 
 
 class PointGroupInfo:
-    """Point group information."""
+    """
+    Point group information containing types and numbers of symmetry elements
+    and angles between their axes or normals.
+    """
 
-    def __init__(self, symb: str) -> None:
-        """Initialize the instance with a point group symbol `symb`."""
-        group = PointGroup(symb)
-        invertible = False
-        symmelems: List[
+    def __init__(self, invertible: bool) -> None:
+        """
+        Initialize the instance with a symmetry `invertible` with respect to an
+        inversion.
+        """
+        self._symmelems: List[
             Union[
                 RotationAxis,
                 InfRotationAxis,
                 ReflectionPlane,
                 RotoreflectionAxis,
                 InfRotoreflectionAxis,
+                AxisRotationAxes,
+                AxisReflectionPlanes,
             ]
         ] = []
-        for symmelem in group.symmelems:
+        self._invertible = invertible
+        self._nums: Dict[int, int] = {}
+        self._angles: Dict[Tuple[int, int], Dict[float, int]] = {}
+
+    @property
+    def invertible(self) -> bool:
+        """Return the symmetry with respect to an inversion."""
+        return self._invertible
+
+    @property
+    def nums(self) -> Dict[int, int]:
+        """Return the types and numbers of symmetry elements."""
+        return self._nums
+
+    @property
+    def angles(self) -> Dict[Tuple[int, int], Dict[float, int]]:
+        """Return the angles between axes or normals of symmetry elements."""
+        return self._angles
+
+    def add(
+        self,
+        symmelems: Union[SymmetryElement, Sequence[SymmetryElement]],
+        tol: float,
+    ) -> None:
+        """
+        Add information of one or multiple symmetry elements `symmelems` using
+        a tolerance `tol` to calculate exact intersection angles.
+        """
+        symmelems = (
+            symmelems if isinstance(symmelems, Sequence) else (symmelems,)
+        )
+        for symmelem1 in symmelems:
             if isinstance(
-                symmelem,
+                symmelem1,
                 (
                     RotationAxis,
                     InfRotationAxis,
                     ReflectionPlane,
                     RotoreflectionAxis,
                     InfRotoreflectionAxis,
+                    AxisRotationAxes,
+                    AxisReflectionPlanes,
                 ),
             ):
-                symmelems.append(symmelem)
-            elif isinstance(symmelem, InversionCenter):
-                invertible = True
-            else:
-                raise NotImplementedError()
-        nums: Dict[int, int] = {}
-        for symmelem in symmelems:
-            id_ = symmelem.id()
-            if id_ not in nums:
-                nums[id_] = 0
-            nums[id_] += 1
-        angles: Dict[Tuple[int, int], Dict[float, int]] = {}
-        n_symmelems = len(symmelems)
-        for i1 in range(n_symmelems - 1):
-            symmelem = symmelems[i1]
-            vec1 = symmelem.vec
-            id1 = symmelem.id()
-            for i2 in range(i1 + 1, n_symmelems):
-                symmelem = symmelems[i2]
-                vec2 = symmelem.vec
-                id2 = symmelem.id()
-                key = (id1, id2) if id1 >= id2 else (id2, id1)
-                angle = intersectangle(vec1, vec2)
-                found = False
-                for ref_angle in _SPECIAL_ANGLES:
-                    diff = abs(angle - ref_angle)
-                    if diff <= TOL:
-                        found = True
-                        angle = ref_angle
-                        break
-                if not found:
-                    raise NotImplementedError()
-                if key not in angles:
-                    angles[key] = {}
-                if angle not in angles[key]:
-                    angles[key][angle] = 0
-                angles[key][angle] += 1
-        self._symb = group.symb
-        self._invertible = invertible
-        self._nums = nums
-        self._angles = angles
+                key1 = symmelem1.id()
+                if key1 not in self._nums:
+                    self._nums[key1] = 0
+                self._nums[key1] += 1
+                vec1 = symmelem1.vec
+                id1 = symmelem1.id()
+                for symmelem2 in self._symmelems:
+                    vec2 = symmelem2.vec
+                    id2 = symmelem2.id()
+                    key2 = (id1, id2) if id1 >= id2 else (id2, id1)
+                    angle = intersectangle(vec1, vec2)
+                    found = False
+                    for special_angle in _SPECIAL_ANGLES:
+                        diff = abs(angle - special_angle)
+                        if diff <= tol:
+                            found = True
+                            angle = special_angle
+                            break
+                    if not found:
+                        nom, denom = rational(angle / PI, tol)
+                        angle = nom * PI / denom
+                    if key2 not in self._angles:
+                        self._angles[key2] = {}
+                    if angle not in self._angles[key2]:
+                        self._angles[key2][angle] = 0
+                    self._angles[key2][angle] += 1
+                self._symmelems.append(symmelem1)
 
-    @property
-    def symb(self) -> str:
-        """Return the symbol."""
-        return self._symb
-
-    def issubset(
-        self,
-        invertible: bool,
-        symmelems: Sequence[
-            Union[
-                RotationAxis,
-                InfRotationAxis,
-                ReflectionPlane,
-                RotoreflectionAxis,
-                InfRotoreflectionAxis,
-            ]
-        ],
-        tol: float,
-    ) -> bool:
+    def contains(self, other: "PointGroupInfo") -> bool:
         """
-        Check whether a symmetry `invertible` with respect to an inversion
-        matches the instance and a set of symmetry elements `symmelems` is a
-        subset of the symmetry elements of the instance within a tolerance
-        `tol`.
+        Check whether another instance `other` is a subset of the instance.
         """
-        if invertible != self._invertible:
+        if self._invertible != other.invertible:
             return False
-        nums: Dict[int, int] = {}
-        for symmelem in symmelems:
-            id_ = symmelem.id()
-            if id_ not in nums:
-                nums[id_] = 0
-            nums[id_] += 1
-        for order, num in nums.items():
-            if order not in self._nums or self._nums[order] < num:
+        for key1, num in other.nums.items():
+            if key1 not in self._nums or self._nums[key1] < num:
                 return False
-        angles: Dict[Tuple[int, int], Dict[float, int]] = {}
-        n_symmelems = len(symmelems)
-        for i1 in range(n_symmelems - 1):
-            symmelem = symmelems[i1]
-            vec1 = symmelem.vec
-            id1 = symmelem.id()
-            for i2 in range(i1 + 1, n_symmelems):
-                symmelem = symmelems[i2]
-                vec2 = symmelem.vec
-                id2 = symmelem.id()
-                key = (id1, id2) if id1 >= id2 else (id2, id1)
-                angle = intersectangle(vec1, vec2)
-                found = True
-                for ref_angle in self._angles[key]:
-                    if abs(angle - ref_angle) <= tol:
-                        found = True
-                        if key not in angles:
-                            angles[key] = {}
-                        if ref_angle not in angles[key]:
-                            angles[key][ref_angle] = 0
-                        angles[key][ref_angle] += 1
-                        if (
-                            self._angles[key][ref_angle]
-                            < angles[key][ref_angle]
-                        ):
-                            return False
-                if not found:
+        for key2, angles in other.angles.items():
+            for angle, num in angles.items():
+                if (
+                    angle not in self._angles[key2]
+                    or self._angles[key2][angle] < num
+                ):
                     return False
         return True
 
