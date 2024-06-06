@@ -561,11 +561,8 @@ class PointGroupInfo:
     and angles between their axes or normals.
     """
 
-    def __init__(self, invertible: bool) -> None:
-        """
-        Initialize the instance with a symmetry `invertible` with respect to an
-        inversion.
-        """
+    def __init__(self) -> None:
+        """Initialize the instance."""
         self._symmelems: List[
             Union[
                 RotationAxis,
@@ -577,14 +574,8 @@ class PointGroupInfo:
                 AxisReflectionPlanes,
             ]
         ] = []
-        self._invertible = invertible
         self._nums: Dict[int, int] = {}
         self._angles: Dict[Tuple[int, int], Dict[float, int]] = {}
-
-    @property
-    def invertible(self) -> bool:
-        """Return the symmetry with respect to an inversion."""
-        return self._invertible
 
     @property
     def nums(self) -> Dict[int, int]:
@@ -605,9 +596,8 @@ class PointGroupInfo:
         Add information of one or multiple symmetry elements `symmelems` using
         a tolerance `tol` to calculate exact intersection angles.
         """
-        symmelems = (
-            symmelems if isinstance(symmelems, Sequence) else (symmelems,)
-        )
+        if not isinstance(symmelems, Sequence):
+            symmelems = (symmelems,)
         for symmelem1 in symmelems:
             if isinstance(
                 symmelem1,
@@ -648,13 +638,13 @@ class PointGroupInfo:
                         self._angles[key2][angle] = 0
                     self._angles[key2][angle] += 1
                 self._symmelems.append(symmelem1)
+            elif isinstance(symmelem1, InversionCenter):
+                self._nums[symmelem1.id()] = 1
 
     def contains(self, other: "PointGroupInfo") -> bool:
         """
         Check whether another instance `other` is a subset of the instance.
         """
-        if self._invertible != other.invertible:
-            return False
         for key1, num in other.nums.items():
             if key1 not in self._nums or self._nums[key1] < num:
                 return False
