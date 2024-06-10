@@ -339,7 +339,7 @@ def symb2symmelems(
                             add(InversionCenter())
                     else:
                         add(InfRotationAxis(PRIMAX))
-                        add(AxisReflectionPlanes(SECAX), "v")
+                        add(AxisReflectionPlanes(PRIMAX), "v")
             elif reflection == "h":
                 if n == 1:
                     return symb2symmelems("Cs")
