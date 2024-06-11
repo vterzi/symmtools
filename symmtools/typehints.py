@@ -10,6 +10,7 @@ __all__ = [
     "Tuple",
     "List",
     "Dict",
+    "Iterator",
     "Bool",
     "Int",
     "Float",
@@ -38,6 +39,7 @@ from typing import (
     Tuple,
     List,
     Dict,
+    Iterator,
 )
 
 from numpy import bool_, signedinteger, floating, complexfloating
