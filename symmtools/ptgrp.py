@@ -131,7 +131,7 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
             # for all point triplets
             for i3 in range(i2 + 1, n_points):
                 # find the normal of the plane containing the point triplet
-                normal: Vector = cross(
+                normal = cross(
                     points[i2].pos - points[i1].pos,
                     points[i3].pos - points[i1].pos,
                 )
@@ -452,6 +452,7 @@ def symb2symmelems(
                         add(RotoreflectionAxis(PRIMAX, n))
                 else:
                     add(AxisReflectionPlanes(PRIMAX), "v")
+                    add(InversionCenter())
     elif order:
         raise ValueError(
             "only the symbols starting with 'C', 'S', or 'D' can have an order"
