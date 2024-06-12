@@ -701,13 +701,13 @@ class PointGroup(Transformable):
             res += f",{self._transformation}"
         return res
 
+    def props(self) -> Tuple:
+        return super().props() + (self._symb,)
+
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
         if res < INF:
-            if self._symb != obj.symb:
-                res = INF
-            else:
-                res = max(res, self._transformation.diff(obj.transformation))
+            res = max(res, self._transformation.diff(obj.transformation))
         return res
 
     def translate(self: _PointGroup, translation: Translation) -> _PointGroup:

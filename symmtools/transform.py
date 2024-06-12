@@ -39,6 +39,9 @@ from .typehints import (
     TypeVar,
     Any,
     Sequence,
+    Tuple,
+    List,
+    Dict,
     Int,
     Float,
     Vector,
@@ -65,9 +68,17 @@ class Transformable(ABC):
     def __hash__(self) -> int:
         return hash(self.__repr__())
 
+    def props(self) -> Tuple:
+        """Return the immutable properties."""
+        return (self.__class__,)
+
+    def similar(self, obj: Any) -> bool:
+        """Check wether the instance is similar to an object `obj`."""
+        return isinstance(obj, Transformable) and self.props() == obj.props()
+
     def diff(self, obj: Any) -> float:
         """Return the difference between the instance and an object `obj`."""
-        return 0.0 if type(self) is type(obj) else INF
+        return 0.0 if self.similar(obj) else INF
 
     def same(self, obj: Any, tol: float) -> bool:
         """
@@ -165,11 +176,25 @@ class Transformables(Transformable):
     def __init__(self, elems: Sequence[Transformable]) -> None:
         """Initialize the instance with a set of elements `elems`."""
         self._elems = tuple(elems)
+        groups: Dict[Tuple, List[int]] = {}
+        for i, elem in enumerate(self._elems):
+            group = elem.props()
+            if group not in groups:
+                groups[group] = []
+            groups[group].append(i)
+        self._groups = tuple(
+            (group, tuple(groups[group])) for group in sorted(groups)
+        )
 
     @property
     def elems(self) -> Sequence[Transformable]:
         """Return the set of elements."""
         return self._elems
+
+    @property
+    def groups(self) -> Sequence[Tuple[Tuple, Sequence[int]]]:
+        """Return the group indices of elements."""
+        return self._groups
 
     def args(self) -> str:
         return (
@@ -186,43 +211,31 @@ class Transformables(Transformable):
             + "]"
         )
 
+    def props(self) -> Tuple:
+        return super().props() + tuple(
+            (group, len(idxs)) for group, idxs in self._groups
+        )
+
     def __getitem__(self, item: int) -> Transformable:
         return self._elems[item]
 
     def __len__(self) -> int:
         return len(self._elems)
 
-    def sort(self, obj: "Transformables") -> float:
-        """
-        Sort the elements of the instance minimizing the difference to another
-        instance `obj` and return the resulting difference.
-        """
-        n = len(self._elems)
-        if n != len(obj.elems):
-            raise ValueError("different number of elements")
-        diffs = empty((n, n))
-        for i1 in range(n):
-            elem = self._elems[i1]
-            for i2 in range(n):
-                diffs[i1, i2] = elem.diff(obj.elems[i2])
-        try:
-            order = linear_sum_assignment(diffs)[1]
-        except ValueError:
-            raise ValueError("different number of elements of the same type")
-        idxs = n * [n]
-        for i in range(n):
-            idxs[order[i]] = i
-        self._elems = tuple(self._elems[idxs[i]] for i in range(n))
-        diff = 0.0
-        for i in range(n):
-            diff = max(diff, diffs[i, order[i]])
-        return diff
-
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
         if res < INF:
             try:
-                res = max(res, obj.sort(self))
+                for (_, idxs1), (_, idxs2) in zip(self._groups, obj.groups):
+                    n = max(len(idxs1), len(idxs2))
+                    diffs = empty((n, n))
+                    for i1 in idxs1:
+                        elem = self._elems[i1]
+                        for i2 in idxs2:
+                            diffs[i1, i2] = elem.diff(obj[i2])
+                    order = linear_sum_assignment(diffs)[1]
+                    for i in range(n):
+                        res = max(res, diffs[i, order[i]])
             except ValueError:
                 res = INF
         return res
@@ -231,12 +244,13 @@ class Transformables(Transformable):
         """
         Check wether no two elements are the same within a tolerance `tol`.
         """
-        n = len(self._elems)
-        for i1 in range(n - 1):
-            elem = self._elems[i1]
-            for i2 in range(i1 + 1, n):
-                if elem.same(self._elems[i2], tol):
-                    return False
+        for _, idxs in self._groups:
+            n = len(idxs)
+            for i1 in range(n - 1):
+                elem = self._elems[idxs[i1]]
+                for i2 in range(i1 + 1, n):
+                    if elem.same(self._elems[idxs[i2]], tol):
+                        return False
         return True
 
     def negate(self: _Transformables) -> _Transformables:
@@ -432,11 +446,8 @@ class OrderedTransformable(DirectionTransformable):
     def args(self) -> str:
         return f"{super().args()},{self._order}"
 
-    def diff(self, obj: Any) -> float:
-        res = super().diff(obj)
-        if res < INF and self._order != obj.order:
-            res = INF
-        return res
+    def props(self) -> Tuple:
+        return super().props() + (self._order,)
 
 
 class InfFoldTransformable(DirectionTransformable):

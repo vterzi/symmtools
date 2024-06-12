@@ -23,6 +23,7 @@ from .typehints import (
     TypeVar,
     Any,
     Sequence,
+    Tuple,
     Bool,
     Vector,
     RealVector,
@@ -58,11 +59,8 @@ class LabeledPoint(Point):
         label = self._label.replace("'", r"\'")
         return f"{super().args()},'{label}'"
 
-    def diff(self, obj: Any) -> float:
-        res = super().diff(obj)
-        if res < INF and self._label != obj.label:
-            res = INF
-        return res
+    def props(self) -> Tuple:
+        return super().props() + (self._label,)
 
 
 _Points = TypeVar("_Points", bound="Points")
@@ -185,12 +183,13 @@ class Arrow(DirectionTransformable):
             back = False
         return f"{super().args()},{fore},{back}"
 
+    def props(self) -> Tuple:
+        return super().props() + (self._form,)
+
     def diff(self, obj: Any) -> float:
         res = Transformable.diff(self, obj)
         if res < INF:
-            if self._form != obj.form:
-                res = INF
-            elif self._form == 0:
+            if self._form == 0:
                 res = max(res, diff(self._vec, obj.vec))
             else:
                 res = max(res, unitindep(self._vec, obj.vec))
@@ -238,6 +237,9 @@ class StructPoint(Point):
 
     def args(self) -> str:
         return f"{super().args()},{self._coef},{self._arrows.args()}"
+
+    def props(self) -> Tuple:
+        return super().props() + self._arrows.props()
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
