@@ -76,6 +76,7 @@ class Quaternion(VectorTransformable):
         res._vec = (self * Quaternion(0.0, obj.vec) * self.conjugate()).vec
         return res
 
+    @property
     def mat(self) -> Matrix:
         """Return the transformation matrix."""
         res = eye(3)

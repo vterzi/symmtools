@@ -63,7 +63,7 @@ class TestIdentity(TestCase):
     def test_mat(self) -> None:
         transform = Identity()
         mat = eye(3)
-        self.assertTrue((transform.mat() == mat).all())
+        self.assertTrue((transform.mat= mat).all())
 
     def test_transformation(self) -> None:
         transform_: Transformation
@@ -128,7 +128,7 @@ class TestTranslation(TestCase):
         transform = Translation(vec)
         mat = eye(4)
         mat[:3, 3] = vec
-        self.assertTrue((transform.mat() == mat).all())
+        self.assertTrue((transform.mat == mat).all())
 
     def test_transformation(self) -> None:
         transform_: Transformation
@@ -193,7 +193,7 @@ class TestInversion(TestCase):
     def test_mat(self) -> None:
         transform = Inversion()
         mat = -eye(3)
-        self.assertTrue((transform.mat() == mat).all())
+        self.assertTrue((transform.mat == mat).all())
 
     def test_transformation(self) -> None:
         transform_: Transformation
@@ -284,7 +284,7 @@ class TestRotation(TestCase):
         angle = randne0angle()
         transform = Rotation(vec, angle)
         mat = rotmat(vec, angle)
-        self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
+        self.assertLessEqual(abs(transform.mat - mat).max(), TOL)
 
     def test_transformation(self) -> None:
         transform_: Transformation
@@ -373,7 +373,7 @@ class TestReflection(TestCase):
         vec = randunitvec()
         transform = Reflection(vec)
         mat = reflmat(vec)
-        self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
+        self.assertLessEqual(abs(transform.mat - mat).max(), TOL)
 
     def test_transformation(self) -> None:
         transform_: Transformation
@@ -485,7 +485,7 @@ class TestRotoreflection(TestCase):
         angle = randne0angle()
         transform = Rotoreflection(vec, angle)
         mat = reflmat(vec) @ rotmat(vec, angle)
-        self.assertLessEqual(abs(transform.mat() - mat).max(), TOL)
+        self.assertLessEqual(abs(transform.mat - mat).max(), TOL)
 
     def test_transformation(self) -> None:
         transform_: Transformation

@@ -470,7 +470,6 @@ class InfFoldTransformable(DirectionTransformable):
 
 
 _Any = TypeVar("_Any", bound=Any)
-_Transformation = TypeVar("_Transformation", bound="Transformation")
 
 
 class Transformation(ABC):
@@ -505,6 +504,7 @@ class Transformation(ABC):
         """Apply the transformation."""
         pass
 
+    @property
     @abstractmethod
     def mat(self) -> Matrix:
         """Return the transformation matrix."""
@@ -517,6 +517,7 @@ class Identity(InvariantTransformable, Transformation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.copy()
 
+    @property
     def mat(self) -> Matrix:
         return eye(3)
 
@@ -527,6 +528,7 @@ class Translation(VectorTransformable, Transformation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.translate(self)
 
+    @property
     def mat(self) -> Matrix:
         res = eye(4)
         res[:3, 3] = self._vec
@@ -539,6 +541,7 @@ class Inversion(InvariantTransformable, Transformation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.invert()
 
+    @property
     def mat(self) -> Matrix:
         return -eye(3)
 
@@ -600,6 +603,7 @@ class Rotation(DirectionTransformable, Transformation):
             res = max(res, vec_diff, angle_diff)
         return res
 
+    @property
     def mat(self) -> Matrix:
         res = eye(3)
         for i in range(len(res)):
@@ -613,6 +617,7 @@ class Reflection(DirectionTransformable, Transformation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.reflect(self)
 
+    @property
     def mat(self) -> Matrix:
         res = eye(3)
         for i in range(len(res)):
@@ -638,6 +643,7 @@ class Rotoreflection(Rotation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.rotoreflect(self)
 
+    @property
     def mat(self) -> Matrix:
         res = eye(3)
         for i in range(len(res)):
