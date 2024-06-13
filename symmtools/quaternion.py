@@ -33,8 +33,9 @@ class Quaternion(VectorTransformable):
         """Return the scalar part."""
         return self._scalar
 
+    @property
     def args(self) -> str:
-        return f"{self._scalar},{super().args()}"
+        return f"{self._scalar},{super().args}"
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)

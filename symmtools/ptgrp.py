@@ -798,14 +798,16 @@ class PointGroup(Transformable):
         """Return the transformation describing the orientation in space."""
         return self._transformation
 
+    @property
     def args(self) -> str:
         res = f"'{self._symb}'"
         if not isinstance(self._transformation, Identity):
             res += f",{self._transformation}"
         return res
 
+    @property
     def props(self) -> Tuple:
-        return super().props() + (self._symb,)
+        return super().props + (self._symb,)
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)

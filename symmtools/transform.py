@@ -55,12 +55,13 @@ _Transformable = TypeVar("_Transformable", bound="Transformable")
 class Transformable(ABC):
     """Transformable object."""
 
+    @property
     def args(self) -> str:
         """Return the argument values used to create the instance."""
         return ""
 
     def __str__(self) -> str:
-        return f"{self.__class__.__name__}({self.args()})"
+        return f"{self.__class__.__name__}({self.args})"
 
     def __repr__(self) -> str:
         return self.__str__()
@@ -68,13 +69,14 @@ class Transformable(ABC):
     def __hash__(self) -> int:
         return hash(self.__repr__())
 
+    @property
     def props(self) -> Tuple:
         """Return the immutable properties."""
         return (self.__class__,)
 
     def similar(self, obj: Any) -> bool:
         """Check wether the instance is similar to an object `obj`."""
-        return isinstance(obj, Transformable) and self.props() == obj.props()
+        return isinstance(obj, Transformable) and self.props == obj.props
 
     def diff(self, obj: Any) -> float:
         """Return the difference between the instance and an object `obj`."""
@@ -178,7 +180,7 @@ class Transformables(Transformable):
         self._elems = tuple(elems)
         groups: Dict[Tuple, List[int]] = {}
         for i, elem in enumerate(self._elems):
-            group = elem.props()
+            group = elem.props
             if group not in groups:
                 groups[group] = []
             groups[group].append(i)
@@ -196,6 +198,7 @@ class Transformables(Transformable):
         """Return the group indices of elements."""
         return self._groups
 
+    @property
     def args(self) -> str:
         return (
             "["
@@ -211,8 +214,9 @@ class Transformables(Transformable):
             + "]"
         )
 
+    @property
     def props(self) -> Tuple:
-        return super().props() + tuple(
+        return super().props + tuple(
             (group, len(idxs)) for group, idxs in self._groups
         )
 
@@ -343,6 +347,7 @@ class VectorTransformable(Transformable):
         """Return the vector representing the instance."""
         return self._vec
 
+    @property
     def args(self) -> str:
         return str(self._vec.tolist()).replace(" ", "")
 
@@ -443,11 +448,13 @@ class OrderedTransformable(DirectionTransformable):
         """Return the order."""
         return self._order
 
+    @property
     def args(self) -> str:
-        return f"{super().args()},{self._order}"
+        return f"{super().args},{self._order}"
 
+    @property
     def props(self) -> Tuple:
-        return super().props() + (self._order,)
+        return super().props + (self._order,)
 
 
 class InfFoldTransformable(DirectionTransformable):
@@ -568,8 +575,9 @@ class Rotation(DirectionTransformable, Transformation):
         """Return the sine of the rotation angle."""
         return self._sin
 
+    @property
     def args(self) -> str:
-        return f"{super().args()},{self._angle}"
+        return f"{super().args},{self._angle}"
 
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.rotate(self)

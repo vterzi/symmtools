@@ -55,12 +55,14 @@ class LabeledPoint(Point):
         """Return the label."""
         return self._label
 
+    @property
     def args(self):
         label = self._label.replace("'", r"\'")
-        return f"{super().args()},'{label}'"
+        return f"{super().args},'{label}'"
 
+    @property
     def props(self) -> Tuple:
-        return super().props() + (self._label,)
+        return super().props + (self._label,)
 
 
 _Points = TypeVar("_Points", bound="Points")
@@ -171,6 +173,7 @@ class Arrow(DirectionTransformable):
         """
         return self._form
 
+    @property
     def args(self) -> str:
         if self._form == 1:
             fore = True
@@ -181,10 +184,11 @@ class Arrow(DirectionTransformable):
         else:
             fore = True
             back = False
-        return f"{super().args()},{fore},{back}"
+        return f"{super().args},{fore},{back}"
 
+    @property
     def props(self) -> Tuple:
-        return super().props() + (self._form,)
+        return super().props + (self._form,)
 
     def diff(self, obj: Any) -> float:
         res = Transformable.diff(self, obj)
@@ -235,11 +239,13 @@ class StructPoint(Point):
         """Return the set of arrows."""
         return self._arrows
 
+    @property
     def args(self) -> str:
-        return f"{super().args()},{self._coef},{self._arrows.args()}"
+        return f"{super().args},{self._coef},{self._arrows.args}"
 
+    @property
     def props(self) -> Tuple:
-        return super().props() + self._arrows.props()
+        return super().props + self._arrows.props
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
