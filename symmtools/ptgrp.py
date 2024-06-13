@@ -401,7 +401,7 @@ def symb2symmelems(
                 n_axes = len(axes)
                 for i in range(0, n_axes, 2):
                     add(axes[i], "'")
-                for i in range(0, n_axes, 2):
+                for i in range(1, n_axes, 2):
                     add(axes[i], "''")
         elif inf:
             add(InfRotationAxis(PRIMAX))
