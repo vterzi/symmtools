@@ -811,7 +811,7 @@ class PointGroup(Transformable):
             res = max(res, self._transform.diff(obj.transform))
         return res
 
-    def translate(self: _PointGroup, translation: Translation) -> _PointGroup:
+    def translate(self: _PointGroup, transl: Translation) -> _PointGroup:
         return self.copy()
 
     def invert(self: _PointGroup) -> _PointGroup:
@@ -819,20 +819,20 @@ class PointGroup(Transformable):
         res._transform = self._transform.invert()
         return res
 
-    def rotate(self: _PointGroup, rotation: Rotation) -> _PointGroup:
+    def rotate(self: _PointGroup, rot: Rotation) -> _PointGroup:
         res = self.copy()
-        res._transform = self._transform.rotate(rotation)
+        res._transform = self._transform.rotate(rot)
         return res
 
-    def reflect(self: _PointGroup, reflection: Reflection) -> _PointGroup:
+    def reflect(self: _PointGroup, refl: Reflection) -> _PointGroup:
         res = self.copy()
-        res._transform = self._transform.reflect(reflection)
+        res._transform = self._transform.reflect(refl)
         return res
 
     def rotoreflect(
-        self: _PointGroup, rotoreflection: Rotoreflection
+        self: _PointGroup, rotorefl: Rotoreflection
     ) -> _PointGroup:
         res = self.copy()
-        res._transform = self._transform.rotoreflect(rotoreflection)
+        res._transform = self._transform.rotoreflect(rotorefl)
         return res
 

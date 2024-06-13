@@ -90,7 +90,7 @@ class Quaternion(VectorTransformable):
         return cls(0.0, point.vec)
 
     @classmethod
-    def from_rotation(cls, rotation: Rotation) -> "Quaternion":
-        """Construct an instance from a rotation `rotation`."""
-        angle = 0.5 * rotation.angle
-        return cls(cos(angle), sin(angle) * rotation.vec)
+    def from_rotation(cls, rot: Rotation) -> "Quaternion":
+        """Construct an instance from a rotation `rot`."""
+        angle = 0.5 * rot.angle
+        return cls(cos(angle), sin(angle) * rot.vec)

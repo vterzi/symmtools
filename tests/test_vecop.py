@@ -136,9 +136,9 @@ class TestVecOp(TestCase):
 
     def test_translate(self) -> None:
         vec = randvec()
-        translation = randvec()
+        transl = randvec()
         self.assertListEqual(
-            translate(vec, translation).tolist(), (vec + translation).tolist()
+            translate(vec, transl).tolist(), (vec + transl).tolist()
         )
 
     def test_invert(self) -> None:
@@ -159,18 +159,16 @@ class TestVecOp(TestCase):
 
     def test_rotate(self) -> None:
         vec = randvec()
-        rotation = randunitvec()
+        axis = randunitvec()
         angle = randangle()
-        mat = rotmat(rotation, angle)
-        self.assertLessEqual(
-            diff(rotate(vec, rotation, angle), mat @ vec), TOL
-        )
+        mat = rotmat(axis, angle)
+        self.assertLessEqual(diff(rotate(vec, axis, angle), mat @ vec), TOL)
 
     def test_reflect(self) -> None:
         vec = randvec()
-        reflection = randunitvec()
-        mat = reflmat(reflection)
-        self.assertLessEqual(diff(reflect(vec, reflection), mat @ vec), TOL)
+        normal = randunitvec()
+        mat = reflmat(normal)
+        self.assertLessEqual(diff(reflect(vec, normal), mat @ vec), TOL)
 
 
 if __name__ == "__main__":

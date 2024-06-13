@@ -123,11 +123,11 @@ class Transformable(ABC):
 
     @abstractmethod
     def translate(
-        self: _Transformable, translation: "Translation"
+        self: _Transformable, transl: "Translation"
     ) -> _Transformable:
         """
         Return the instance resulting from the application of a translation
-        `translation`.
+        `transl`.
         """
         pass
 
@@ -139,30 +139,27 @@ class Transformable(ABC):
         pass
 
     @abstractmethod
-    def rotate(self: _Transformable, rotation: "Rotation") -> _Transformable:
+    def rotate(self: _Transformable, rot: "Rotation") -> _Transformable:
         """
-        Return the instance resulting from the application of a rotation
-        `rotation`.
+        Return the instance resulting from the application of a rotation `rot`.
         """
         pass
 
     @abstractmethod
-    def reflect(
-        self: _Transformable, reflection: "Reflection"
-    ) -> _Transformable:
+    def reflect(self: _Transformable, refl: "Reflection") -> _Transformable:
         """
         Return the instance resulting from the application of a reflection
-        `reflection`.
+        `refl`.
         """
         pass
 
     @abstractmethod
     def rotoreflect(
-        self: _Transformable, rotoreflection: "Rotoreflection"
+        self: _Transformable, rotorefl: "Rotoreflection"
     ) -> _Transformable:
         """
         Return the instance resulting from the application of a rotoreflection
-        `rotoreflection`.
+        `rotorefl`.
         """
         pass
 
@@ -263,10 +260,10 @@ class Transformables(Transformable):
         return res
 
     def translate(
-        self: _Transformables, translation: "Translation"
+        self: _Transformables, transl: "Translation"
     ) -> _Transformables:
         res = self.copy()
-        res._elems = tuple(elem.translate(translation) for elem in self._elems)
+        res._elems = tuple(elem.translate(transl) for elem in self._elems)
         return res
 
     def invert(self: _Transformables) -> _Transformables:
@@ -274,25 +271,21 @@ class Transformables(Transformable):
         res._elems = tuple(elem.invert() for elem in self._elems)
         return res
 
-    def rotate(self: _Transformables, rotation: "Rotation") -> _Transformables:
+    def rotate(self: _Transformables, rot: "Rotation") -> _Transformables:
         res = self.copy()
-        res._elems = tuple(elem.rotate(rotation) for elem in self._elems)
+        res._elems = tuple(elem.rotate(rot) for elem in self._elems)
         return res
 
-    def reflect(
-        self: _Transformables, reflection: "Reflection"
-    ) -> _Transformables:
+    def reflect(self: _Transformables, refl: "Reflection") -> _Transformables:
         res = self.copy()
-        res._elems = tuple(elem.reflect(reflection) for elem in self._elems)
+        res._elems = tuple(elem.reflect(refl) for elem in self._elems)
         return res
 
     def rotoreflect(
-        self: _Transformables, rotoreflection: "Rotoreflection"
+        self: _Transformables, rotorefl: "Rotoreflection"
     ) -> _Transformables:
         res = self.copy()
-        res._elems = tuple(
-            elem.rotoreflect(rotoreflection) for elem in self._elems
-        )
+        res._elems = tuple(elem.rotoreflect(rotorefl) for elem in self._elems)
         return res
 
 
@@ -305,7 +298,7 @@ class InvariantTransformable(Transformable):
     """Transformable object that is invariant to any transformation."""
 
     def translate(
-        self: _InvariantTransformable, translation: "Translation"
+        self: _InvariantTransformable, transl: "Translation"
     ) -> _InvariantTransformable:
         return self.copy()
 
@@ -313,17 +306,17 @@ class InvariantTransformable(Transformable):
         return self.copy()
 
     def rotate(
-        self: _InvariantTransformable, rotation: "Rotation"
+        self: _InvariantTransformable, rot: "Rotation"
     ) -> _InvariantTransformable:
         return self.copy()
 
     def reflect(
-        self: _InvariantTransformable, reflection: "Reflection"
+        self: _InvariantTransformable, refl: "Reflection"
     ) -> _InvariantTransformable:
         return self.copy()
 
     def rotoreflect(
-        self: _InvariantTransformable, rotoreflection: "Rotoreflection"
+        self: _InvariantTransformable, rotorefl: "Rotoreflection"
     ) -> _InvariantTransformable:
         return self.copy()
 
@@ -358,10 +351,10 @@ class VectorTransformable(Transformable):
         return res
 
     def translate(
-        self: _VectorTransformable, translation: "Translation"
+        self: _VectorTransformable, transl: "Translation"
     ) -> _VectorTransformable:
         res = self.copy()
-        res._vec = translate(self._vec, translation.vec)
+        res._vec = translate(self._vec, transl.vec)
         return res
 
     def invert(self: _VectorTransformable) -> _VectorTransformable:
@@ -370,31 +363,26 @@ class VectorTransformable(Transformable):
         return res
 
     def rotate(
-        self: _VectorTransformable, rotation: "Rotation"
+        self: _VectorTransformable, rot: "Rotation"
     ) -> _VectorTransformable:
         res = self.copy()
-        res._vec = move2(self._vec, rotation.vec, rotation.cos, rotation.sin)
+        res._vec = move2(self._vec, rot.vec, rot.cos, rot.sin)
         return res
 
     def reflect(
-        self: _VectorTransformable, reflection: "Reflection"
+        self: _VectorTransformable, refl: "Reflection"
     ) -> _VectorTransformable:
         res = self.copy()
-        res._vec = reflect(self._vec, reflection.vec)
+        res._vec = reflect(self._vec, refl.vec)
         return res
 
     def rotoreflect(
-        self: _VectorTransformable, rotoreflection: "Rotoreflection"
+        self: _VectorTransformable, rotorefl: "Rotoreflection"
     ) -> _VectorTransformable:
         res = self.copy()
         res._vec = reflect(
-            move2(
-                self._vec,
-                rotoreflection.vec,
-                rotoreflection.cos,
-                rotoreflection.sin,
-            ),
-            rotoreflection.vec,
+            move2(self._vec, rotorefl.vec, rotorefl.cos, rotorefl.sin),
+            rotorefl.vec,
         )
         return res
 
@@ -422,7 +410,7 @@ class DirectionTransformable(VectorTransformable):
         return res
 
     def translate(
-        self: _DirectionTransformable, translation: "Translation"
+        self: _DirectionTransformable, transl: "Translation"
     ) -> _DirectionTransformable:
         return self.copy()
 
@@ -480,7 +468,7 @@ class Transformation(ABC):
         pass
 
     @abstractmethod
-    def translate(self: _Any, translation: "Translation") -> _Any:
+    def translate(self: _Any, transl: "Translation") -> _Any:
         pass
 
     @abstractmethod
@@ -488,15 +476,15 @@ class Transformation(ABC):
         pass
 
     @abstractmethod
-    def rotate(self: _Any, rotation: "Rotation") -> _Any:
+    def rotate(self: _Any, rot: "Rotation") -> _Any:
         pass
 
     @abstractmethod
-    def reflect(self: _Any, reflection: "Reflection") -> _Any:
+    def reflect(self: _Any, refl: "Reflection") -> _Any:
         pass
 
     @abstractmethod
-    def rotoreflect(self: _Any, rotoreflection: "Rotoreflection") -> _Any:
+    def rotoreflect(self: _Any, rotorefl: "Rotoreflection") -> _Any:
         pass
 
     @abstractmethod

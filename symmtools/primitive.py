@@ -265,19 +265,19 @@ class StructPoint(Point):
         res._arrows = self._arrows.invert()
         return res
 
-    def rotate(self: _StructPoint, rotation: Rotation) -> _StructPoint:
-        res = super().rotate(rotation)
-        res._arrows = self._arrows.rotate(rotation)
+    def rotate(self: _StructPoint, rot: Rotation) -> _StructPoint:
+        res = super().rotate(rot)
+        res._arrows = self._arrows.rotate(rot)
         return res
 
-    def reflect(self: _StructPoint, reflection: Reflection) -> _StructPoint:
-        res = super().reflect(reflection)
-        res._arrows = self._arrows.reflect(reflection)
+    def reflect(self: _StructPoint, refl: Reflection) -> _StructPoint:
+        res = super().reflect(refl)
+        res._arrows = self._arrows.reflect(refl)
         return res
 
     def rotoreflect(
-        self: _StructPoint, rotoreflection: Rotoreflection
+        self: _StructPoint, rotorefl: Rotoreflection
     ) -> _StructPoint:
-        res = super().rotoreflect(rotoreflection)
-        res._arrows = self._arrows.rotoreflect(rotoreflection)
+        res = super().rotoreflect(rotorefl)
+        res._arrows = self._arrows.rotoreflect(rotorefl)
         return res
