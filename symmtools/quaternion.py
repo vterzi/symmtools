@@ -43,10 +43,12 @@ class Quaternion(VectorTransformable):
             res = max(res, abs(self._scalar - obj.scalar))
         return res
 
+    @property
     def axis(self) -> Vector:
         """Return the axis of rotation."""
         return normalize(self._vec)
 
+    @property
     def angle(self) -> float:
         """Return the angle of rotation."""
         return 2.0 * atan2(norm(self._vec), self._scalar)
