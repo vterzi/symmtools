@@ -51,6 +51,11 @@ class SymmetryElement(ABC):
         pass
 
     @abstractmethod
+    def name(self) -> str:
+        """Return the name."""
+        pass
+
+    @abstractmethod
     def id(self) -> int:
         """Return the ID."""
         pass
@@ -84,6 +89,9 @@ class IdentityElement(InvariantTransformable, SymmetryElement):
     def symb(self) -> str:
         return "E"
 
+    def name(self) -> str:
+        return "identity element"
+
     def id(self) -> int:
         return 1
 
@@ -96,6 +104,9 @@ class InversionCenter(InvariantTransformable, SymmetryElement):
 
     def symb(self) -> str:
         return "i"
+
+    def name(self) -> str:
+        return "inversion center"
 
     def id(self) -> int:
         return -2
@@ -124,6 +135,9 @@ class RotationAxis(OrderedTransformable, SymmetryElement):
     def symb(self) -> str:
         return f"C{self._order}"
 
+    def name(self) -> str:
+        return f"{self._order}-fold rotation axis"
+
     def id(self) -> int:
         return self._order
 
@@ -137,6 +151,9 @@ class InfRotationAxis(InfFoldTransformable, SymmetryElement):
     def symb(self) -> str:
         return f"C{INF_SYMB}"
 
+    def name(self) -> str:
+        return "infinite-fold rotation axis"
+
     def id(self) -> int:
         return 0
 
@@ -149,6 +166,9 @@ class ReflectionPlane(DirectionTransformable, SymmetryElement):
 
     def symb(self) -> str:
         return REFL_SYMB
+
+    def name(self) -> str:
+        return "reflection plane"
 
     def id(self) -> int:
         return -1
@@ -195,6 +215,9 @@ class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
     def symb(self) -> str:
         return f"S{self._order}"
 
+    def name(self) -> str:
+        return f"{self._order}-fold rotoreflection axis"
+
     def id(self) -> int:
         return -self._order
 
@@ -210,13 +233,17 @@ class InfRotoreflectionAxis(InfFoldTransformable, SymmetryElement):
     def symb(self) -> str:
         return f"S{INF_SYMB}"
 
+    def name(self) -> str:
+        return "infinite-fold rotoreflection axis"
+
     def id(self) -> int:
         return 0
 
 
 class AxisRotationAxes(DirectionTransformable, SymmetryElement):
     """
-    All two-fold rotation axes perpendicular to an infinite-fold rotation axis.
+    All two-fold rotation axes perpendicular to an infinite-fold rotation axis
+    containing the origin in a real 3D space.
     """
 
     def transformations(self) -> Sequence[Transformation]:
@@ -225,13 +252,17 @@ class AxisRotationAxes(DirectionTransformable, SymmetryElement):
     def symb(self) -> str:
         return "C2"
 
+    def name(self) -> str:
+        return "set of all two-fold rotation axes perpendicular to an axis"
+
     def id(self) -> int:
         return 2
 
 
 class CenterRotationAxes(InvariantTransformable, SymmetryElement):
     """
-    All infinite-fold rotation axes containing a rotationally invariant center.
+    All infinite-fold rotation axes containing the origin as an invariant
+    center in a real 3D space.
     """
 
     def transformations(self) -> Sequence[Transformation]:
@@ -240,19 +271,31 @@ class CenterRotationAxes(InvariantTransformable, SymmetryElement):
     def symb(self) -> str:
         return f"C{INF_SYMB}"
 
+    def name(self) -> str:
+        return "set of all infinite-fold rotation axes containing a center"
+
     def id(self) -> int:
         return 0
 
 
 class AxisReflectionPlanes(ReflectionPlane):
-    """All reflection planes containing an infinite-fold rotation axis."""
+    """
+    All reflection planes containing an infinite-fold rotation axis and the
+    origin in a real 3D space.
+    """
 
     def transformations(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
+    def name(self) -> str:
+        return "set of all reflection planes containing an axis"
+
 
 class CenterReflectionPlanes(InvariantTransformable, SymmetryElement):
-    """All reflection planes containing a rotationally invariant center."""
+    """
+    All reflection planes containing the origin as an invariant center in a
+    real 3D space.
+    """
 
     def transformations(self) -> Sequence[Transformation]:
         raise NotImplementedError()
@@ -260,14 +303,17 @@ class CenterReflectionPlanes(InvariantTransformable, SymmetryElement):
     def symb(self) -> str:
         return REFL_SYMB
 
+    def name(self) -> str:
+        return "set of all reflection planes containing a center"
+
     def id(self) -> int:
         return -1
 
 
 class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
     """
-    All infinite-fold rotoreflection axes containing a rotationally invariant
-    center.
+    All infinite-fold rotoreflection axes containing the origin as an invariant
+    center in a real 3D space.
     """
 
     def transformations(self) -> Sequence[Transformation]:
@@ -275,6 +321,11 @@ class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
 
     def symb(self) -> str:
         return f"S{INF_SYMB}"
+
+    def name(self) -> str:
+        return (
+            "set of all infinite-fold rotoreflection axes containing a center"
+        )
 
     def id(self) -> int:
         return 0
