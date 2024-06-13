@@ -586,6 +586,16 @@ class PointGroupInfo:
         self._angles: Dict[Tuple[int, int], Dict[float, int]] = {}
 
     @property
+    def included(self) -> Sequence[_DirectionSymmetryElement]:
+        """Return the included symmetry elements."""
+        return self._included
+
+    @property
+    def excluded(self) -> Sequence[_DirectionSymmetryElement]:
+        """Return the excluded symmetry elements."""
+        return self._excluded
+
+    @property
     def nums(self) -> Dict[int, int]:
         """Return the types and numbers of symmetry elements."""
         return self._nums
