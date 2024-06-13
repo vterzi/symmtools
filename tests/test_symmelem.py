@@ -28,11 +28,11 @@ from symmtools import (
 class TestIdentityElement(TestCase):
     def test_transformations(self) -> None:
         symmelem = IdentityElement()
-        self.assertSequenceEqual(symmelem.transformations(), [])
+        self.assertSequenceEqual(symmelem.transformations, [])
 
     def test_symb(self) -> None:
         symmelem = IdentityElement()
-        self.assertEqual(symmelem.symb(), "E")
+        self.assertEqual(symmelem.symb, "E")
 
     def test_symmetric(self) -> None:
         symmelem = IdentityElement()
@@ -43,11 +43,11 @@ class TestIdentityElement(TestCase):
 class TestInversionCenter(TestCase):
     def test_transformations(self) -> None:
         symmelem = InversionCenter()
-        self.assertSequenceEqual(symmelem.transformations(), [Inversion()])
+        self.assertSequenceEqual(symmelem.transformations, [Inversion()])
 
     def test_symb(self) -> None:
         symmelem = InversionCenter()
-        self.assertEqual(symmelem.symb(), "i")
+        self.assertEqual(symmelem.symb, "i")
 
     def test_symmetric(self) -> None:
         symmelem = InversionCenter()
@@ -55,7 +55,7 @@ class TestInversionCenter(TestCase):
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
-            for transform in symmelem.transformations():
+            for transform in symmelem.transformations:
                 points.append(transform(points[i]))
         self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
@@ -71,14 +71,14 @@ class TestRotationAxis(TestCase):
         symmelem = RotationAxis(vec, 3)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            symmelem.transformations(),
+            symmelem.transformations,
             [Rotation(vec, 1 / 3 * TAU), Rotation(vec, 2 / 3 * TAU)],
         )
         vec = randunitvec()
         symmelem = RotationAxis(vec, 4)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            symmelem.transformations(),
+            symmelem.transformations,
             [
                 Rotation(vec, 1 / 4 * TAU),
                 Rotation(vec, 2 / 4 * TAU),
@@ -89,7 +89,7 @@ class TestRotationAxis(TestCase):
     def test_symb(self) -> None:
         order = 3
         symmelem = RotationAxis(randunitvec(), order)
-        self.assertEqual(symmelem.symb(), f"C{order}")
+        self.assertEqual(symmelem.symb, f"C{order}")
 
     def test_symmetric(self) -> None:
         symmelem = RotationAxis(randunitvec(), 3)
@@ -97,7 +97,7 @@ class TestRotationAxis(TestCase):
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
-            for transform in symmelem.transformations():
+            for transform in symmelem.transformations:
                 points.append(transform(points[i]))
         self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
@@ -107,11 +107,11 @@ class TestReflectionPlane(TestCase):
         vec = randunitvec()
         symmelem = ReflectionPlane(vec)
         vec = normalize(vec)
-        self.assertSequenceEqual(symmelem.transformations(), [Reflection(vec)])
+        self.assertSequenceEqual(symmelem.transformations, [Reflection(vec)])
 
     def test_symb(self) -> None:
         symmelem = ReflectionPlane(randunitvec())
-        self.assertEqual(symmelem.symb(), REFL_SYMB)
+        self.assertEqual(symmelem.symb, REFL_SYMB)
 
     def test_symmetric(self) -> None:
         symmelem = ReflectionPlane(randunitvec())
@@ -119,7 +119,7 @@ class TestReflectionPlane(TestCase):
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
-            for transform in symmelem.transformations():
+            for transform in symmelem.transformations:
                 points.append(transform(points[i]))
         self.assertTrue(symmelem.symmetric(Points(points), TOL))
 
@@ -136,7 +136,7 @@ class TestRotoreflectionAxis(TestCase):
         symmelem = RotoreflectionAxis(vec, 3)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            symmelem.transformations(),
+            symmelem.transformations,
             [
                 Rotoreflection(vec, 1 / 3 * TAU),
                 Rotation(vec, 2 / 3 * TAU),
@@ -149,7 +149,7 @@ class TestRotoreflectionAxis(TestCase):
         symmelem = RotoreflectionAxis(vec, 4)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            symmelem.transformations(),
+            symmelem.transformations,
             [
                 Rotoreflection(vec, 1 / 4 * TAU),
                 Rotation(vec, 2 / 4 * TAU),
@@ -160,7 +160,7 @@ class TestRotoreflectionAxis(TestCase):
         symmelem = RotoreflectionAxis(vec, 5)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            symmelem.transformations(),
+            symmelem.transformations,
             [
                 Rotoreflection(vec, 1 / 5 * TAU),
                 Rotation(vec, 2 / 5 * TAU),
@@ -177,7 +177,7 @@ class TestRotoreflectionAxis(TestCase):
         symmelem = RotoreflectionAxis(vec, 6)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            symmelem.transformations(),
+            symmelem.transformations,
             [
                 Rotoreflection(vec, 1 / 6 * TAU),
                 Rotation(vec, 2 / 6 * TAU),
@@ -190,7 +190,7 @@ class TestRotoreflectionAxis(TestCase):
     def test_symb(self) -> None:
         order = 3
         symmelem = RotoreflectionAxis(randunitvec(), order)
-        self.assertEqual(symmelem.symb(), f"S{order}")
+        self.assertEqual(symmelem.symb, f"S{order}")
 
     def test_symmetric(self) -> None:
         symmelem = RotoreflectionAxis(randunitvec(), 3)
@@ -198,7 +198,7 @@ class TestRotoreflectionAxis(TestCase):
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
-            for transform in symmelem.transformations():
+            for transform in symmelem.transformations:
                 points.append(transform(points[i]))
         self.assertTrue(symmelem.symmetric(Points(points), TOL))
 

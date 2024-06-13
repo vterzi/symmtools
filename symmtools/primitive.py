@@ -130,7 +130,7 @@ class Points(Transformables):
             point = Point(vec)
             points.append(point)
             for symm_elem in symm_elems:
-                for transformation in symm_elem.transformations():
+                for transformation in symm_elem.transformations:
                     points.append(transformation(point))
         return cls(points)
 

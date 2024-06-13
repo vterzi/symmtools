@@ -322,7 +322,7 @@ def symb2symmelems(
                         plane = ReflectionPlane(SECAX)
                         transforms = RotationAxis(
                             PRIMAX, 2 * n
-                        ).transformations()
+                        ).transformations
                         planes = (plane,) + tuple(
                             transform(plane)
                             for transform in transforms[: n - 1]
@@ -389,7 +389,7 @@ def symb2symmelems(
     elif rotation == "D":
         if n > 0:
             add(RotationAxis(PRIMAX, n))
-            transforms = RotationAxis(PRIMAX, 2 * n).transformations()
+            transforms = RotationAxis(PRIMAX, 2 * n).transformations
             axis = RotationAxis(SECAX, 2)
             axes = (axis,) + tuple(
                 transform(axis) for transform in transforms[: n - 1]
@@ -420,7 +420,7 @@ def symb2symmelems(
                 return symb2symmelems(f"D{order}h")
             else:
                 plane = ReflectionPlane(SECAX)
-                transforms = RotationAxis(PRIMAX, 2 * n).transformations()
+                transforms = RotationAxis(PRIMAX, 2 * n).transformations
                 planes = tuple(transforms[i](plane) for i in range(1, n, 2))
                 for plane in planes:
                     add(plane, "d")
@@ -434,7 +434,7 @@ def symb2symmelems(
                 add(ReflectionPlane(PRIMAX), "h")
                 if not inf:
                     plane = ReflectionPlane(SECAX)
-                    transforms = RotationAxis(PRIMAX, 2 * n).transformations()
+                    transforms = RotationAxis(PRIMAX, 2 * n).transformations
                     planes = (plane,) + tuple(
                         transform(plane) for transform in transforms[: n - 1]
                     )
@@ -609,14 +609,14 @@ class PointGroupInfo:
         if not isinstance(symmelems, Sequence):
             symmelems = (symmelems,)
         for symmelem1 in symmelems:
-            id1 = symmelem1.id()
+            id1 = symmelem1.id
             if isinstance(symmelem1, _DirectionSymmetryElements):
                 vec1 = symmelem1.vec
                 if id1 not in self._nums:
                     self._nums[id1] = 0
                 self._nums[id1] += 1
                 for symmelem2 in self._included:
-                    id2 = symmelem2.id()
+                    id2 = symmelem2.id
                     vec2 = symmelem2.vec
                     angle = intersectangle(vec1, vec2)
                     found = False
@@ -631,7 +631,7 @@ class PointGroupInfo:
                         angle = nom * PI / denom
                     if angle == 0.0 and symmelem1.similar(symmelem2):
                         raise ValueError(
-                            f"a parallel {symmelem1.name()} already included"
+                            f"a parallel {symmelem1.name} already included"
                         )
                     key = (id1, id2) if id1 >= id2 else (id2, id1)
                     if key not in self._angles:
@@ -641,12 +641,12 @@ class PointGroupInfo:
                     elif self._angles[key][angle] == 0:
                         raise ValueError(
                             f"the excluded angle of {angle} between"
-                            + f" a {symmelem1.name()} and a {symmelem2.name()}"
+                            + f" a {symmelem1.name} and a {symmelem2.name}"
                             + " cannot be included"
                         )
                     self._angles[key][angle] += 1
                 for symmelem2 in self._excluded:
-                    id2 = symmelem2.id()
+                    id2 = symmelem2.id
                     vec2 = symmelem2.vec
                     angle = intersectangle(vec1, vec2)
                     if angle > tol:
@@ -654,7 +654,7 @@ class PointGroupInfo:
                     angle = 0.0
                     if symmelem1.similar(symmelem2):
                         raise ValueError(
-                            f"the excluded parallel {symmelem1.name()} cannot"
+                            f"the excluded parallel {symmelem1.name} cannot"
                             + " be included"
                         )
                     key = (id1, id2) if id1 >= id2 else (id2, id1)
@@ -666,7 +666,7 @@ class PointGroupInfo:
                     ):
                         raise ValueError(
                             f"the included angle of {angle} between"
-                            + f" a {symmelem1.name()} and a {symmelem2.name()}"
+                            + f" a {symmelem1.name} and a {symmelem2.name}"
                             + " cannot be excluded"
                         )
                     self._angles[key][angle] = 0
@@ -674,7 +674,7 @@ class PointGroupInfo:
             elif isinstance(symmelem1, InversionCenter):
                 if id1 in self._nums:
                     raise ValueError(
-                        f"an {symmelem1.name()} already "
+                        f"an {symmelem1.name} already "
                         + ("included" if self._nums[id1] == 1 else "excluded")
                     )
                 self._nums[id1] = 1
@@ -691,11 +691,11 @@ class PointGroupInfo:
         if not isinstance(symmelems, Sequence):
             symmelems = (symmelems,)
         for symmelem1 in symmelems:
-            id1 = symmelem1.id()
+            id1 = symmelem1.id
             if isinstance(symmelem1, _DirectionSymmetryElements):
                 vec1 = symmelem1.vec
                 for symmelem2 in self._included:
-                    id2 = symmelem2.id()
+                    id2 = symmelem2.id
                     vec2 = symmelem2.vec
                     angle = intersectangle(vec1, vec2)
                     if angle > tol:
@@ -703,7 +703,7 @@ class PointGroupInfo:
                     angle = 0.0
                     if symmelem1.similar(symmelem2):
                         raise ValueError(
-                            f"the included parallel {symmelem1.name()} cannot"
+                            f"the included parallel {symmelem1.name} cannot"
                             + " be excluded"
                         )
                     key = (id1, id2) if id1 >= id2 else (id2, id1)
@@ -715,23 +715,23 @@ class PointGroupInfo:
                     ):
                         raise ValueError(
                             f"the included angle of {angle} between"
-                            + f" a {symmelem1.name()} and a {symmelem2.name()}"
+                            + f" a {symmelem1.name} and a {symmelem2.name}"
                             + " cannot be excluded"
                         )
                     self._angles[key][angle] = 0
                 for symmelem2 in self._excluded:
-                    id2 = symmelem2.id()
+                    id2 = symmelem2.id
                     vec2 = symmelem2.vec
                     angle = intersectangle(vec1, vec2)
                     if angle <= tol and symmelem1.similar(symmelem2):
                         raise ValueError(
-                            f"a parallel {symmelem1.name()} already excluded"
+                            f"a parallel {symmelem1.name} already excluded"
                         )
                 self._excluded.append(symmelem1)
             elif isinstance(symmelem1, InversionCenter):
                 if id1 in self._nums:
                     raise ValueError(
-                        f"an {symmelem1.name()} already "
+                        f"an {symmelem1.name} already "
                         + ("included" if self._nums[id1] == 1 else "excluded")
                     )
                 self._nums[id1] = 0
