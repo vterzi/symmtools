@@ -6,6 +6,5 @@ from .primitive import *
 from .symmelem import *
 from .quaternion import *
 from .ptgrp import *
-from .tools import *
 from .chem import *
 from .irrep import *
