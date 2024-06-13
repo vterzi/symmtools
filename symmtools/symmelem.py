@@ -42,7 +42,7 @@ class SymmetryElement(ABC):
 
     @property
     @abstractmethod
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         """Return the transformations."""
         pass
 
@@ -69,8 +69,8 @@ class SymmetryElement(ABC):
         Check wether a set of transformables `transformables` is symmetric
         within a tolerance `tol`.
         """
-        for transformation in self.transformations:
-            if not transformables.same(transformation(transformables), tol):
+        for transform in self.transforms:
+            if not transformables.same(transform(transformables), tol):
                 return False
         return True
 
@@ -79,8 +79,7 @@ class SymmetryElement(ABC):
     ) -> Sequence[_Transformable]:
         """Apply the transformations."""
         return (transformable,) + tuple(
-            transformation(transformable)
-            for transformation in self.transformations
+            transform(transformable) for transform in self.transforms
         )
 
 
@@ -88,7 +87,7 @@ class IdentityElement(InvariantTransformable, SymmetryElement):
     """Identity element in a real 3D space."""
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         return ()
 
     @property
@@ -108,7 +107,7 @@ class InversionCenter(InvariantTransformable, SymmetryElement):
     """Inversion center in the origin in a real 3D space."""
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         return (Inversion(),)
 
     @property
@@ -139,7 +138,7 @@ class RotationAxis(OrderedTransformable, SymmetryElement):
             )
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         return tuple(
             Rotation(self._vec, i / self._order * TAU)
             for i in range(1, self._order)
@@ -162,7 +161,7 @@ class InfRotationAxis(InfFoldTransformable, SymmetryElement):
     """Infinite-fold rotation axis containing the origin in a real 3D space."""
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
     @property
@@ -182,7 +181,7 @@ class ReflectionPlane(DirectionTransformable, SymmetryElement):
     """Reflection plane containing the origin in a real 3D space."""
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         return (Reflection(self._vec),)
 
     @property
@@ -219,23 +218,21 @@ class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
             )
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
-        transformations: List[Transformation] = []
+    def transforms(self) -> Sequence[Transformation]:
+        res: List[Transformation] = []
         for i in range(1, self._order * (1 if self._order % 2 == 0 else 2)):
             if i != self._order:
                 angle = (i % self._order) / self._order * TAU
                 if i % 2 == 0:
-                    transformations.append(Rotation(self._vec, angle))
+                    res.append(Rotation(self._vec, angle))
                 else:
                     if 2 * i != self._order:
-                        transformations.append(
-                            Rotoreflection(self._vec, angle)
-                        )
+                        res.append(Rotoreflection(self._vec, angle))
                     else:
-                        transformations.append(Inversion())
+                        res.append(Inversion())
             else:
-                transformations.append(Reflection(self._vec))
-        return tuple(transformations)
+                res.append(Reflection(self._vec))
+        return tuple(res)
 
     @property
     def symb(self) -> str:
@@ -256,7 +253,7 @@ class InfRotoreflectionAxis(InfFoldTransformable, SymmetryElement):
     """
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
     @property
@@ -279,7 +276,7 @@ class AxisRotationAxes(DirectionTransformable, SymmetryElement):
     """
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
     @property
@@ -302,7 +299,7 @@ class CenterRotationAxes(InvariantTransformable, SymmetryElement):
     """
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
     @property
@@ -325,7 +322,7 @@ class AxisReflectionPlanes(ReflectionPlane):
     """
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
     @property
@@ -340,7 +337,7 @@ class CenterReflectionPlanes(InvariantTransformable, SymmetryElement):
     """
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
     @property
@@ -363,7 +360,7 @@ class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
     """
 
     @property
-    def transformations(self) -> Sequence[Transformation]:
+    def transforms(self) -> Sequence[Transformation]:
         raise NotImplementedError()
 
     @property

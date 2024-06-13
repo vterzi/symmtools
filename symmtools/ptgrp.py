@@ -320,9 +320,7 @@ def symb2symmelems(
                     if not inf:
                         add(RotationAxis(PRIMAX, n))
                         plane = ReflectionPlane(SECAX)
-                        transforms = RotationAxis(
-                            PRIMAX, 2 * n
-                        ).transformations
+                        transforms = RotationAxis(PRIMAX, 2 * n).transforms
                         planes = (plane,) + tuple(
                             transform(plane)
                             for transform in transforms[: n - 1]
@@ -389,7 +387,7 @@ def symb2symmelems(
     elif rotation == "D":
         if n > 0:
             add(RotationAxis(PRIMAX, n))
-            transforms = RotationAxis(PRIMAX, 2 * n).transformations
+            transforms = RotationAxis(PRIMAX, 2 * n).transforms
             axis = RotationAxis(SECAX, 2)
             axes = (axis,) + tuple(
                 transform(axis) for transform in transforms[: n - 1]
@@ -420,7 +418,7 @@ def symb2symmelems(
                 return symb2symmelems(f"D{order}h")
             else:
                 plane = ReflectionPlane(SECAX)
-                transforms = RotationAxis(PRIMAX, 2 * n).transformations
+                transforms = RotationAxis(PRIMAX, 2 * n).transforms
                 planes = tuple(transforms[i](plane) for i in range(1, n, 2))
                 for plane in planes:
                     add(plane, "d")
@@ -434,7 +432,7 @@ def symb2symmelems(
                 add(ReflectionPlane(PRIMAX), "h")
                 if not inf:
                     plane = ReflectionPlane(SECAX)
-                    transforms = RotationAxis(PRIMAX, 2 * n).transformations
+                    transforms = RotationAxis(PRIMAX, 2 * n).transforms
                     planes = (plane,) + tuple(
                         transform(plane) for transform in transforms[: n - 1]
                     )
@@ -769,19 +767,17 @@ class PointGroup(Transformable):
     """Point group."""
 
     def __init__(
-        self, symb: str, transformation: Transformation = Identity()
+        self, symb: str, transform: Transformation = Identity()
     ) -> None:
         """
         Initialize the instance with a symbol `symb` and a transformation
-        `transformation` describing the orientation in space.
+        `transform` describing the orientation in space.
         """
         symb, symmelems, labels = symb2symmelems(symb)
         self._symb = symb
-        self._symmelems = tuple(
-            transformation(symmelem) for symmelem in symmelems
-        )
+        self._symmelems = tuple(transform(symmelem) for symmelem in symmelems)
         self._labels = labels
-        self._transformation = transformation
+        self._transform = transform
 
     @property
     def symb(self) -> str:
@@ -794,15 +790,15 @@ class PointGroup(Transformable):
         return self._symmelems
 
     @property
-    def transformation(self) -> Transformation:
+    def transform(self) -> Transformation:
         """Return the transformation describing the orientation in space."""
-        return self._transformation
+        return self._transform
 
     @property
     def args(self) -> str:
         res = f"'{self._symb}'"
-        if not isinstance(self._transformation, Identity):
-            res += f",{self._transformation}"
+        if not isinstance(self._transform, Identity):
+            res += f",{self._transform}"
         return res
 
     @property
@@ -812,7 +808,7 @@ class PointGroup(Transformable):
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
         if res < INF:
-            res = max(res, self._transformation.diff(obj.transformation))
+            res = max(res, self._transform.diff(obj.transform))
         return res
 
     def translate(self: _PointGroup, translation: Translation) -> _PointGroup:
@@ -820,23 +816,23 @@ class PointGroup(Transformable):
 
     def invert(self: _PointGroup) -> _PointGroup:
         res = self.copy()
-        res._transformation = self._transformation.invert()
+        res._transform = self._transform.invert()
         return res
 
     def rotate(self: _PointGroup, rotation: Rotation) -> _PointGroup:
         res = self.copy()
-        res._transformation = self._transformation.rotate(rotation)
+        res._transform = self._transform.rotate(rotation)
         return res
 
     def reflect(self: _PointGroup, reflection: Reflection) -> _PointGroup:
         res = self.copy()
-        res._transformation = self._transformation.reflect(reflection)
+        res._transform = self._transform.reflect(reflection)
         return res
 
     def rotoreflect(
         self: _PointGroup, rotoreflection: Rotoreflection
     ) -> _PointGroup:
         res = self.copy()
-        res._transformation = self._transformation.rotoreflect(rotoreflection)
+        res._transform = self._transform.rotoreflect(rotoreflection)
         return res
 
