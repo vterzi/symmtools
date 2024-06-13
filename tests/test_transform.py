@@ -63,7 +63,7 @@ class TestIdentity(TestCase):
     def test_mat(self) -> None:
         transform = Identity()
         mat = eye(3)
-        self.assertTrue((transform.mat= mat).all())
+        self.assertTrue((transform.mat == mat).all())
 
     def test_transformation(self) -> None:
         transform_: Transformation
