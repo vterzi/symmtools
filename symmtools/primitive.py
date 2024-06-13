@@ -4,7 +4,7 @@ __all__ = ["Point", "Points", "LabeledPoint", "Arrow", "StructPoint"]
 
 from re import findall
 
-from numpy import zeros
+from numpy import empty, zeros
 
 from .const import INF, LABEL_RE, FLOAT_RE
 from .vecop import diff, unitindep
@@ -26,6 +26,7 @@ from .typehints import (
     Tuple,
     Bool,
     Vector,
+    Matrix,
     RealVector,
     RealVectors,
 )
@@ -95,6 +96,38 @@ class Points(Transformables):
     def center(self: _Points) -> _Points:
         """Center the points at the origin."""
         return self.translate(Translation(-self.pos))
+
+    def inertia(self) -> Matrix:
+        """Return the inertia tensor of the points of unit mass."""
+        xx = 0.0
+        yy = 0.0
+        zz = 0.0
+        xy = 0.0
+        zx = 0.0
+        yz = 0.0
+        center = self.pos
+        for elem in self._elems:
+            x, y, z = elem.pos - center
+            x_ = x * x
+            y_ = y * y
+            z_ = z * z
+            xx += y_ + z_
+            yy += z_ + x_
+            zz += x_ + y_
+            xy -= x * y
+            zx -= x * z
+            yz -= y * z
+        mat = empty((3, 3))
+        mat[0, 0] = xx
+        mat[0, 1] = xy
+        mat[0, 2] = zx
+        mat[1, 0] = xy
+        mat[1, 1] = yy
+        mat[1, 2] = yz
+        mat[2, 0] = zx
+        mat[2, 1] = yz
+        mat[2, 2] = zz
+        return mat
 
     @classmethod
     def from_arr(cls, vecs: RealVectors) -> "Points":
