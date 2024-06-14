@@ -97,6 +97,7 @@ class Points(Transformables):
         """Center the points at the origin."""
         return self.translate(Translation(-self.pos))
 
+    @property
     def inertia(self) -> Matrix:
         """Return the inertia tensor of the points of unit mass."""
         xx = 0.0
@@ -108,12 +109,12 @@ class Points(Transformables):
         center = self.pos
         for elem in self._elems:
             x, y, z = elem.pos - center
-            x_ = x * x
-            y_ = y * y
-            z_ = z * z
-            xx += y_ + z_
-            yy += z_ + x_
-            zz += x_ + y_
+            xs = x * x
+            ys = y * y
+            zs = z * z
+            xx += ys + zs
+            yy += zs + xs
+            zz += xs + ys
             xy -= x * y
             zx -= x * z
             yz -= y * z

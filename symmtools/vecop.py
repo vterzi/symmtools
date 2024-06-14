@@ -262,20 +262,20 @@ def reflmat(normal: Vector) -> Matrix:
     `normal`.
     """
     x, y, z = normal
-    x_ = x + x
-    y_ = y + y
-    z_ = z + z
-    xy = -x * y_
-    yz = -y * z_
-    zx = -z * x_
+    dx = x + x
+    dy = y + y
+    dz = z + z
+    xy = -x * dy
+    yz = -y * dz
+    zx = -z * dx
     mat = empty((3, 3))
-    mat[0, 0] = 1.0 - x * x_
+    mat[0, 0] = 1.0 - x * dx
     mat[0, 1] = xy
     mat[0, 2] = zx
     mat[1, 0] = xy
-    mat[1, 1] = 1.0 - y * y_
+    mat[1, 1] = 1.0 - y * dy
     mat[1, 2] = yz
     mat[2, 0] = zx
     mat[2, 1] = yz
-    mat[2, 2] = 1.0 - z * z_
+    mat[2, 2] = 1.0 - z * dz
     return mat
