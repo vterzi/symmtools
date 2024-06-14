@@ -528,7 +528,7 @@ def symb2symmelems(
             add(CenterReflectionPlanes())
             add(InversionCenter())
             add(CenterRotoreflectionAxes())
-        else:
+        elif reflection:
             raise ValueError(
                 "a symbol starting with 'K' can end only with '' or 'h'"
             )
