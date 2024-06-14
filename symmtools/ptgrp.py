@@ -4,7 +4,7 @@ __all__ = ["symmelems", "ptgrp", "symb2symmelems", "PointGroup"]
 
 from math import sqrt, atan
 
-from .const import INF, PI, PHI, TOL, PRIMAX, SECAX, INF_SYMB
+from .const import INF, PI, PHI, TOL, PRIMAX, SECAX, SPECIAL_ANGLES, INF_SYMB
 from .vecop import (
     norm,
     cross,
@@ -539,19 +539,6 @@ def symb2symmelems(
     return symb, tuple(symmelems), tuple(labels)
 
 
-_SPECIAL_ANGLES = (
-    atan(1.0 / PHI**2),
-    atan(1.0 / PHI),
-    atan(1.0 / sqrt(2.0)),
-    atan(2.0 / PHI**2),
-    atan(2.0 / sqrt(5.0)),
-    atan(sqrt(2.0)),
-    atan(PHI),
-    atan(2.0),
-    atan(PHI**2),
-    atan(2.0 * sqrt(2.0)),
-    atan(2.0 * PHI**2),
-)
 _DirectionSymmetryElement = Union[
     RotationAxis,
     InfRotationAxis,
@@ -628,7 +615,7 @@ class PointGroupInfo:
                     vec2 = symmelem2.vec
                     angle = intersectangle(vec1, vec2)
                     found = False
-                    for special_angle in _SPECIAL_ANGLES:
+                    for special_angle in SPECIAL_ANGLES:
                         diff = abs(angle - special_angle)
                         if diff <= tol:
                             found = True
