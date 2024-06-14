@@ -418,8 +418,10 @@ def symb2symmelems(
                 return symb2symmelems(f"D{order}h")
             else:
                 plane = ReflectionPlane(SECAX)
-                transforms = RotationAxis(PRIMAX, 2 * n).transforms
-                planes = tuple(transforms[i](plane) for i in range(1, n, 2))
+                transforms = RotationAxis(PRIMAX, 4 * n).transforms
+                planes = tuple(
+                    transforms[i](plane) for i in range(0, 2 * n, 2)
+                )
                 for plane in planes:
                     add(plane, "d")
                 if n % 2 == 1:
