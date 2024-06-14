@@ -281,7 +281,7 @@ class AxisRotationAxes(DirectionTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return "C2"
+        return f"{INF_SYMB}C2"
 
     @property
     def name(self) -> str:
@@ -304,7 +304,7 @@ class CenterRotationAxes(InvariantTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return f"C{INF_SYMB}"
+        return f"{INF_SYMB}C{INF_SYMB}"
 
     @property
     def name(self) -> str:
@@ -326,6 +326,10 @@ class AxisReflectionPlanes(ReflectionPlane):
         raise NotImplementedError()
 
     @property
+    def symb(self) -> str:
+        return f"{INF_SYMB}{REFL_SYMB}v"
+
+    @property
     def name(self) -> str:
         return "set of all reflection planes containing an axis"
 
@@ -342,7 +346,7 @@ class CenterReflectionPlanes(InvariantTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return REFL_SYMB
+        return f"{INF_SYMB}{REFL_SYMB}"
 
     @property
     def name(self) -> str:
@@ -365,7 +369,7 @@ class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return f"S{INF_SYMB}"
+        return f"{INF_SYMB}S{INF_SYMB}"
 
     @property
     def name(self) -> str:
