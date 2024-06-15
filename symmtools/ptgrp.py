@@ -304,6 +304,8 @@ def symb2symmelems(
             if not reflection:
                 if n > 1:
                     add(RotationAxis(PRIMAX, n))
+                elif inf:
+                    add(InfRotationAxis(PRIMAX))
             elif reflection == "i":
                 if n == 1:
                     return symb2symmelems("Ci")
@@ -334,7 +336,6 @@ def symb2symmelems(
                                 add(planes[i], "v")
                             for i in range(1, n_planes, 2):
                                 add(planes[i], "d")
-                            add(InversionCenter())
                     else:
                         add(InfRotationAxis(PRIMAX))
                         add(AxisReflectionPlanes(PRIMAX), "v")
