@@ -165,8 +165,8 @@ class Points(Transformables):
         for vec in vecs:
             point = Point(vec)
             points.append(point)
-            for symm_elem in symm_elems:
-                for transform in symm_elem.transforms:
+            for symmelem in symm_elems:
+                for transform in symmelem.transforms:
                     points.append(transform(point))
         return cls(points)
 
