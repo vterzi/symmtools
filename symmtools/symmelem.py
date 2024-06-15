@@ -14,6 +14,7 @@ __all__ = [
     "AxisReflectionPlanes",
     "CenterReflectionPlanes",
     "CenterRotoreflectionAxes",
+    "symmelems2symbs",
 ]
 
 from abc import ABC, abstractmethod
@@ -380,3 +381,22 @@ class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
     @property
     def id(self) -> int:
         return 0
+
+
+def symmelems2symbs(
+    symmelems: Sequence[SymmetryElement], delim: str = ","
+) -> str:
+    """
+    Concatenate the symbols of symmetry elements `symmelems` to a sorted
+    string.
+    """
+    nums = {}
+    for symmelem in symmelems:
+        key = (symmelem.id, symmelem.symb)
+        if key not in nums:
+            nums[key] = 0
+        nums[key] += 1
+    string = ""
+    for key, num in reversed(sorted(nums.items())):
+        string += (str(num) if num > 1 else "") + key[1] + delim
+    return string[: -len(delim)]
