@@ -883,6 +883,107 @@ class PointGroup(Transformable):
         return res
 
     @classmethod
+    def from_all_symmelems(
+        cls, symmelems: Sequence[SymmetryElement]
+    ) -> "PointGroup":
+        """
+        Construct an instance from a set of symmetry elements `symmelems`
+        assuming the set is complete.
+        """
+        rot = ""
+        order = ""
+        refl = ""
+        rot_num = 0
+        high_rot_num = 0
+        max_rot_order = 1
+        refl_num = 0
+        invertible = False
+        rotorefl_num = 0
+        for symmelem in symmelems:
+            if isinstance(symmelem, RotationAxis):
+                rot_order = symmelem.order
+                rot_num += 1
+                if rot_order > 2:
+                    high_rot_num += 1
+                if max_rot_order < rot_order:
+                    max_rot_order = rot_order
+            elif isinstance(symmelem, ReflectionPlane):
+                refl_num += 1
+            elif isinstance(symmelem, InversionCenter):
+                invertible = True
+            elif isinstance(symmelem, RotoreflectionAxis):
+                rotorefl_num += 1
+            elif isinstance(symmelem, InfRotationAxis):
+                order = SYMB.inf
+            elif isinstance(symmelem, InfRotoreflectionAxis):
+                order = SYMB.inf
+                refl = "h"
+                if rot:
+                    break
+                refl_num += 1
+                invertible = True
+            elif isinstance(symmelem, AxisRotationAxes):
+                rot = "D"
+                order = SYMB.inf
+                if refl:
+                    break
+            elif isinstance(symmelem, AxisReflectionPlanes):
+                order = SYMB.inf
+                refl_num += 1
+            elif isinstance(symmelem, CenterRotationAxes):
+                rot = "K"
+            elif isinstance(
+                symmelem, (CenterReflectionPlanes, CenterRotoreflectionAxes)
+            ):
+                rot = "K"
+                refl = "h"
+                break
+        if not rot:
+            if order == SYMB.inf:
+                rot = "C"
+                if invertible:
+                    refl = "h"
+                elif refl_num > 0:
+                    refl = "v"
+            elif high_rot_num > 1:
+                if max_rot_order == 5:
+                    rot = "I"
+                elif max_rot_order == 4:
+                    rot = "O"
+                else:
+                    rot = "T"
+                    if refl_num > 0:
+                        refl = "d"
+                if invertible:
+                    refl = "h"
+            elif rot_num > 1:
+                rot = "D"
+                order = str(max_rot_order)
+                if refl_num > max_rot_order:
+                    refl = "h"
+                elif refl_num == max_rot_order:
+                    refl = "d"
+            elif rotorefl_num > 0 and refl_num == 0:
+                rot = "S"
+                order = str(2 * max_rot_order)
+            else:
+                rot = "C"
+                if max_rot_order > 1:
+                    order = str(max_rot_order)
+                    if refl_num == 1:
+                        refl = "h"
+                    elif refl_num > 1:
+                        refl = "v"
+                else:
+                    if invertible:
+                        refl = "i"
+                    elif refl_num > 0:
+                        refl = "s"
+                    else:
+                        order = "1"
+        return cls(rot + order + refl)
+
+    @classmethod
     def from_symmelem_nums(
         cls, symmelems: Sequence[SymmetryElement]
     ) -> "PointGroup":
