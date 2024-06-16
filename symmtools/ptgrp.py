@@ -1,5 +1,13 @@
 """Class for point groups."""
 
+__all__ = [
+    "symmelems",
+    "ptgrp",
+    "symb2symmelems",
+    "PointGroupInfo",
+    "PointGroup",
+]
+
 from .const import (
     INF,
     PI,
@@ -9,6 +17,8 @@ from .const import (
     SECAX,
     SPECIAL_ANGLES,
     SYMB,
+    ROT_SYMBS,
+    REFL_SYMBS,
 )
 from .vecop import (
     norm,
@@ -41,16 +51,20 @@ from .symmelem import (
     AxisReflectionPlanes,
     CenterReflectionPlanes,
     CenterRotoreflectionAxes,
+    symmelems2nums,
 )
 from .primitive import Points
 from .typehints import (
     TypeVar,
+    Type,
     Any,
     Union,
     Sequence,
+    Set,
     Tuple,
     List,
     Dict,
+    Iterator,
     Vector,
 )
 
@@ -841,3 +855,97 @@ class PointGroup(Transformable):
         res._transform = self._transform.rotoreflect(rotorefl)
         return res
 
+    @classmethod
+    def from_symmelem_nums(
+        cls, symmelems: Sequence[SymmetryElement]
+    ) -> "PointGroup":
+        """
+        Construct an instance from a set of symmetry elements `symmelems` using
+        only their types and numbers.
+        """
+        nums = symmelems2nums(symmelems)
+        max_rot_order = 0
+        max_rotorefl_order = 0
+        rot2_num = 0
+        refl_num = 0
+        invertible = False
+        for key, num in nums.items():
+            symmelem_type, order = key
+            order = abs(order)
+            if symmelem_type is RotationAxis:
+                if max_rot_order < order:
+                    max_rot_order = order
+                if order == 2:
+                    rot2_num = num
+            elif symmelem_type is RotoreflectionAxis:
+                if max_rotorefl_order < order:
+                    max_rotorefl_order = order
+            elif symmelem_type is ReflectionPlane:
+                refl_num = num
+            elif symmelem_type is InversionCenter:
+                invertible = True
+        variants: Dict[str, Dict[Tuple[Type[SymmetryElement], int], int]] = {}
+        variants.update(_LOW_POINT_GROUP_NUMS)
+        new_variants: Set[Tuple[int, int, int]] = set()
+
+        def add(rot: str, order: int, refl: str = "") -> None:
+            new_variants.add(
+                (ROT_SYMBS.index(rot), order, REFL_SYMBS.index(refl))
+            )
+
+        if max_rot_order > 0:
+            n = max_rot_order
+            add("C", n)
+            add("C", n, "v")
+            add("C", n, "h")
+            add("S", 2 * n)
+            add("D", n)
+            add("D", n, "d")
+            add("D", n, "h")
+        if max_rotorefl_order > 0:
+            n = max_rotorefl_order
+            add("C", n, "h")
+            if n % 2 == 0:
+                add("S", n)
+                add("D", n // 2, "d")
+            add("D", n, "h")
+        if rot2_num > 0:
+            n = rot2_num
+            n1 = n
+            n2 = n
+            if invertible:
+                if n % 2 == 0:
+                    n1 += 1
+                else:
+                    n2 += 1
+            add("D", n)
+            add("D", n1, "d")
+            add("D", n2, "h")
+        if refl_num > 0:
+            n = refl_num
+            n1 = n
+            n2 = n - 1
+            if invertible:
+                if n % 2 == 0:
+                    n1 += 1
+                else:
+                    n2 += 1
+            add("C", n, "v")
+            add("D", n1, "d")
+            add("D", n2, "h")
+        for rot, order, refl in sorted(new_variants):
+            variant = f"{ROT_SYMBS[rot]}{order}{REFL_SYMBS[refl]}".strip()
+            variants[variant] = symmelems2nums(PointGroup(variant).symmelems)
+        variants.update(_HIGH_POINT_GROUP_NUMS)
+        remove = []
+        for variant, ref_nums in variants.items():
+            for key, num in nums.items():
+                if key not in ref_nums or ref_nums[key] < num:
+                    remove.append(variant)
+                    continue
+        for variant in remove:
+            del variants[variant]
+        keys = tuple(variants.keys())
+        if len(keys) == 0:
+            raise ValueError("invalid combination of symmetry elements")
+        return cls(keys[0])
