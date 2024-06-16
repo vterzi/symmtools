@@ -81,6 +81,15 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
     and rotoreflection axes of a set of points `points` within a tolerance
     `tol`.
     """
+    if not points.nondegen(tol):
+        raise ValueError(
+            "at least two identical elements in the instance of "
+            + points.__class__.__name__
+            + " for the given tolerance"
+        )
+    rotations: List[_RotationAxis] = []
+    reflections: List[_ReflectionPlane] = []
+    rotoreflections: List[_RotoreflectionAxis] = []
 
     def contains(array: List[Vector], vector: Vector) -> bool:
         for elem in array:
@@ -122,97 +131,71 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
                     return True
         return False
 
-    if not points.nondegen(tol):
-        raise ValueError(
-            "at least two identical elements in the instance of "
-            + points.__class__.__name__
-            + " for the given tolerance"
-        )
-    dim = 3
     invertible = InversionCenter().symmetric(points, tol)
-    rotations: List[_RotationAxis] = []
-    reflections: List[_ReflectionPlane] = []
-    rotoreflections: List[_RotoreflectionAxis] = []
-    n_points = len(points)
-    if n_points == 1:
-        dim = 0
     axes: List[Vector] = []
     planes: List[Vector] = []
     direction = None
-    collinear = True
+    first = True
+    collinear = False
+    coplanar = False
+    n_points = len(points)
     for i1 in range(n_points - 1):
-        # for all point pairs
+        point1 = points[i1]
+        pos1 = point1.pos
         for i2 in range(i1 + 1, n_points):
-            # for all point triplets
-            for i3 in range(i2 + 1, n_points):
-                # find the normal of the plane containing the point triplet
-                normal = cross(
-                    points[i2].pos - points[i1].pos,
-                    points[i3].pos - points[i1].pos,
-                )
-                normal_norm = norm(normal)
-                # if the point triplet is collinear
-                if normal_norm <= tol:
-                    continue
-                # not all points are collinear
-                collinear = False
-                rotation = normal / normal_norm
-                if not contains(axes, rotation):
-                    # calculate the distance between the origin and the plane
-                    dist = points[i1].pos.dot(rotation)
-                    # initial number of points in the plane
-                    max_order = 3
-                    # for other points
-                    for i4 in range(i3 + 1, n_points):
-                        # if the point is in the plane
-                        if abs(points[i4].pos.dot(rotation) - dist) <= tol:
-                            # increase the number of points in the plane
-                            max_order += 1
-                    if (
-                        max_order == n_points
-                        and direction is None
-                        and abs(dist) <= tol
-                    ):
-                        # all points are coplanar
-                        dim = 2
-                        direction = rotation
-                        # add reflection (described by the plane containing
-                        #   all points)
-                        reflections.append(ReflectionPlane(rotation))
-                    # for all possible orders > 2 starting from the highest
-                    for order in range(max_order, 2, -1):
-                        if add_rotoreflection(rotation, order):
-                            break
-                    # for all possible orders > 1 starting from the highest
-                    for order in range(max_order, 1, -1):
-                        if add_rotation(rotation, order):
-                            break
-            # directed segment between the point pair
-            segment = points[i1].pos - points[i2].pos
-            # midpoint of the segment
-            midpoint = 0.5 * (points[i1].pos + points[i2].pos)
+            point2 = points[i2]
+            if not point2.similar(point1):
+                continue
+            pos2 = point2.pos
+            segment = pos1 - pos2
+            if not collinear:
+                if first:
+                    first = False
+                    collinear = True
+                for i3 in range(i2 + 1, n_points):
+                    point3 = points[i3]
+                    if not point3.similar(point2):
+                        continue
+                    pos3 = point3.pos
+                    normal = cross(segment, pos1 - pos3)
+                    normal_norm = norm(normal)
+                    if normal_norm <= tol:
+                        continue
+                    collinear = False
+                    rotation = normal / normal_norm
+                    if not contains(axes, rotation):
+                        dist = pos1.dot(rotation)
+                        max_order = 3
+                        for i4 in range(i3 + 1, n_points):
+                            if abs(points[i4].pos.dot(rotation) - dist) <= tol:
+                                max_order += 1
+                        if (
+                            max_order == n_points
+                            and direction is None
+                            and abs(dist) <= tol
+                        ):
+                            coplanar = True
+                            direction = rotation
+                            reflections.append(ReflectionPlane(rotation))
+                        for order in range(max_order, 2, -1):
+                            if add_rotoreflection(rotation, order):
+                                break
+                        for order in range(max_order, 1, -1):
+                            if add_rotation(rotation, order):
+                                break
+            midpoint = 0.5 * (pos1 + pos2)
             reflection = segment / norm(segment)
-            # add rotation with order infinity
-            if (
-                collinear
-                and direction is None
-                and parallel(points[i1].pos, points[i2].pos, tol)
-            ):
-                dim = 1
+            if collinear and direction is None and parallel(pos1, pos2, tol):
                 direction = reflection
                 rotations.insert(0, InfRotationAxis(reflection))
                 if invertible:
                     rotoreflections.insert(
                         0, InfRotoreflectionAxis(reflection)
                     )
-            # if the distance from the origin to the segment doesn't divide it
-            #   in halves
             if not perpendicular(segment, midpoint, tol):
                 continue
             midpoint_norm = norm(midpoint)
-            # if the distance from the origin to the midpoint is not zero or
-            #   all points are in one plane
-            if midpoint_norm > tol or dim == 2:
+            if midpoint_norm > tol or coplanar:
                 rotation = (
                     midpoint / midpoint_norm
                     if direction is None
@@ -224,6 +207,14 @@ def symmelems(points: Points, tol: float = TOL) -> Tuple[
                     add_rotation(rotation, order)
             if not contains(planes, reflection):
                 add_reflection(reflection)
+    if n_points == 1:
+        dim = 0
+    elif collinear:
+        dim = 1
+    elif coplanar:
+        dim = 2
+    else:
+        dim = 3
     return (
         dim,
         invertible,
