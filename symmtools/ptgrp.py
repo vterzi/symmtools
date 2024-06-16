@@ -893,7 +893,7 @@ class PointGroup(Transformable):
                 (ROT_SYMBS.index(rot), order, REFL_SYMBS.index(refl))
             )
 
-        if max_rot_order > 0:
+        if max_rot_order > 1:
             n = max_rot_order
             add("C", n)
             add("C", n, "v")
@@ -902,14 +902,14 @@ class PointGroup(Transformable):
             add("D", n)
             add("D", n, "d")
             add("D", n, "h")
-        if max_rotorefl_order > 0:
+        if max_rotorefl_order > 2:
             n = max_rotorefl_order
             add("C", n, "h")
             if n % 2 == 0:
                 add("S", n)
                 add("D", n // 2, "d")
             add("D", n, "h")
-        if rot2_num > 0:
+        if rot2_num > 1:
             n = rot2_num
             n1 = n
             n2 = n
@@ -921,15 +921,13 @@ class PointGroup(Transformable):
             add("D", n)
             add("D", n1, "d")
             add("D", n2, "h")
-        if refl_num > 0:
+        if refl_num > 1:
             n = refl_num
             n1 = n
             n2 = n - 1
-            if invertible:
-                if n % 2 == 0:
-                    n1 += 1
-                else:
-                    n2 += 1
+            if invertible and n % 2 == 0:
+                n1 += 1
+                n2 += 1
             add("C", n, "v")
             add("D", n1, "d")
             add("D", n2, "h")
