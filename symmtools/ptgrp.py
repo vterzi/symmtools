@@ -8,19 +8,20 @@ __all__ = [
     "PointGroup",
 ]
 
+from math import sin, cos
+
 from .const import (
     INF,
     PI,
     PHI,
     TOL,
-    PRIMAX,
-    SECAX,
     SPECIAL_ANGLES,
     SYMB,
     ROT_SYMBS,
     REFL_SYMBS,
 )
 from .vecop import (
+    vector,
     norm,
     cross,
     parallel,
@@ -287,6 +288,8 @@ def symb2symmelems(
     Return the standardized symbol, all symmetry elements in the standardized
     space orientation, and their labels for a point group with a symbol `symb`.
     """
+    PRIMAX = vector((0.0, 0.0, 1.0))
+    SECAX = vector((1.0, 0.0, 0.0))
     if not symb:
         raise ValueError("empty symbol")
     rotation = symb[0]
@@ -340,21 +343,38 @@ def symb2symmelems(
                 else:
                     if not inf:
                         add(RotationAxis(PRIMAX, n))
-                        plane = ReflectionPlane(SECAX)
-                        transforms = RotationAxis(PRIMAX, 2 * n).transforms
-                        planes = (plane,) + tuple(
-                            transform(plane)
-                            for transform in transforms[: n - 1]
-                        )
+                        add(ReflectionPlane(SECAX), "v")
+                        step = PI / (2 * n)
                         if n % 2 == 1:
-                            for plane in planes:
-                                add(plane, "v")
+                            angle = step
+                            for _ in range(1, n):
+                                add(
+                                    ReflectionPlane(
+                                        (cos(angle), sin(angle), 0.0)
+                                    ),
+                                    "v",
+                                )
+                                angle += step
                         else:
-                            n_planes = len(planes)
-                            for i in range(0, n_planes, 2):
-                                add(planes[i], "v")
-                            for i in range(1, n_planes, 2):
-                                add(planes[i], "d")
+                            angle = step
+                            step += step
+                            for _ in range(1, n, 2):
+                                add(
+                                    ReflectionPlane(
+                                        (cos(angle), sin(angle), 0.0)
+                                    ),
+                                    "d",
+                                )
+                                angle += step
+                            angle = step
+                            for _ in range(2, n, 2):
+                                add(
+                                    ReflectionPlane(
+                                        (cos(angle), sin(angle), 0.0)
+                                    ),
+                                    "v",
+                                )
+                                angle += step
                     else:
                         add(InfRotationAxis(PRIMAX))
                         add(AxisReflectionPlanes(PRIMAX), "v")
@@ -407,20 +427,32 @@ def symb2symmelems(
     elif rotation == "D":
         if n > 0:
             add(RotationAxis(PRIMAX, n))
-            transforms = RotationAxis(PRIMAX, 2 * n).transforms
-            axis = RotationAxis(SECAX, 2)
-            axes = (axis,) + tuple(
-                transform(axis) for transform in transforms[: n - 1]
-            )
+            add(RotationAxis(SECAX, 2), "'")
+            step = PI / (2 * n)
             if n % 2 == 1:
-                for axis in axes:
-                    add(axis, "'")
+                angle = step
+                for _ in range(1, n):
+                    add(
+                        RotationAxis((cos(angle), sin(angle), 0.0), 2),
+                        "'",
+                    )
+                    angle += step
             else:
-                n_axes = len(axes)
-                for i in range(0, n_axes, 2):
-                    add(axes[i], "'")
-                for i in range(1, n_axes, 2):
-                    add(axes[i], "''")
+                angle = step
+                step += step
+                for _ in range(1, n, 2):
+                    add(
+                        RotationAxis((cos(angle), sin(angle), 0.0), 2),
+                        "''",
+                    )
+                    angle += step
+                angle = step
+                for _ in range(2, n, 2):
+                    add(
+                        RotationAxis((cos(angle), sin(angle), 0.0), 2),
+                        "'",
+                    )
+                    angle += step
         elif inf:
             add(InfRotationAxis(PRIMAX))
             add(AxisRotationAxes(PRIMAX))
@@ -437,13 +469,11 @@ def symb2symmelems(
             elif inf:
                 return symb2symmelems(f"D{order}h")
             else:
-                plane = ReflectionPlane(SECAX)
-                transforms = RotationAxis(PRIMAX, 4 * n).transforms
-                planes = tuple(
-                    transforms[i](plane) for i in range(0, 2 * n, 2)
-                )
-                for plane in planes:
-                    add(plane, "d")
+                step = PI / (2 * n)
+                angle = 0.5 * step
+                for _ in range(n):
+                    add(ReflectionPlane((cos(angle), sin(angle), 0.0)), "d")
+                    angle += step
                 if n % 2 == 1:
                     add(InversionCenter())
                 add(RotoreflectionAxis(PRIMAX, 2 * n))
@@ -453,20 +483,32 @@ def symb2symmelems(
             else:
                 add(ReflectionPlane(PRIMAX), "h")
                 if not inf:
-                    plane = ReflectionPlane(SECAX)
-                    transforms = RotationAxis(PRIMAX, 2 * n).transforms
-                    planes = (plane,) + tuple(
-                        transform(plane) for transform in transforms[: n - 1]
-                    )
+                    add(ReflectionPlane(SECAX), "v")
+                    step = PI / (2 * n)
                     if n % 2 == 1:
-                        for plane in planes:
-                            add(plane, "v")
+                        angle = step
+                        for _ in range(1, n):
+                            add(
+                                ReflectionPlane((cos(angle), sin(angle), 0.0)),
+                                "v",
+                            )
+                            angle += step
                     else:
-                        n_planes = len(planes)
-                        for i in range(0, n_planes, 2):
-                            add(planes[i], "v")
-                        for i in range(1, n_planes, 2):
-                            add(planes[i], "d")
+                        angle = step
+                        step += step
+                        for _ in range(1, n, 2):
+                            add(
+                                ReflectionPlane((cos(angle), sin(angle), 0.0)),
+                                "d",
+                            )
+                            angle += step
+                        angle = step
+                        for _ in range(2, n, 2):
+                            add(
+                                ReflectionPlane((cos(angle), sin(angle), 0.0)),
+                                "v",
+                            )
+                            angle += step
                         add(InversionCenter())
                     if n > 2:
                         add(RotoreflectionAxis(PRIMAX, n))
