@@ -940,7 +940,7 @@ class PointGroup(Transformable):
             for key, num in nums.items():
                 if key not in ref_nums or ref_nums[key] < num:
                     remove.append(variant)
-                    continue
+                    break
         for variant in remove:
             del variants[variant]
         keys = tuple(variants.keys())
