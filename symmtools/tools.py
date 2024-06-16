@@ -7,7 +7,6 @@ __all__ = [
     "ax3permut",
 ]
 
-from .const import ORIGIN
 from .typehints import (
     Optional,
     Tuple,
@@ -44,7 +43,7 @@ def rational(num: float, tol: float) -> Tuple[int, int]:
 
 def chcoords(
     vecs: RealVectors,
-    origin: RealVector = ORIGIN,
+    origin: RealVector = (0.0, 0.0, 0.0),
     axes: Optional[Ints] = None,
 ) -> List[List[Real]]:
     """
