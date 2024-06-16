@@ -1,12 +1,6 @@
 """Class for point groups."""
 
-__all__ = [
-    "symmelems",
-    "ptgrp",
-    "symb2symmelems",
-    "PointGroupInfo",
-    "PointGroup",
-]
+__all__ = ["symmelems", "ptgrp", "PointGroupInfo", "PointGroup"]
 
 from math import sin, cos
 
@@ -67,6 +61,7 @@ from .typehints import (
     Dict,
     Iterator,
     Vector,
+    RealVector,
 )
 
 _RotationAxis = Union[RotationAxis, InfRotationAxis]
@@ -279,328 +274,6 @@ def ptgrp(points: Points, tol: float = TOL) -> str:
         if len(rotoreflections) > 0:
             return f"S{2*order}"
         return f"C{order}"
-
-
-def symb2symmelems(
-    symb: str,
-) -> Tuple[str, Sequence[SymmetryElement], Sequence[str]]:
-    """
-    Return the standardized symbol, all symmetry elements in the standardized
-    space orientation, and their labels for a point group with a symbol `symb`.
-    """
-    PRIMAX = vector((0.0, 0.0, 1.0))
-    SECAX = vector((1.0, 0.0, 0.0))
-    if not symb:
-        raise ValueError("empty symbol")
-    rotation = symb[0]
-    subscript = symb[1:]
-    if subscript.startswith(SYMB.inf):
-        i = len(SYMB.inf)
-        order = SYMB.inf
-        n = 0
-        inf = True
-        reflection = subscript[i:]
-    else:
-        length = len(subscript)
-        i = 0
-        while i < length and subscript[i].isdigit():
-            i += 1
-        order = subscript[:i]
-        if i > 0:
-            if order.startswith("0"):
-                raise ValueError("leading zero in the order of the symbol")
-            n = int(order)
-        else:
-            n = 0
-        inf = False
-        reflection = subscript[i:]
-    symmelems: List[SymmetryElement] = []
-    labels: List[str] = []
-
-    def add(symmelem: SymmetryElement, label: str = "") -> None:
-        symmelems.append(symmelem)
-        labels.append(label)
-
-    if rotation == "C":
-        if order:
-            if not reflection:
-                if n > 1:
-                    add(RotationAxis(PRIMAX, n))
-                elif inf:
-                    add(InfRotationAxis(PRIMAX))
-            elif reflection == "i":
-                if n == 1:
-                    return symb2symmelems("Ci")
-                elif n % 2 == 1:
-                    return symb2symmelems(f"S{2 * n}")
-                elif (n // 2) % 2 == 1:
-                    return symb2symmelems(f"S{n // 2}")
-                else:
-                    return symb2symmelems(f"S{order}")
-            elif reflection == "v":
-                if n == 1:
-                    return symb2symmelems("Cs")
-                else:
-                    if not inf:
-                        add(RotationAxis(PRIMAX, n))
-                        add(ReflectionPlane(SECAX), "v")
-                        step = PI / (2 * n)
-                        if n % 2 == 1:
-                            angle = step
-                            for _ in range(1, n):
-                                add(
-                                    ReflectionPlane(
-                                        (cos(angle), sin(angle), 0.0)
-                                    ),
-                                    "v",
-                                )
-                                angle += step
-                        else:
-                            angle = step
-                            step += step
-                            for _ in range(1, n, 2):
-                                add(
-                                    ReflectionPlane(
-                                        (cos(angle), sin(angle), 0.0)
-                                    ),
-                                    "d",
-                                )
-                                angle += step
-                            angle = step
-                            for _ in range(2, n, 2):
-                                add(
-                                    ReflectionPlane(
-                                        (cos(angle), sin(angle), 0.0)
-                                    ),
-                                    "v",
-                                )
-                                angle += step
-                    else:
-                        add(InfRotationAxis(PRIMAX))
-                        add(AxisReflectionPlanes(PRIMAX), "v")
-            elif reflection == "h":
-                if n == 1:
-                    return symb2symmelems("Cs")
-                else:
-                    if not inf:
-                        add(RotationAxis(PRIMAX, n))
-                        add(ReflectionPlane(PRIMAX), "h")
-                        if n % 2 == 0:
-                            add(InversionCenter())
-                        if n > 2:
-                            add(RotoreflectionAxis(PRIMAX, n))
-                    else:
-                        add(InfRotationAxis(PRIMAX))
-                        add(ReflectionPlane(PRIMAX), "h")
-                        add(InversionCenter())
-                        add(InfRotoreflectionAxis(PRIMAX))
-            else:
-                raise ValueError(
-                    "a symbol starting with 'C' and an order can end only with"
-                    + " '', 'i', 'v', or 'h'"
-                )
-        elif reflection == "s":
-            add(ReflectionPlane(PRIMAX))
-        elif reflection == "i":
-            add(InversionCenter())
-        else:
-            raise ValueError(
-                "a symbol starting with 'C' should have an order or end with"
-                + " 's' or 'i'"
-            )
-    elif rotation == "S":
-        if reflection:
-            raise ValueError(
-                "a symbol starting with 'S' can end only with an order"
-            )
-        if n % 2 == 1 or inf:
-            return symb2symmelems(f"C{order}h")
-        elif n == 2:
-            return symb2symmelems("Ci")
-        elif n > 0:
-            add(RotoreflectionAxis(PRIMAX, n))
-            add(RotationAxis(PRIMAX, n // 2))
-            if (n // 2) % 2 == 1:
-                add(InversionCenter())
-        else:
-            raise ValueError("a symbol starting with 'S' should have an order")
-    elif rotation == "D":
-        if n > 0:
-            add(RotationAxis(PRIMAX, n))
-            add(RotationAxis(SECAX, 2), "'")
-            step = PI / (2 * n)
-            if n % 2 == 1:
-                angle = step
-                for _ in range(1, n):
-                    add(
-                        RotationAxis((cos(angle), sin(angle), 0.0), 2),
-                        "'",
-                    )
-                    angle += step
-            else:
-                angle = step
-                step += step
-                for _ in range(1, n, 2):
-                    add(
-                        RotationAxis((cos(angle), sin(angle), 0.0), 2),
-                        "''",
-                    )
-                    angle += step
-                angle = step
-                for _ in range(2, n, 2):
-                    add(
-                        RotationAxis((cos(angle), sin(angle), 0.0), 2),
-                        "'",
-                    )
-                    angle += step
-        elif inf:
-            add(InfRotationAxis(PRIMAX))
-            add(AxisRotationAxes(PRIMAX))
-        else:
-            raise ValueError("a symbol starting with 'D' should have an order")
-        if not reflection:
-            if n == 1:
-                return symb2symmelems(f"C{2 * n}")
-            elif inf:
-                add(InversionCenter())
-        elif reflection == "d":
-            if n == 1:
-                return symb2symmelems(f"C{2 * n}h")
-            elif inf:
-                return symb2symmelems(f"D{order}h")
-            else:
-                step = PI / (2 * n)
-                angle = 0.5 * step
-                for _ in range(n):
-                    add(ReflectionPlane((cos(angle), sin(angle), 0.0)), "d")
-                    angle += step
-                if n % 2 == 1:
-                    add(InversionCenter())
-                add(RotoreflectionAxis(PRIMAX, 2 * n))
-        elif reflection == "h":
-            if n == 1:
-                return symb2symmelems(f"C{2 * n}v")
-            else:
-                add(ReflectionPlane(PRIMAX), "h")
-                if not inf:
-                    add(ReflectionPlane(SECAX), "v")
-                    step = PI / (2 * n)
-                    if n % 2 == 1:
-                        angle = step
-                        for _ in range(1, n):
-                            add(
-                                ReflectionPlane((cos(angle), sin(angle), 0.0)),
-                                "v",
-                            )
-                            angle += step
-                    else:
-                        angle = step
-                        step += step
-                        for _ in range(1, n, 2):
-                            add(
-                                ReflectionPlane((cos(angle), sin(angle), 0.0)),
-                                "d",
-                            )
-                            angle += step
-                        angle = step
-                        for _ in range(2, n, 2):
-                            add(
-                                ReflectionPlane((cos(angle), sin(angle), 0.0)),
-                                "v",
-                            )
-                            angle += step
-                        add(InversionCenter())
-                    if n > 2:
-                        add(RotoreflectionAxis(PRIMAX, n))
-                else:
-                    add(AxisReflectionPlanes(PRIMAX), "v")
-                    add(InversionCenter())
-    elif order:
-        raise ValueError(
-            "only the symbols starting with 'C', 'S', or 'D' can have an order"
-        )
-    elif rotation == "T":
-        vecs3 = signvar([1, 1, 1], 1)
-        vecs2 = ax3permut([[1]])
-        for n, vecs in ((3, vecs3), (2, vecs2)):
-            for vec in vecs:
-                add(RotationAxis(vec, n))
-        if reflection == "d":
-            for vec in ax3permut(signvar([1, 1], 0, True)):
-                add(ReflectionPlane(vec), "d")
-            n = 4
-            for vec in vecs2:
-                add(RotoreflectionAxis(vec, n))
-        elif reflection == "h":
-            for vec in vecs2:
-                add(ReflectionPlane(vec), "h")
-            add(InversionCenter())
-            n = 6
-            for vec in vecs3:
-                add(RotoreflectionAxis(vec, n))
-        elif reflection:
-            raise ValueError(
-                "a symbol starting with 'T' can end only with '', 'd', or 'h'"
-            )
-    elif rotation == "O":
-        vecs4 = ax3permut([[1]])
-        vecs3 = signvar([1, 1, 1], 1)
-        vecs2 = ax3permut(signvar([1, 1], 0, True))
-        for n, vecs, label in (
-            (4, vecs4, ""),
-            (3, vecs3, ""),
-            (2, vecs2, "'"),
-        ):
-            for vec in vecs:
-                add(RotationAxis(vec, n), label)
-        if reflection == "h":
-            for vec in vecs4:
-                add(ReflectionPlane(vec), "h")
-            for vec in vecs2:
-                add(ReflectionPlane(vec), "d")
-            add(InversionCenter())
-            for n, vecs in ((6, vecs3), (4, vecs4)):
-                for vec in vecs:
-                    add(RotoreflectionAxis(vec, n))
-        elif reflection:
-            raise ValueError(
-                "a symbol starting with 'O' can end only with '' or 'h'"
-            )
-    elif rotation == "I":
-        vecs5 = ax3permut(signvar([PHI, 1], 0, True))
-        vecs3 = signvar([1, 1, 1], 1) + ax3permut(
-            signvar([1, 1 + PHI], 0, True)
-        )
-        vecs2 = ax3permut([[1], *signvar([1, PHI, 1 + PHI], 0, True)])
-        for n, vecs in ((5, vecs5), (3, vecs3), (2, vecs2)):
-            for vec in vecs:
-                add(RotationAxis(vec, n))
-        if reflection == "h":
-            for vec in vecs2:
-                add(ReflectionPlane(vec))
-            add(InversionCenter())
-            for n, vecs in ((10, vecs5), (6, vecs3)):
-                for vec in vecs:
-                    add(RotoreflectionAxis(vec, n))
-        elif reflection:
-            raise ValueError(
-                "a symbol starting with 'I' can end only with '' or 'h'"
-            )
-    elif rotation == "K":
-        add(CenterRotationAxes())
-        if reflection == "h":
-            add(CenterReflectionPlanes())
-            add(InversionCenter())
-            add(CenterRotoreflectionAxes())
-        elif reflection:
-            raise ValueError(
-                "a symbol starting with 'K' can end only with '' or 'h'"
-            )
-    else:
-        raise ValueError(
-            "a symbol can start only with 'C', 'S', 'D', 'T', 'O', 'I', or 'K'"
-        )
-    return symb, tuple(symmelems), tuple(labels)
 
 
 _DirectionSymmetryElement = Union[
@@ -834,10 +507,332 @@ class PointGroup(Transformable):
         Initialize the instance with a symbol `symb` and a transformation
         `transform` describing the orientation in space.
         """
-        symb, symmelems, labels = symb2symmelems(symb)
-        self._symb = symb
-        self._symmelems = tuple(transform(symmelem) for symmelem in symmelems)
-        self._labels = labels
+        if not symb:
+            raise ValueError("empty symbol")
+        PRIMAX = vector((0.0, 0.0, 1.0))
+        SECAX = vector((1.0, 0.0, 0.0))
+        vec: RealVector
+        symmelems: List[SymmetryElement] = []
+        labels: List[str] = []
+
+        def add(symmelem: SymmetryElement, label: str = "") -> None:
+            symmelems.append(symmelem)
+            labels.append(label)
+
+        while symb:
+            rotation = symb[0]
+            subscript = symb[1:]
+            if subscript.startswith(SYMB.inf):
+                i = len(SYMB.inf)
+                order = SYMB.inf
+                n = 0
+                inf = True
+                reflection = subscript[i:]
+            else:
+                length = len(subscript)
+                i = 0
+                while i < length and subscript[i].isdigit():
+                    i += 1
+                order = subscript[:i]
+                if i > 0:
+                    if order.startswith("0"):
+                        raise ValueError(
+                            "leading zero in the order of the symbol"
+                        )
+                    n = int(order)
+                else:
+                    n = 0
+                inf = False
+                reflection = subscript[i:]
+            self._symb = symb
+            symb = ""
+            if rotation == "C":
+                if order:
+                    if not reflection:
+                        if n > 1:
+                            add(RotationAxis(PRIMAX, n))
+                        elif inf:
+                            add(InfRotationAxis(PRIMAX))
+                    elif reflection == "i":
+                        if n == 1:
+                            symb = "Ci"
+                        elif n % 2 == 1:
+                            symb = f"S{2 * n}"
+                        elif (n // 2) % 2 == 1:
+                            symb = f"S{n // 2}"
+                        else:
+                            symb = f"S{order}"
+                    elif reflection == "v":
+                        if n == 1:
+                            symb = "Cs"
+                        else:
+                            if not inf:
+                                add(RotationAxis(PRIMAX, n))
+                                vec = SECAX.copy()
+                                step = PI / (2 * n)
+                                add(ReflectionPlane(vec), "v")
+                                if n % 2 == 1:
+                                    angle = step
+                                    for _ in range(1, n):
+                                        vec[0] = cos(angle)
+                                        vec[1] = sin(angle)
+                                        add(ReflectionPlane(vec), "v")
+                                        angle += step
+                                else:
+                                    angle = step
+                                    step += step
+                                    for _ in range(1, n, 2):
+                                        vec[0] = cos(angle)
+                                        vec[1] = sin(angle)
+                                        add(ReflectionPlane(vec), "d")
+                                        angle += step
+                                    angle = step
+                                    for _ in range(2, n, 2):
+                                        vec[0] = cos(angle)
+                                        vec[1] = sin(angle)
+                                        add(ReflectionPlane(vec), "v")
+                                        angle += step
+                            else:
+                                add(InfRotationAxis(PRIMAX))
+                                add(AxisReflectionPlanes(PRIMAX), "v")
+                    elif reflection == "h":
+                        if n == 1:
+                            symb = "Cs"
+                        else:
+                            if not inf:
+                                add(RotationAxis(PRIMAX, n))
+                                add(ReflectionPlane(PRIMAX), "h")
+                                if n % 2 == 0:
+                                    add(InversionCenter())
+                                if n > 2:
+                                    add(RotoreflectionAxis(PRIMAX, n))
+                            else:
+                                add(InfRotationAxis(PRIMAX))
+                                add(ReflectionPlane(PRIMAX), "h")
+                                add(InversionCenter())
+                                add(InfRotoreflectionAxis(PRIMAX))
+                    else:
+                        raise ValueError(
+                            "a symbol starting with 'C' and an order can end"
+                            + " only with '', 'i', 'v', or 'h'"
+                        )
+                elif reflection == "s":
+                    add(ReflectionPlane(PRIMAX))
+                elif reflection == "i":
+                    add(InversionCenter())
+                else:
+                    raise ValueError(
+                        "a symbol starting with 'C' should have an order or"
+                        + " end with 's' or 'i'"
+                    )
+            elif rotation == "S":
+                if reflection:
+                    raise ValueError(
+                        "a symbol starting with 'S' can end only with an order"
+                    )
+                if n % 2 == 1 or inf:
+                    symb = f"C{order}h"
+                elif n == 2:
+                    symb = "Ci"
+                elif n > 0:
+                    add(RotoreflectionAxis(PRIMAX, n))
+                    add(RotationAxis(PRIMAX, n // 2))
+                    if (n // 2) % 2 == 1:
+                        add(InversionCenter())
+                else:
+                    raise ValueError(
+                        "a symbol starting with 'S' should have an order"
+                    )
+            elif rotation == "D":
+                if n > 0:
+                    add(RotationAxis(PRIMAX, n))
+                    vec = SECAX.copy()
+                    step = PI / (2 * n)
+                    add(RotationAxis(vec, 2), "'")
+                    if n % 2 == 1:
+                        angle = step
+                        for _ in range(1, n):
+                            vec[0] = cos(angle)
+                            vec[1] = sin(angle)
+                            add(RotationAxis(vec, 2), "'")
+                            angle += step
+                    else:
+                        angle = step
+                        step += step
+                        for _ in range(1, n, 2):
+                            vec[0] = cos(angle)
+                            vec[1] = sin(angle)
+                            add(RotationAxis(vec, 2), "''")
+                            angle += step
+                        angle = step
+                        for _ in range(2, n, 2):
+                            vec[0] = cos(angle)
+                            vec[1] = sin(angle)
+                            add(RotationAxis(vec, 2), "'")
+                            angle += step
+                elif inf:
+                    add(InfRotationAxis(PRIMAX))
+                    add(AxisRotationAxes(PRIMAX))
+                else:
+                    raise ValueError(
+                        "a symbol starting with 'D' should have an order"
+                    )
+                if not reflection:
+                    if n == 1:
+                        symb = f"C{2 * n}"
+                    elif inf:
+                        add(InversionCenter())
+                elif reflection == "d":
+                    if n == 1:
+                        symb = f"C{2 * n}h"
+                    elif inf:
+                        symb = f"D{order}h"
+                    else:
+                        vec = SECAX.copy()
+                        step = PI / (2 * n)
+                        angle = 0.5 * step
+                        for _ in range(n):
+                            vec[0] = cos(angle)
+                            vec[1] = sin(angle)
+                            add(ReflectionPlane(vec), "d")
+                            angle += step
+                        if n % 2 == 1:
+                            add(InversionCenter())
+                        add(RotoreflectionAxis(PRIMAX, 2 * n))
+                elif reflection == "h":
+                    if n == 1:
+                        symb = f"C{2 * n}v"
+                    else:
+                        add(ReflectionPlane(PRIMAX), "h")
+                        if not inf:
+                            vec = SECAX.copy()
+                            step = PI / (2 * n)
+                            add(ReflectionPlane(vec), "v")
+                            if n % 2 == 1:
+                                angle = step
+                                for _ in range(1, n):
+                                    vec[0] = cos(angle)
+                                    vec[1] = sin(angle)
+                                    add(ReflectionPlane(vec), "v")
+                                    angle += step
+                            else:
+                                angle = step
+                                step += step
+                                for _ in range(1, n, 2):
+                                    vec[0] = cos(angle)
+                                    vec[1] = sin(angle)
+                                    add(ReflectionPlane(vec), "d")
+                                    angle += step
+                                angle = step
+                                for _ in range(2, n, 2):
+                                    vec[0] = cos(angle)
+                                    vec[1] = sin(angle)
+                                    add(ReflectionPlane(vec), "v")
+                                    angle += step
+                                add(InversionCenter())
+                            if n > 2:
+                                add(RotoreflectionAxis(PRIMAX, n))
+                        else:
+                            add(AxisReflectionPlanes(PRIMAX), "v")
+                            add(InversionCenter())
+            elif order:
+                raise ValueError(
+                    "only the symbols starting with 'C', 'S', or 'D' can have"
+                    + " an order"
+                )
+            elif rotation == "T":
+                vecs3 = signvar([1, 1, 1], 1)
+                vecs2 = ax3permut([[1]])
+                for n, vecs in ((3, vecs3), (2, vecs2)):
+                    for vec in vecs:
+                        add(RotationAxis(vec, n))
+                if reflection == "d":
+                    for vec in ax3permut(signvar([1, 1], 0, True)):
+                        add(ReflectionPlane(vec), "d")
+                    n = 4
+                    for vec in vecs2:
+                        add(RotoreflectionAxis(vec, n))
+                elif reflection == "h":
+                    for vec in vecs2:
+                        add(ReflectionPlane(vec), "h")
+                    add(InversionCenter())
+                    n = 6
+                    for vec in vecs3:
+                        add(RotoreflectionAxis(vec, n))
+                elif reflection:
+                    raise ValueError(
+                        "a symbol starting with 'T' can end only with '', 'd',"
+                        + " or 'h'"
+                    )
+            elif rotation == "O":
+                vecs4 = ax3permut([[1]])
+                vecs3 = signvar([1, 1, 1], 1)
+                vecs2 = ax3permut(signvar([1, 1], 0, True))
+                for n, vecs, label in (
+                    (4, vecs4, ""),
+                    (3, vecs3, ""),
+                    (2, vecs2, "'"),
+                ):
+                    for vec in vecs:
+                        add(RotationAxis(vec, n), label)
+                if reflection == "h":
+                    for vec in vecs4:
+                        add(ReflectionPlane(vec), "h")
+                    for vec in vecs2:
+                        add(ReflectionPlane(vec), "d")
+                    add(InversionCenter())
+                    for n, vecs in ((6, vecs3), (4, vecs4)):
+                        for vec in vecs:
+                            add(RotoreflectionAxis(vec, n))
+                elif reflection:
+                    raise ValueError(
+                        "a symbol starting with 'O' can end only with '' or"
+                        + " 'h'"
+                    )
+            elif rotation == "I":
+                vecs5 = ax3permut(signvar([PHI, 1], 0, True))
+                vecs3 = signvar([1, 1, 1], 1) + ax3permut(
+                    signvar([1, 1 + PHI], 0, True)
+                )
+                vecs2 = ax3permut([[1], *signvar([1, PHI, 1 + PHI], 0, True)])
+                for n, vecs in ((5, vecs5), (3, vecs3), (2, vecs2)):
+                    for vec in vecs:
+                        add(RotationAxis(vec, n))
+                if reflection == "h":
+                    for vec in vecs2:
+                        add(ReflectionPlane(vec))
+                    add(InversionCenter())
+                    for n, vecs in ((10, vecs5), (6, vecs3)):
+                        for vec in vecs:
+                            add(RotoreflectionAxis(vec, n))
+                elif reflection:
+                    raise ValueError(
+                        "a symbol starting with 'I' can end only with '' or"
+                        + " 'h'"
+                    )
+            elif rotation == "K":
+                add(CenterRotationAxes())
+                if reflection == "h":
+                    add(CenterReflectionPlanes())
+                    add(InversionCenter())
+                    add(CenterRotoreflectionAxes())
+                elif reflection:
+                    raise ValueError(
+                        "a symbol starting with 'K' can end only with '' or"
+                        + " 'h'"
+                    )
+            else:
+                raise ValueError(
+                    "a symbol can start only with 'C', 'S', 'D', 'T', 'O',"
+                    + " 'I', or 'K'"
+                )
+
+        self._symmelems = (
+            tuple(symmelems)
+            if isinstance(transform, Identity)
+            else tuple(transform(symmelem) for symmelem in symmelems)
+        )
+        self._labels = tuple(labels)
         self._transform = transform
 
     @property
