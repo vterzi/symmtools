@@ -1,10 +1,15 @@
 """Class for point groups."""
 
-__all__ = ["symmelems", "ptgrp", "symb2symmelems", "PointGroup"]
-
-from math import sqrt, atan
-
-from .const import INF, PI, PHI, TOL, PRIMAX, SECAX, SPECIAL_ANGLES, INF_SYMB
+from .const import (
+    INF,
+    PI,
+    PHI,
+    TOL,
+    PRIMAX,
+    SECAX,
+    SPECIAL_ANGLES,
+    SYMB,
+)
 from .vecop import (
     norm,
     cross,
@@ -229,7 +234,7 @@ def ptgrp(points: Points, tol: float = TOL) -> str:
     if dim == 0:
         return "Kh"  # 'K'
     if dim == 1:
-        return f"D{INF_SYMB}h" if invertible else f"C{INF_SYMB}v"
+        return f"D{SYMB.inf}h" if invertible else f"C{SYMB.inf}v"
     sigma = len(reflections) > 0
     if len(rotations) == 0:
         if sigma:
@@ -272,9 +277,9 @@ def symb2symmelems(
         raise ValueError("empty symbol")
     rotation = symb[0]
     subscript = symb[1:]
-    if subscript.startswith(INF_SYMB):
-        i = len(INF_SYMB)
-        order = INF_SYMB
+    if subscript.startswith(SYMB.inf):
+        i = len(SYMB.inf)
+        order = SYMB.inf
         n = 0
         inf = True
         reflection = subscript[i:]

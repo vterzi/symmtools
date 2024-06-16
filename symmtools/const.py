@@ -13,10 +13,11 @@ __all__ = [
     "SECAX",
     "TERNAX",
     "SPECIAL_ANGLES",
-    "INF_SYMB",
-    "REFL_SYMB",
+    "ROT_SYMBS",
+    "REFL_SYMBS",
     "LABEL_RE",
     "FLOAT_RE",
+    "SYMB",
 ]
 
 from math import nan, inf, pi, sqrt, atan
@@ -46,7 +47,32 @@ SPECIAL_ANGLES = (
     atan(2.0 * sqrt(2.0)),
     atan(2.0 * PHI**2),
 )
-INF_SYMB = "oo"  # "\u221e"
-REFL_SYMB = "s"  # "\u03c3"
+ROT_SYMBS = "CSDTOIK"
+REFL_SYMBS = " sivdh"
 LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
 FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
+
+
+class _Symbols:
+    _unicode = False
+
+    def use_ascii(self):
+        """Use ASCII symbols."""
+        self._unicode = False
+
+    def use_unicode(self):
+        """Use Unicode symbols."""
+        self._unicode = True
+
+    @property
+    def inf(self):
+        """Infinity symbol."""
+        return "\u221e" if self._unicode else "oo"
+
+    @property
+    def refl(self):
+        """Reflection plane symbol."""
+        return "\u03c3" if self._unicode else "s"
+
+
+SYMB = _Symbols()

@@ -19,7 +19,7 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 
-from .const import TAU, INF_SYMB, REFL_SYMB
+from .const import TAU, SYMB
 from .transform import (
     Transformable,
     Transformables,
@@ -167,7 +167,7 @@ class InfRotationAxis(InfFoldTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return f"C{INF_SYMB}"
+        return f"C{SYMB.inf}"
 
     @property
     def name(self) -> str:
@@ -187,7 +187,7 @@ class ReflectionPlane(DirectionTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return REFL_SYMB
+        return SYMB.refl
 
     @property
     def name(self) -> str:
@@ -259,7 +259,7 @@ class InfRotoreflectionAxis(InfFoldTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return f"S{INF_SYMB}"
+        return f"S{SYMB.inf}"
 
     @property
     def name(self) -> str:
@@ -282,7 +282,7 @@ class AxisRotationAxes(DirectionTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return f"{INF_SYMB}C2"
+        return f"{SYMB.inf}C2"
 
     @property
     def name(self) -> str:
@@ -305,7 +305,7 @@ class CenterRotationAxes(InvariantTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return f"{INF_SYMB}C{INF_SYMB}"
+        return f"{SYMB.inf}C{SYMB.inf}"
 
     @property
     def name(self) -> str:
@@ -328,7 +328,7 @@ class AxisReflectionPlanes(ReflectionPlane):
 
     @property
     def symb(self) -> str:
-        return f"{INF_SYMB}{REFL_SYMB}v"
+        return f"{SYMB.inf}{SYMB.refl}v"
 
     @property
     def name(self) -> str:
@@ -347,7 +347,7 @@ class CenterReflectionPlanes(InvariantTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return f"{INF_SYMB}{REFL_SYMB}"
+        return f"{SYMB.inf}{SYMB.refl}"
 
     @property
     def name(self) -> str:
@@ -370,7 +370,7 @@ class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
 
     @property
     def symb(self) -> str:
-        return f"{INF_SYMB}S{INF_SYMB}"
+        return f"{SYMB.inf}S{SYMB.inf}"
 
     @property
     def name(self) -> str:
