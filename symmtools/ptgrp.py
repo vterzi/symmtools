@@ -949,3 +949,34 @@ class PointGroup(Transformable):
         if len(keys) == 0:
             raise ValueError("invalid combination of symmetry elements")
         return cls(keys[0])
+
+
+_LOW_POINT_GROUPS = (
+    "C1",
+    "Cs",
+    "Ci",
+)
+_HIGH_POINT_GROUPS = (
+    "T",
+    "Td",
+    "Th",
+    "O",
+    "Oh",
+    "I",
+    "Ih",
+    f"C{SYMB.inf}",
+    f"C{SYMB.inf}v",
+    f"C{SYMB.inf}h",
+    f"D{SYMB.inf}",
+    f"D{SYMB.inf}h",
+    "K",
+    "Kh",
+)
+_LOW_POINT_GROUP_NUMS = {
+    symb: symmelems2nums(PointGroup(symb).symmelems)
+    for symb in _LOW_POINT_GROUPS
+}
+_HIGH_POINT_GROUP_NUMS = {
+    symb: symmelems2nums(PointGroup(symb).symmelems)
+    for symb in _HIGH_POINT_GROUPS
+}
