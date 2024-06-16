@@ -14,6 +14,7 @@ __all__ = [
     "AxisReflectionPlanes",
     "CenterReflectionPlanes",
     "CenterRotoreflectionAxes",
+    "symmelems2nums",
     "symmelems2symbs",
 ]
 
@@ -33,7 +34,16 @@ from .transform import (
     Reflection,
     Rotoreflection,
 )
-from .typehints import TypeVar, Sequence, List, Int, RealVector
+from .typehints import (
+    TypeVar,
+    Type,
+    Sequence,
+    Tuple,
+    List,
+    Dict,
+    Int,
+    RealVector,
+)
 
 _Transformable = TypeVar("_Transformable", bound=Transformable)
 
@@ -383,6 +393,21 @@ class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
         return 0
 
 
+def symmelems2nums(
+    symmelems: Sequence[SymmetryElement],
+) -> Dict[Tuple[Type[SymmetryElement], int], int]:
+    """
+    Count the numbers of different types of symmetry elements `symmelems`.
+    """
+    nums = {}
+    for symmelem in symmelems:
+        key = (type(symmelem), symmelem.id)
+        if key not in nums:
+            nums[key] = 0
+        nums[key] += 1
+    return nums
+
+
 def symmelems2symbs(
     symmelems: Sequence[SymmetryElement], delim: str = ","
 ) -> str:
@@ -397,6 +422,6 @@ def symmelems2symbs(
             nums[key] = 0
         nums[key] += 1
     string = ""
-    for key, num in reversed(sorted(nums.items())):
+    for key, num in sorted(nums.items(), reverse=True):
         string += (str(num) if num > 1 else "") + key[1] + delim
     return string[: -len(delim)]
