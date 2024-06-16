@@ -59,7 +59,6 @@ from .typehints import (
     Tuple,
     List,
     Dict,
-    Iterator,
     Vector,
     RealVector,
 )
