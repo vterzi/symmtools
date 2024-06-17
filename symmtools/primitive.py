@@ -6,8 +6,16 @@ from re import findall
 
 from numpy import empty, zeros
 
-from .const import INF, LABEL_RE, FLOAT_RE
-from .vecop import diff, unitindep
+from .const import INF, TOL, LABEL_RE, FLOAT_RE
+from .vecop import (
+    diff,
+    unitindep,
+    norm,
+    cross,
+    parallel,
+    unitparallel,
+    perpendicular,
+)
 from .transform import (
     Transformable,
     Transformables,
@@ -18,12 +26,26 @@ from .transform import (
     Reflection,
     Rotoreflection,
 )
-from .symmelem import SymmetryElement
+from .symmelem import (
+    SymmetryElement,
+    InversionCenter,
+    RotationAxis,
+    InfRotationAxis,
+    ReflectionPlane,
+    RotoreflectionAxis,
+    InfRotoreflectionAxis,
+    AxisRotationAxes,
+    CenterRotationAxes,
+    AxisReflectionPlanes,
+    CenterReflectionPlanes,
+    CenterRotoreflectionAxes,
+)
 from .typehints import (
     TypeVar,
     Any,
     Sequence,
     Tuple,
+    List,
     Bool,
     Vector,
     Matrix,
@@ -129,6 +151,126 @@ class Points(Transformables):
         mat[2, 1] = yz
         mat[2, 2] = zz
         return mat
+
+    def symmelems(self, tol: float = TOL) -> Sequence[SymmetryElement]:
+        """
+        Determine all symmetry elements of a set of points `points` within a
+        tolerance `tol`.
+        """
+        if not self.nondegen(tol):
+            raise ValueError(
+                "at least two identical elements in the instance of for the"
+                + " given tolerance"
+            )
+
+        def contains(array: List[Vector], vector: Vector) -> bool:
+            for elem in array:
+                if unitparallel(elem, vector, tol):
+                    return True
+            array.append(vector)
+            return False
+
+        symmelems: List[SymmetryElement] = []
+        center = InversionCenter()
+        if center.symmetric(self, tol):
+            symmelems.append(center)
+        axes: List[Vector] = []
+        planes: List[Vector] = []
+        direction = None
+        first = True
+        collinear = False  # fix for different point types
+        coplanar = False  # fix for different point types
+        if len(self._elems) == 1:
+            symmelems.append(CenterRotationAxes())
+            symmelems.append(CenterReflectionPlanes())
+            symmelems.append(CenterRotoreflectionAxes())
+        for _, idxs in self._groups:
+            n_points = len(idxs)
+            for i1 in range(n_points - 1):
+                point1 = self._elems[idxs[i1]]
+                pos1 = point1.pos
+                for i2 in range(i1 + 1, n_points):
+                    point2 = self._elems[idxs[i2]]
+                    pos2 = point2.pos
+                    segment = pos1 - pos2
+                    if not collinear:
+                        if first:
+                            first = False
+                            collinear = True
+                        for i3 in range(i2 + 1, n_points):
+                            point3 = self._elems[idxs[i3]]
+                            pos3 = point3.pos
+                            normal = cross(segment, pos1 - pos3)
+                            normal_norm = norm(normal)
+                            if normal_norm <= tol:
+                                continue
+                            collinear = False
+                            rotation = normal / normal_norm
+                            if not contains(axes, rotation):
+                                dist = pos1.dot(rotation)
+                                max_order = 3
+                                for i4 in range(i3 + 1, n_points):
+                                    point4 = self._elems[idxs[i4]]
+                                    pos4 = point4.pos
+                                    if abs(pos4.dot(rotation) - dist) <= tol:
+                                        max_order += 1
+                                if (
+                                    max_order == n_points
+                                    and direction is None
+                                    and abs(dist) <= tol
+                                ):
+                                    coplanar = True
+                                    direction = rotation
+                                    symmelems.append(ReflectionPlane(rotation))
+                                orders = set(range(max_order, 2, -1)).union(
+                                    set(range(2 * max_order, 4, -2))
+                                )
+                                for order in sorted(orders, reverse=True):
+                                    rotorefl = RotoreflectionAxis(
+                                        rotation, order
+                                    )
+                                    if rotorefl.symmetric(self, tol):
+                                        symmelems.append(rotorefl)
+                                        break
+                                for order in range(max_order, 1, -1):
+                                    rot = RotationAxis(rotation, order)
+                                    if rot.symmetric(self, tol):
+                                        symmelems.append(rot)
+                                        break
+                    midpoint = 0.5 * (pos1 + pos2)
+                    reflection = segment / norm(segment)
+                    if (
+                        collinear
+                        and direction is None
+                        and parallel(pos1, pos2, tol)
+                    ):
+                        direction = reflection
+                        symmelems.append(InfRotationAxis(reflection))
+                        symmelems.append(AxisReflectionPlanes(reflection))
+                        if center in symmelems:
+                            symmelems.append(InfRotoreflectionAxis(reflection))
+                            symmelems.append(AxisRotationAxes(reflection))
+                    if not perpendicular(segment, midpoint, tol):
+                        continue
+                    midpoint_norm = norm(midpoint)
+                    if midpoint_norm > tol or coplanar:
+                        rotation = (
+                            midpoint / midpoint_norm
+                            if direction is None
+                            else cross(direction, reflection)
+                        )
+                        if not contains(axes, rotation):
+                            rotorefl = RotoreflectionAxis(rotation, 4)
+                            if rotorefl.symmetric(self, tol):
+                                symmelems.append(rotorefl)
+                            rot = RotationAxis(rotation, 2)
+                            if rot.symmetric(self, tol):
+                                symmelems.append(rot)
+                    if not contains(planes, reflection):
+                        refl = ReflectionPlane(reflection)
+                        if refl.symmetric(self, tol):
+                            symmelems.append(refl)
+        return tuple(symmelems)
 
     @classmethod
     def from_arr(cls, vecs: RealVectors) -> "Points":
