@@ -14,13 +14,14 @@ __all__ = [
     "AxisReflectionPlanes",
     "CenterReflectionPlanes",
     "CenterRotoreflectionAxes",
-    "symmelems2nums",
-    "symmelems2symbs",
+    "SymmetryElements",
 ]
 
 from abc import ABC, abstractmethod
 
-from .const import TAU, SYMB
+from .const import PI, TAU, SYMB, SPECIAL_ANGLES
+from .vecop import intersectangle
+from .tools import rational
 from .transform import (
     Transformable,
     Transformables,
@@ -35,8 +36,8 @@ from .transform import (
     Rotoreflection,
 )
 from .typehints import (
+    Union,
     TypeVar,
-    Type,
     Sequence,
     Tuple,
     List,
@@ -301,35 +302,279 @@ class CenterRotoreflectionAxes(InvariantTransformable, SymmetryElement):
         raise NotImplementedError()
 
 
-def symmelems2nums(
-    symmelems: Sequence[SymmetryElement],
-) -> Dict[Tuple[Type[SymmetryElement], int], int]:
-    """
-    Count the numbers of different types of symmetry elements `symmelems`.
-    """
-    nums = {}
-    for symmelem in symmelems:
-        key = (type(symmelem), symmelem.id)
-        if key not in nums:
-            nums[key] = 0
-        nums[key] += 1
-    return nums
+_DirectionSymmetryElement = Union[
+    RotationAxis,
+    InfRotationAxis,
+    ReflectionPlane,
+    RotoreflectionAxis,
+    InfRotoreflectionAxis,
+    AxisRotationAxes,
+    AxisReflectionPlanes,
+]
+_DirectionSymmetryElements = (
+    RotationAxis,
+    InfRotationAxis,
+    ReflectionPlane,
+    RotoreflectionAxis,
+    InfRotoreflectionAxis,
+    AxisRotationAxes,
+    AxisReflectionPlanes,
+)
 
 
-def symmelems2symbs(
-    symmelems: Sequence[SymmetryElement], delim: str = ","
-) -> str:
+class SymmetryElements:
     """
-    Concatenate the symbols of symmetry elements `symmelems` to a sorted
-    string.
+    Set of symmetry elements containing numbers of their types and of the
+    angles between their axes or normals.
     """
-    nums = {}
-    for symmelem in symmelems:
-        key = (symmelem.id, symmelem.symb)
-        if key not in nums:
-            nums[key] = 0
-        nums[key] += 1
-    string = ""
-    for key, num in sorted(nums.items(), reverse=True):
-        string += (str(num) if num > 1 else "") + key[1] + delim
-    return string[: -len(delim)]
+
+    def __init__(self) -> None:
+        """Initialize the instance."""
+        self._included: List[_DirectionSymmetryElement] = []
+        self._excluded: List[_DirectionSymmetryElement] = []
+        self._nums: Dict[str, int] = {}
+        self._angles: Dict[Tuple[str, str], Dict[float, int]] = {}
+
+    @property
+    def included(self) -> Sequence[_DirectionSymmetryElement]:
+        """Return the included symmetry elements containing a direction."""
+        return tuple(self._included)
+
+    @property
+    def excluded(self) -> Sequence[_DirectionSymmetryElement]:
+        """Return the excluded symmetry elements containing a direction."""
+        return tuple(self._excluded)
+
+    @property
+    def nums(self) -> Sequence[Tuple[str, int]]:
+        """Return the types and numbers of symmetry elements."""
+        return tuple((symb, num) for symb, num in self._nums.items())
+
+    @property
+    def angles(
+        self,
+    ) -> Sequence[Tuple[Tuple[str, str], Sequence[Tuple[float, int]]]]:
+        """Return the angles between axes or normals of symmetry elements."""
+        return tuple(
+            (symbs, tuple((angle, num) for angle, num in angles.items()))
+            for symbs, angles in self._angles.items()
+        )
+
+    def include(
+        self,
+        symmelems: Union[SymmetryElement, Sequence[SymmetryElement]],
+        tol: float,
+    ) -> None:
+        """
+        Include information of one or multiple symmetry elements `symmelems`
+        using a tolerance `tol` to calculate exact intersection angles.
+        """
+        if not isinstance(symmelems, Sequence):
+            symmelems = (symmelems,)
+        for symmelem1 in symmelems:
+            symb1 = symmelem1.symb
+            if isinstance(symmelem1, _DirectionSymmetryElements):
+                if symb1 not in self._nums:
+                    self._nums[symb1] = 0
+                self._nums[symb1] += 1
+                vec1 = symmelem1.vec
+                for symmelem2 in self._included:
+                    symb2 = symmelem2.symb
+                    vec2 = symmelem2.vec
+                    angle = intersectangle(vec1, vec2)
+                    found = False
+                    for special_angle in SPECIAL_ANGLES:
+                        diff = abs(angle - special_angle)
+                        if diff <= tol:
+                            found = True
+                            angle = special_angle
+                            break
+                    if not found:
+                        nom, denom = rational(angle / PI, tol)
+                        angle = nom * PI / denom
+                    if angle == 0.0 and symmelem1.similar(symmelem2):
+                        raise ValueError(
+                            f"a parallel {symmelem1.name} already included"
+                        )
+                    symbs = (
+                        (symb1, symb2) if symb1 >= symb2 else (symb2, symb1)
+                    )
+                    if symbs not in self._angles:
+                        self._angles[symbs] = {}
+                    if angle not in self._angles[symbs]:
+                        self._angles[symbs][angle] = 0
+                    elif self._angles[symbs][angle] == 0:
+                        raise ValueError(
+                            f"the excluded angle of {angle} between"
+                            + f" a {symmelem1.name} and a {symmelem2.name}"
+                            + " cannot be included"
+                        )
+                    self._angles[symbs][angle] += 1
+                for symmelem2 in self._excluded:
+                    symb2 = symmelem2.symb
+                    vec2 = symmelem2.vec
+                    angle = intersectangle(vec1, vec2)
+                    if angle > tol:
+                        continue
+                    angle = 0.0
+                    if symmelem1.similar(symmelem2):
+                        raise ValueError(
+                            f"the excluded parallel {symmelem1.name} cannot"
+                            + " be included"
+                        )
+                    symbs = (
+                        (symb1, symb2) if symb1 >= symb2 else (symb2, symb1)
+                    )
+                    if symbs not in self._angles:
+                        self._angles[symbs] = {}
+                    if (
+                        angle in self._angles[symbs]
+                        and self._angles[symbs][angle] > 0
+                    ):
+                        raise ValueError(
+                            f"the included angle of {angle} between"
+                            + f" a {symmelem1.name} and a {symmelem2.name}"
+                            + " cannot be excluded"
+                        )
+                    self._angles[symbs][angle] = 0
+                self._included.append(symmelem1)
+            else:
+                if symb1 in self._nums:
+                    raise ValueError(
+                        f"an {symmelem1.name} already "
+                        + (
+                            "included"
+                            if self._nums[symb1] == 1
+                            else "excluded"
+                        )
+                    )
+                self._nums[symb1] = 1
+
+    def exclude(
+        self,
+        symmelems: Union[SymmetryElement, Sequence[SymmetryElement]],
+        tol: float,
+    ) -> None:
+        """
+        Exclude information of one or multiple symmetry elements `symmelems`
+        using a tolerance `tol` to calculate exact intersection angles.
+        """
+        if not isinstance(symmelems, Sequence):
+            symmelems = (symmelems,)
+        for symmelem1 in symmelems:
+            symb1 = symmelem1.symb
+            if isinstance(symmelem1, _DirectionSymmetryElements):
+                vec1 = symmelem1.vec
+                for symmelem2 in self._included:
+                    symb2 = symmelem2.symb
+                    vec2 = symmelem2.vec
+                    angle = intersectangle(vec1, vec2)
+                    if angle > tol:
+                        continue
+                    angle = 0.0
+                    if symmelem1.similar(symmelem2):
+                        raise ValueError(
+                            f"the included parallel {symmelem1.name} cannot"
+                            + " be excluded"
+                        )
+                    symbs = (
+                        (symb1, symb2) if symb1 >= symb2 else (symb2, symb1)
+                    )
+                    if symbs not in self._angles:
+                        self._angles[symbs] = {}
+                    if (
+                        angle in self._angles[symbs]
+                        and self._angles[symbs][angle] > 0
+                    ):
+                        raise ValueError(
+                            f"the included angle of {angle} between"
+                            + f" a {symmelem1.name} and a {symmelem2.name}"
+                            + " cannot be excluded"
+                        )
+                    self._angles[symbs][angle] = 0
+                for symmelem2 in self._excluded:
+                    symb2 = symmelem2.symb
+                    vec2 = symmelem2.vec
+                    angle = intersectangle(vec1, vec2)
+                    if angle <= tol and symmelem1.similar(symmelem2):
+                        raise ValueError(
+                            f"a parallel {symmelem1.name} already excluded"
+                        )
+                self._excluded.append(symmelem1)
+            else:
+                if symb1 in self._nums:
+                    raise ValueError(
+                        f"an {symmelem1.name} already "
+                        + (
+                            "included"
+                            if self._nums[symb1] == 1
+                            else "excluded"
+                        )
+                    )
+                self._nums[symb1] = 0
+
+    def contains(self, other: "SymmetryElements") -> bool:
+        """
+        Check whether another instance `other` is a subset of the instance.
+        """
+        for key1, num in other.nums:
+            if key1 in self._nums:
+                ref_num = self._nums[key1]
+            else:
+                ref_num = 0
+            zero = num == 0
+            ref_zero = ref_num == 0
+            if ref_num < num or zero != ref_zero:
+                return False
+        for key2, angles in other.angles:
+            for angle, num in angles:
+                if angle in self._angles[key2]:
+                    ref_num = self._angles[key2][angle]
+                else:
+                    ref_num = 0
+                zero = num == 0
+                ref_zero = ref_num == 0
+                if ref_num < num or zero != ref_zero:
+                    return False
+        return True
+
+    @property
+    def symbs(self) -> Sequence[str]:
+        """Return the sorted symbols of the symmetry elements."""
+        res = {}
+        rank: Union[Tuple[int, int], Tuple[int]]
+        for symb, num in self._nums.items():
+            if num > 0:
+                if SYMB.rot in symb:
+                    i = symb.index(SYMB.rot) + 1
+                    suffix = symb[i:]
+                    prefix_inf = symb.startswith(SYMB.inf)
+                    suffix_inf = suffix == SYMB.inf
+                    if suffix_inf:
+                        rank = (10 if prefix_inf else 9,)
+                    elif prefix_inf:
+                        rank = (7,)
+                    else:
+                        rank = (8, int(suffix))
+                elif SYMB.refl in symb:
+                    if symb.startswith(SYMB.inf):
+                        rank = (5 if symb.endswith("v") else 6,)
+                    else:
+                        rank = (4,)
+                elif symb == SYMB.inv:
+                    rank = (3,)
+                elif SYMB.rotorefl in symb:
+                    i = symb.index(SYMB.rotorefl) + 1
+                    suffix = symb[i:]
+                    prefix_inf = symb.startswith(SYMB.inf)
+                    suffix_inf = suffix == SYMB.inf
+                    if suffix_inf:
+                        rank = (2 if prefix_inf else 1,)
+                    else:
+                        rank = (0, int(suffix))
+                else:
+                    raise ValueError(f"unknown symbol {symb}")
+                if num > 1:
+                    symb = str(num) + symb
+                res[rank] = symb
+        return tuple(res[rank] for rank in sorted(res, reverse=True))

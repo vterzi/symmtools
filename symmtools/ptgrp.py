@@ -1,6 +1,6 @@
 """Class for point groups."""
 
-__all__ = ["symmelems", "ptgrp", "PointGroupInfo", "PointGroup"]
+__all__ = ["PointGroup"]
 
 from math import sin, cos
 
@@ -9,21 +9,12 @@ from .const import (
     PI,
     PHI,
     TOL,
-    SPECIAL_ANGLES,
     SYMB,
     ROT_SYMBS,
     REFL_SYMBS,
 )
-from .vecop import (
-    vector,
-    norm,
-    cross,
-    parallel,
-    unitparallel,
-    perpendicular,
-    intersectangle,
-)
-from .tools import rational, signvar, ax3permut
+from .vecop import vector
+from .tools import signvar, ax3permut
 from .transform import (
     Transformable,
     Transformation,
@@ -46,442 +37,19 @@ from .symmelem import (
     AxisReflectionPlanes,
     CenterReflectionPlanes,
     CenterRotoreflectionAxes,
-    symmelems2nums,
+    SymmetryElements,
 )
-from .primitive import Points
 from .typehints import (
     TypeVar,
     Type,
     Any,
-    Union,
     Sequence,
     Set,
     Tuple,
     List,
     Dict,
-    Vector,
     RealVector,
 )
-
-_RotationAxis = Union[RotationAxis, InfRotationAxis]
-_ReflectionPlane = ReflectionPlane
-_RotoreflectionAxis = Union[RotoreflectionAxis, InfRotoreflectionAxis]
-
-
-def symmelems(points: Points, tol: float = TOL) -> Tuple[
-    int,
-    bool,
-    Sequence[_RotationAxis],
-    Sequence[_ReflectionPlane],
-    Sequence[_RotoreflectionAxis],
-]:
-    """
-    Determine dimensionality, ivertibility, rotation axes, reflection planes,
-    and rotoreflection axes of a set of points `points` within a tolerance
-    `tol`.
-    """
-    if not points.nondegen(tol):
-        raise ValueError(
-            "at least two identical elements in the instance of "
-            + points.__class__.__name__
-            + " for the given tolerance"
-        )
-    rotations: List[_RotationAxis] = []
-    reflections: List[_ReflectionPlane] = []
-    rotoreflections: List[_RotoreflectionAxis] = []
-
-    def contains(array: List[Vector], vector: Vector) -> bool:
-        for elem in array:
-            if unitparallel(elem, vector, tol):
-                return True
-        array.append(vector)
-        return False
-
-    def add_rotation(vector: Vector, order: int) -> bool:
-        rotation = RotationAxis(vector, order)
-        if rotation.symmetric(points, tol):
-            i = 0
-            while i < len(rotations) and rotations[i].order > order:
-                i += 1
-            rotations.insert(i, rotation)
-            return True
-        return False
-
-    def add_reflection(vector: Vector) -> bool:
-        reflection = ReflectionPlane(vector)
-        if reflection.symmetric(points, tol):
-            reflections.append(reflection)
-            return True
-        return False
-
-    def add_rotoreflection(vector: Vector, order: int) -> bool:
-        for factor in (2, 1):
-            order_ = factor * order
-            if order_ > 2:
-                rotoreflection = RotoreflectionAxis(vector, order_)
-                if rotoreflection.symmetric(points, tol):
-                    i = 0
-                    while (
-                        i < len(rotoreflections)
-                        and rotoreflections[i].order > order_
-                    ):
-                        i += 1
-                    rotoreflections.insert(i, rotoreflection)
-                    return True
-        return False
-
-    invertible = InversionCenter().symmetric(points, tol)
-    axes: List[Vector] = []
-    planes: List[Vector] = []
-    direction = None
-    first = True
-    collinear = False
-    coplanar = False
-    n_points = len(points)
-    for i1 in range(n_points - 1):
-        point1 = points[i1]
-        pos1 = point1.pos
-        for i2 in range(i1 + 1, n_points):
-            point2 = points[i2]
-            if not point2.similar(point1):
-                continue
-            pos2 = point2.pos
-            segment = pos1 - pos2
-            if not collinear:
-                if first:
-                    first = False
-                    collinear = True
-                for i3 in range(i2 + 1, n_points):
-                    point3 = points[i3]
-                    if not point3.similar(point2):
-                        continue
-                    pos3 = point3.pos
-                    normal = cross(segment, pos1 - pos3)
-                    normal_norm = norm(normal)
-                    if normal_norm <= tol:
-                        continue
-                    collinear = False
-                    rotation = normal / normal_norm
-                    if not contains(axes, rotation):
-                        dist = pos1.dot(rotation)
-                        max_order = 3
-                        for i4 in range(i3 + 1, n_points):
-                            if abs(points[i4].pos.dot(rotation) - dist) <= tol:
-                                max_order += 1
-                        if (
-                            max_order == n_points
-                            and direction is None
-                            and abs(dist) <= tol
-                        ):
-                            coplanar = True
-                            direction = rotation
-                            reflections.append(ReflectionPlane(rotation))
-                        for order in range(max_order, 2, -1):
-                            if add_rotoreflection(rotation, order):
-                                break
-                        for order in range(max_order, 1, -1):
-                            if add_rotation(rotation, order):
-                                break
-            midpoint = 0.5 * (pos1 + pos2)
-            reflection = segment / norm(segment)
-            if collinear and direction is None and parallel(pos1, pos2, tol):
-                direction = reflection
-                rotations.insert(0, InfRotationAxis(reflection))
-                if invertible:
-                    rotoreflections.insert(
-                        0, InfRotoreflectionAxis(reflection)
-                    )
-            if not perpendicular(segment, midpoint, tol):
-                continue
-            midpoint_norm = norm(midpoint)
-            if midpoint_norm > tol or coplanar:
-                rotation = (
-                    midpoint / midpoint_norm
-                    if direction is None
-                    else cross(direction, reflection)
-                )
-                if not contains(axes, rotation):
-                    order = 2
-                    add_rotoreflection(rotation, order)
-                    add_rotation(rotation, order)
-            if not contains(planes, reflection):
-                add_reflection(reflection)
-    if n_points == 1:
-        dim = 0
-    elif collinear:
-        dim = 1
-    elif coplanar:
-        dim = 2
-    else:
-        dim = 3
-    return (
-        dim,
-        invertible,
-        tuple(rotations),
-        tuple(reflections),
-        tuple(rotoreflections),
-    )
-
-
-def ptgrp(points: Points, tol: float = TOL) -> str:
-    """
-    Determine the point group symbol of a set of points `points` within a
-    tolerance `tol`.
-    """
-    dim, invertible, rotations, reflections, rotoreflections = symmelems(
-        points, tol
-    )
-    if dim == 0:
-        return "Kh"  # 'K'
-    if dim == 1:
-        return f"D{SYMB.inf}h" if invertible else f"C{SYMB.inf}v"
-    sigma = len(reflections) > 0
-    if len(rotations) == 0:
-        if sigma:
-            return "Cs"
-        if invertible:
-            return "Ci"
-        return "C1"
-    rotation = rotations[0]
-    order = rotation.order
-    h = False
-    if sigma:
-        for reflection in reflections:
-            if unitparallel(rotation.vec, reflection.vec, tol):
-                h = True
-                break
-    if len(rotations) >= 2:
-        if order > 2 and rotations[1].order > 2:
-            if order == 5:
-                return "Ih" if sigma else "I"
-            if order == 4:
-                return "Oh" if sigma else "O"
-            return ("Th" if h else "Td") if sigma else "T"
-        return (f"D{order}h" if h else f"D{order}d") if sigma else f"D{order}"
-    else:
-        if sigma:
-            return f"C{order}h" if h else f"C{order}v"
-        if len(rotoreflections) > 0:
-            return f"S{2*order}"
-        return f"C{order}"
-
-
-_DirectionSymmetryElement = Union[
-    RotationAxis,
-    InfRotationAxis,
-    ReflectionPlane,
-    RotoreflectionAxis,
-    InfRotoreflectionAxis,
-    AxisRotationAxes,
-    AxisReflectionPlanes,
-]
-_DirectionSymmetryElements = (
-    RotationAxis,
-    InfRotationAxis,
-    ReflectionPlane,
-    RotoreflectionAxis,
-    InfRotoreflectionAxis,
-    AxisRotationAxes,
-    AxisReflectionPlanes,
-)
-
-
-class PointGroupInfo:
-    """
-    Point group information containing types and numbers of symmetry elements
-    and angles between their axes or normals.
-    """
-
-    def __init__(self) -> None:
-        """Initialize the instance."""
-        self._included: List[_DirectionSymmetryElement] = []
-        self._excluded: List[_DirectionSymmetryElement] = []
-        self._nums: Dict[int, int] = {}
-        self._angles: Dict[Tuple[int, int], Dict[float, int]] = {}
-
-    @property
-    def included(self) -> Sequence[_DirectionSymmetryElement]:
-        """Return the included symmetry elements."""
-        return self._included
-
-    @property
-    def excluded(self) -> Sequence[_DirectionSymmetryElement]:
-        """Return the excluded symmetry elements."""
-        return self._excluded
-
-    @property
-    def nums(self) -> Dict[int, int]:
-        """Return the types and numbers of symmetry elements."""
-        return self._nums
-
-    @property
-    def angles(self) -> Dict[Tuple[int, int], Dict[float, int]]:
-        """Return the angles between axes or normals of symmetry elements."""
-        return self._angles
-
-    def include(
-        self,
-        symmelems: Union[SymmetryElement, Sequence[SymmetryElement]],
-        tol: float,
-    ) -> None:
-        """
-        Include information of one or multiple symmetry elements `symmelems`
-        using a tolerance `tol` to calculate exact intersection angles.
-        """
-        if not isinstance(symmelems, Sequence):
-            symmelems = (symmelems,)
-        for symmelem1 in symmelems:
-            id1 = symmelem1.id
-            if isinstance(symmelem1, _DirectionSymmetryElements):
-                vec1 = symmelem1.vec
-                if id1 not in self._nums:
-                    self._nums[id1] = 0
-                self._nums[id1] += 1
-                for symmelem2 in self._included:
-                    id2 = symmelem2.id
-                    vec2 = symmelem2.vec
-                    angle = intersectangle(vec1, vec2)
-                    found = False
-                    for special_angle in SPECIAL_ANGLES:
-                        diff = abs(angle - special_angle)
-                        if diff <= tol:
-                            found = True
-                            angle = special_angle
-                            break
-                    if not found:
-                        nom, denom = rational(angle / PI, tol)
-                        angle = nom * PI / denom
-                    if angle == 0.0 and symmelem1.similar(symmelem2):
-                        raise ValueError(
-                            f"a parallel {symmelem1.name} already included"
-                        )
-                    key = (id1, id2) if id1 >= id2 else (id2, id1)
-                    if key not in self._angles:
-                        self._angles[key] = {}
-                    if angle not in self._angles[key]:
-                        self._angles[key][angle] = 0
-                    elif self._angles[key][angle] == 0:
-                        raise ValueError(
-                            f"the excluded angle of {angle} between"
-                            + f" a {symmelem1.name} and a {symmelem2.name}"
-                            + " cannot be included"
-                        )
-                    self._angles[key][angle] += 1
-                for symmelem2 in self._excluded:
-                    id2 = symmelem2.id
-                    vec2 = symmelem2.vec
-                    angle = intersectangle(vec1, vec2)
-                    if angle > tol:
-                        continue
-                    angle = 0.0
-                    if symmelem1.similar(symmelem2):
-                        raise ValueError(
-                            f"the excluded parallel {symmelem1.name} cannot"
-                            + " be included"
-                        )
-                    key = (id1, id2) if id1 >= id2 else (id2, id1)
-                    if key not in self._angles:
-                        self._angles[key] = {}
-                    if (
-                        angle in self._angles[key]
-                        and self._angles[key][angle] > 0
-                    ):
-                        raise ValueError(
-                            f"the included angle of {angle} between"
-                            + f" a {symmelem1.name} and a {symmelem2.name}"
-                            + " cannot be excluded"
-                        )
-                    self._angles[key][angle] = 0
-                self._included.append(symmelem1)
-            elif isinstance(symmelem1, InversionCenter):
-                if id1 in self._nums:
-                    raise ValueError(
-                        f"an {symmelem1.name} already "
-                        + ("included" if self._nums[id1] == 1 else "excluded")
-                    )
-                self._nums[id1] = 1
-
-    def exclude(
-        self,
-        symmelems: Union[SymmetryElement, Sequence[SymmetryElement]],
-        tol: float,
-    ) -> None:
-        """
-        Exclude information of one or multiple symmetry elements `symmelems`
-        using a tolerance `tol` to calculate exact intersection angles.
-        """
-        if not isinstance(symmelems, Sequence):
-            symmelems = (symmelems,)
-        for symmelem1 in symmelems:
-            id1 = symmelem1.id
-            if isinstance(symmelem1, _DirectionSymmetryElements):
-                vec1 = symmelem1.vec
-                for symmelem2 in self._included:
-                    id2 = symmelem2.id
-                    vec2 = symmelem2.vec
-                    angle = intersectangle(vec1, vec2)
-                    if angle > tol:
-                        continue
-                    angle = 0.0
-                    if symmelem1.similar(symmelem2):
-                        raise ValueError(
-                            f"the included parallel {symmelem1.name} cannot"
-                            + " be excluded"
-                        )
-                    key = (id1, id2) if id1 >= id2 else (id2, id1)
-                    if key not in self._angles:
-                        self._angles[key] = {}
-                    if (
-                        angle in self._angles[key]
-                        and self._angles[key][angle] > 0
-                    ):
-                        raise ValueError(
-                            f"the included angle of {angle} between"
-                            + f" a {symmelem1.name} and a {symmelem2.name}"
-                            + " cannot be excluded"
-                        )
-                    self._angles[key][angle] = 0
-                for symmelem2 in self._excluded:
-                    id2 = symmelem2.id
-                    vec2 = symmelem2.vec
-                    angle = intersectangle(vec1, vec2)
-                    if angle <= tol and symmelem1.similar(symmelem2):
-                        raise ValueError(
-                            f"a parallel {symmelem1.name} already excluded"
-                        )
-                self._excluded.append(symmelem1)
-            elif isinstance(symmelem1, InversionCenter):
-                if id1 in self._nums:
-                    raise ValueError(
-                        f"an {symmelem1.name} already "
-                        + ("included" if self._nums[id1] == 1 else "excluded")
-                    )
-                self._nums[id1] = 0
-
-    def contains(self, other: "PointGroupInfo") -> bool:
-        """
-        Check whether another instance `other` is a subset of the instance.
-        """
-        for key1, num in other.nums.items():
-            if key1 in self._nums:
-                ref_num = self._nums[key1]
-            else:
-                ref_num = 0
-            zero = num == 0
-            ref_zero = ref_num == 0
-            if ref_num < num or zero != ref_zero:
-                return False
-        for key2, angles in other.angles.items():
-            for angle, num in angles.items():
-                if angle in self._angles[key2]:
-                    ref_num = self._angles[key2][angle]
-                else:
-                    ref_num = 0
-                zero = num == 0
-                ref_zero = ref_num == 0
-                if ref_num < num or zero != ref_zero:
-                    return False
-        return True
 
 
 _PointGroup = TypeVar("_PointGroup", bound="PointGroup")
@@ -991,13 +559,14 @@ class PointGroup(Transformable):
         Construct an instance from a set of symmetry elements `symmelems` using
         only their types and numbers.
         """
-        nums = symmelems2nums(symmelems)
+        info = SymmetryElements()
+        info.include(symmelems)
         max_rot_order = 0
         max_rotorefl_order = 0
         rot2_num = 0
         refl_num = 0
         invertible = False
-        for key, num in nums.items():
+        for key, num in info.nums:
             symmelem_type, order = key
             order = abs(order)
             if symmelem_type is RotationAxis:
@@ -1077,32 +646,40 @@ class PointGroup(Transformable):
         return cls(keys[0])
 
 
-_LOW_POINT_GROUPS = (
-    "C1",
-    "Cs",
-    "Ci",
+def _init(
+    symbs: Sequence[str],
+) -> Sequence[Tuple[PointGroup, SymmetryElements]]:
+    res = []
+    for symb in symbs:
+        group = PointGroup(symb)
+        info = SymmetryElements()
+        info.include(group.symmelems, TOL)
+        res.append((group, info))
+    return tuple(res)
+
+
+_LOW_POINT_GROUPS = _init(
+    (
+        "C1",
+        "Cs",
+        "Ci",
+    )
 )
-_HIGH_POINT_GROUPS = (
-    "T",
-    "Td",
-    "Th",
-    "O",
-    "Oh",
-    "I",
-    "Ih",
-    f"C{SYMB.inf}",
-    f"C{SYMB.inf}v",
-    f"C{SYMB.inf}h",
-    f"D{SYMB.inf}",
-    f"D{SYMB.inf}h",
-    "K",
-    "Kh",
+_HIGH_POINT_GROUPS = _init(
+    (
+        "T",
+        "Td",
+        "Th",
+        "O",
+        "Oh",
+        "I",
+        "Ih",
+        f"C{SYMB.inf}",
+        f"C{SYMB.inf}v",
+        f"C{SYMB.inf}h",
+        f"D{SYMB.inf}",
+        f"D{SYMB.inf}h",
+        "K",
+        "Kh",
+    )
 )
-_LOW_POINT_GROUP_NUMS = {
-    symb: symmelems2nums(PointGroup(symb).symmelems)
-    for symb in _LOW_POINT_GROUPS
-}
-_HIGH_POINT_GROUP_NUMS = {
-    symb: symmelems2nums(PointGroup(symb).symmelems)
-    for symb in _HIGH_POINT_GROUPS
-}
