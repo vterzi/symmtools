@@ -62,9 +62,29 @@ class _Symbols:
         return "\u221e" if self._unicode else "oo"
 
     @property
+    def ident(self):
+        """Identity element symbol."""
+        return "E"
+
+    @property
+    def rot(self):
+        """Rotation axis symbol."""
+        return "C"
+
+    @property
     def refl(self):
         """Reflection plane symbol."""
         return "\u03c3" if self._unicode else "s"
+
+    @property
+    def inv(self):
+        """Inversion center symbol."""
+        return "i"
+
+    @property
+    def rotorefl(self):
+        """Rotoreflection axis symbol."""
+        return "S"
 
 
 SYMB = _Symbols()
