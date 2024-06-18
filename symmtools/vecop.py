@@ -10,6 +10,7 @@ __all__ = [
     "canonicalize",
     "diff",
     "same",
+    "zero",
     "indep",
     "unitindep",
     "parallel",
@@ -107,6 +108,13 @@ def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
     `tol`.
     """
     return diff(vec1, vec2) <= tol
+
+
+def zero(vec: Vector, tol: float) -> bool:
+    """
+    Check whether a vector `vec` is a zero vector within a tolerance `tol`.
+    """
+    return float(max(abs(vec))) <= tol
 
 
 def indep(vec1: Vector, vec2: Vector) -> float:
