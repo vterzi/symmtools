@@ -103,7 +103,7 @@ def diff(vec1: Vector, vec2: Vector) -> float:
 
 def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
-    Check wether two vectors `vec1` and `vec2` are the same within a tolerance
+    Check whether two vectors `vec1` and `vec2` are the same within a tolerance
     `tol`.
     """
     return diff(vec1, vec2) <= tol
@@ -134,7 +134,7 @@ def unitindep(unitvec1: Vector, unitvec2: Vector) -> float:
 
 def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
-    Check wether two 3D vectors `vec1` and `vec2` are parallel within a
+    Check whether two 3D vectors `vec1` and `vec2` are parallel within a
     tolerance `tol`.
     """
     return indep(vec1, vec2) <= tol
@@ -142,7 +142,7 @@ def parallel(vec1: Vector, vec2: Vector, tol: float) -> bool:
 
 def unitparallel(unitvec1: Vector, unitvec2: Vector, tol: float) -> bool:
     """
-    Check wether two 3D unit vectors `unitvec1` and `unitvec2` are parallel
+    Check whether two 3D unit vectors `unitvec1` and `unitvec2` are parallel
     within a tolerance `tol`.
     """
     return unitindep(unitvec1, unitvec2) <= tol
@@ -150,7 +150,7 @@ def unitparallel(unitvec1: Vector, unitvec2: Vector, tol: float) -> bool:
 
 def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
     """
-    Check wether two vectors `vec1` and `vec2` are perpendicular within a
+    Check whether two vectors `vec1` and `vec2` are perpendicular within a
     tolerance `tol`.
     """
     return abs(float(vec1.dot(vec2))) <= tol

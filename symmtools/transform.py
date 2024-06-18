@@ -75,7 +75,7 @@ class Transformable(ABC):
         return (self.__class__,)
 
     def similar(self, obj: Any) -> bool:
-        """Check wether the instance is similar to an object `obj`."""
+        """Check whether the instance is similar to an object `obj`."""
         return isinstance(obj, Transformable) and self.props == obj.props
 
     def diff(self, obj: Any) -> float:
@@ -84,7 +84,7 @@ class Transformable(ABC):
 
     def same(self, obj: Any, tol: float) -> bool:
         """
-        Check wether the instance is identical to an object `obj` within a
+        Check whether the instance is identical to an object `obj` within a
         tolerance `tol`.
         """
         return self.diff(obj) <= tol
@@ -108,8 +108,8 @@ class Transformable(ABC):
         Return the symmetry of the instance in relation to an object `obj`
         within a tolerance `tol` (`1` for symmetric, `-1` for anti-symmetric,
         and `0` for asymmetric) if the instance is not invariant to negation,
-        and otherwise check wether the instance is identical to an object `obj`
-        within a tolerance `tol`.
+        and otherwise check whether the instance is identical to an object
+        `obj` within a tolerance `tol`.
         """
         antiself = self.negate()
         if self == antiself:
@@ -243,7 +243,7 @@ class Transformables(Transformable):
 
     def nondegen(self, tol: float) -> bool:
         """
-        Check wether no two elements are the same within a tolerance `tol`.
+        Check whether no two elements are the same within a tolerance `tol`.
         """
         for _, idxs in self._groups:
             n = len(idxs)

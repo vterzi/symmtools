@@ -79,7 +79,7 @@ class SymmetryElement(ABC):
 
     def symmetric(self, transformables: Transformables, tol: float) -> bool:
         """
-        Check wether a set of transformables `transformables` is symmetric
+        Check whether a set of transformables `transformables` is symmetric
         within a tolerance `tol`.
         """
         for transform in self.transforms:
