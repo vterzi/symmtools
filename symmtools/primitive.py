@@ -167,6 +167,9 @@ class Points(Transformables):
         poses: Sequence[Vector] = tuple(
             elem.pos - centroid for elem in self._elems
         )
+        axes: List[Vector] = []
+        normals: List[Vector] = []
+        symmelems: List[SymmetryElement] = []
 
         def contains(array: List[Vector], vector: Vector) -> bool:
             for elem in array:
@@ -175,12 +178,13 @@ class Points(Transformables):
             array.append(vector)
             return False
 
-        symmelems: List[SymmetryElement] = []
-        center = InversionCenter()
-        if center.symmetric(self, tol):
-            symmelems.append(center)
-        axes: List[Vector] = []
-        planes: List[Vector] = []
+        def add(symmelem: SymmetryElement) -> bool:
+            if symmelem.symmetric(self, tol):
+                symmelems.append(symmelem)
+                return True
+            return False
+
+        invertible = add(InversionCenter())
         for _, idxs in self._groups:
             n_points = len(idxs)
             collinear = False
@@ -214,14 +218,10 @@ class Points(Transformables):
                                     set(range(2 * max_order, 4, -2))
                                 )
                                 for order in sorted(orders, reverse=True):
-                                    rotorefl = RotoreflectionAxis(axis, order)
-                                    if rotorefl.symmetric(self, tol):
-                                        symmelems.append(rotorefl)
+                                    if add(RotoreflectionAxis(axis, order)):
                                         break
                                 for order in range(max_order, 1, -1):
-                                    rot = RotationAxis(axis, order)
-                                    if rot.symmetric(self, tol):
-                                        symmelems.append(rot)
+                                    if add(RotationAxis(axis, order)):
                                         break
                     midpoint = 0.5 * (pos1 + pos2)
                     if not perpendicular(segment, midpoint, tol):
@@ -233,16 +233,10 @@ class Points(Transformables):
                     else:
                         axis = normal
                     if not contains(axes, axis):
-                        rotorefl = RotoreflectionAxis(axis, 4)
-                        if rotorefl.symmetric(self, tol):
-                            symmelems.append(rotorefl)
-                        rot = RotationAxis(axis, 2)
-                        if rot.symmetric(self, tol):
-                            symmelems.append(rot)
-                    if not contains(planes, normal):
-                        refl = ReflectionPlane(normal)
-                        if refl.symmetric(self, tol):
-                            symmelems.append(refl)
+                        add(RotoreflectionAxis(axis, 4))
+                        add(RotationAxis(axis, 2))
+                    if not contains(normals, normal):
+                        add(ReflectionPlane(normal))
         n_points = len(poses)
         if n_points == 1:
             symmelems.append(CenterRotationAxes())
@@ -262,17 +256,21 @@ class Points(Transformables):
             if collinear:
                 symmelems.append(InfRotationAxis(axis))
                 symmelems.append(AxisReflectionPlanes(axis))
-                if center in symmelems:
+                if invertible:
                     symmelems.append(InfRotoreflectionAxis(axis))
                     symmelems.append(AxisRotationAxes(axis))
             else:
+                found = False
                 for i1 in range(n_points):
                     pos = poses[i1]
                     for i2 in range(i1 + 1, n_points):
                         product = cross(pos, poses[i2])
-                        if not zero(normal, tol):
+                        if not zero(product, tol):
                             normal = product
+                            found = True
                             break
+                    if found:
+                        break
                 coplanar = True
                 for i in range(i2 + 1, n_points):
                     if not perpendicular(normal, poses[i], tol):
