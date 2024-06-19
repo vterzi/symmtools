@@ -175,7 +175,6 @@ class Points(Transformables):
             for elem in array:
                 if unitparallel(elem, vector, tol):
                     return True
-            array.append(vector)
             return False
 
         def add(symmelem: SymmetryElement) -> bool:
@@ -185,58 +184,6 @@ class Points(Transformables):
             return False
 
         invertible = add(InversionCenter())
-        for _, idxs in self._groups:
-            n_points = len(idxs)
-            collinear = False
-            coplanar = False
-            for i1 in range(n_points - 1):
-                pos1 = poses[idxs[i1]]
-                for i2 in range(i1 + 1, n_points):
-                    pos2 = poses[idxs[i2]]
-                    segment = pos1 - pos2
-                    if not collinear and not coplanar:
-                        if i2 == 1:
-                            collinear = True
-                        for i3 in range(i2 + 1, n_points):
-                            pos3 = poses[idxs[i3]]
-                            normal = cross(segment, pos1 - pos3)
-                            normal_norm = norm(normal)
-                            if normal_norm <= tol:
-                                continue
-                            collinear = False
-                            axis = normal / normal_norm
-                            if not contains(axes, axis):
-                                dist = pos1.dot(axis)
-                                max_order = 3
-                                for i4 in range(i3 + 1, n_points):
-                                    pos4 = poses[idxs[i4]]
-                                    if abs(pos4.dot(axis) - dist) <= tol:
-                                        max_order += 1
-                                if i3 == 2 and max_order == n_points:
-                                    coplanar = True
-                                orders = set(range(max_order, 2, -1)).union(
-                                    set(range(2 * max_order, 4, -2))
-                                )
-                                for order in sorted(orders, reverse=True):
-                                    if add(RotoreflectionAxis(axis, order)):
-                                        break
-                                for order in range(max_order, 1, -1):
-                                    if add(RotationAxis(axis, order)):
-                                        break
-                    midpoint = 0.5 * (pos1 + pos2)
-                    if not perpendicular(segment, midpoint, tol):
-                        continue
-                    normal = segment / norm(segment)
-                    midpoint_norm = norm(midpoint)
-                    if midpoint_norm > tol:
-                        axis = midpoint / midpoint_norm
-                    else:
-                        axis = normal
-                    if not contains(axes, axis):
-                        add(RotoreflectionAxis(axis, 4))
-                        add(RotationAxis(axis, 2))
-                    if not contains(normals, normal):
-                        add(ReflectionPlane(normal))
         n_points = len(poses)
         if n_points == 1:
             symmelems.append(CenterRotationAxes())
@@ -254,6 +201,7 @@ class Points(Transformables):
                     collinear = False
                     break
             if collinear:
+                axes.append(axis)
                 symmelems.append(InfRotationAxis(axis))
                 symmelems.append(AxisReflectionPlanes(axis))
                 if invertible:
@@ -277,7 +225,71 @@ class Points(Transformables):
                         coplanar = False
                         break
                 if coplanar:
+                    normals.append(normal)
                     symmelems.append(ReflectionPlane(normal))
+        for _, idxs in self._groups:
+            n_points = len(idxs)
+            collinear = False
+            coplanar = False
+            for i1 in range(n_points - 2):
+                if collinear or coplanar:
+                    break
+                pos1 = poses[idxs[i1]]
+                for i2 in range(i1 + 1, n_points - 1):
+                    pos2 = poses[idxs[i2]]
+                    segment = pos1 - pos2
+                    if i2 == 1:
+                        collinear = True
+                    for i3 in range(i2 + 1, n_points):
+                        pos3 = poses[idxs[i3]]
+                        normal = cross(segment, pos1 - pos3)
+                        normal_norm = norm(normal)
+                        if normal_norm <= tol:
+                            continue
+                        collinear = False
+                        axis = normal / normal_norm
+                        if not contains(axes, axis):
+                            axes.append(axis)
+                            dist = pos1.dot(axis)
+                            max_order = 3
+                            for i4 in range(i3 + 1, n_points):
+                                pos4 = poses[idxs[i4]]
+                                if abs(pos4.dot(axis) - dist) <= tol:
+                                    max_order += 1
+                            if i3 == 2 and max_order == n_points:
+                                coplanar = True
+                            for order in range(max_order, 1, -1):
+                                if add(RotationAxis(axis, order)):
+                                    break
+                            orders = set(range(max_order, 2, -1)).union(
+                                range(2 * max_order, 4, -2)
+                            )
+                            for order in sorted(orders, reverse=True):
+                                if add(RotoreflectionAxis(axis, order)):
+                                    break
+                    if collinear or coplanar:
+                        break
+            for i1 in range(n_points - 1):
+                pos1 = poses[idxs[i1]]
+                for i2 in range(i1 + 1, n_points):
+                    pos2 = poses[idxs[i2]]
+                    segment = pos1 - pos2
+                    midpoint = 0.5 * (pos1 + pos2)
+                    if not perpendicular(segment, midpoint, tol):
+                        continue
+                    normal = segment / norm(segment)
+                    midpoint_norm = norm(midpoint)
+                    if midpoint_norm > tol:
+                        axis = midpoint / midpoint_norm
+                    else:
+                        axis = normal
+                    if not contains(axes, axis):
+                        axes.append(axis)
+                        add(RotationAxis(axis, 2))
+                        add(RotoreflectionAxis(axis, 4))
+                    if not contains(normals, normal):
+                        normals.append(normal)
+                        add(ReflectionPlane(normal))
         return tuple(symmelems)
 
     @classmethod
