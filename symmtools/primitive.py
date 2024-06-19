@@ -8,11 +8,12 @@ from numpy import empty, zeros
 
 from .const import INF, TOL, LABEL_RE, FLOAT_RE
 from .vecop import (
+    norm,
+    cross,
+    normalize,
     diff,
     zero,
     unitindep,
-    norm,
-    cross,
     parallel,
     unitparallel,
     perpendicular,
@@ -171,7 +172,7 @@ class Points(Transformables):
         normals: List[Vector] = []
         symmelems: List[SymmetryElement] = []
 
-        def contains(array: List[Vector], vector: Vector) -> bool:
+        def contains(array: List[Vector], vector: Vector) -> bool:  # new
             for elem in array:
                 if unitparallel(elem, vector, tol):
                     return True
@@ -189,86 +190,93 @@ class Points(Transformables):
             symmelems.append(CenterRotationAxes())
             symmelems.append(CenterReflectionPlanes())
             symmelems.append(CenterRotoreflectionAxes())
+            return tuple(symmelems)
+        for i in range(n_points):
+            pos = poses[i]
+            if not zero(pos, tol):
+                axis = pos
+                break
+        for i in range(i + 1, n_points):
+            if not parallel(axis, poses[i], tol):
+                break
         else:
-            for i in range(n_points):
-                pos = poses[i]
-                if not zero(pos, tol):
-                    axis = pos
+            symmelems.append(InfRotationAxis(axis))
+            symmelems.append(AxisReflectionPlanes(axis))
+            if invertible:
+                symmelems.append(AxisRotationAxes(axis))
+                symmelems.append(ReflectionPlane(axis))
+                symmelems.append(InfRotoreflectionAxis(axis))
+            return tuple(symmelems)
+        for i1 in range(n_points):
+            pos = poses[i1]
+            for i2 in range(i1 + 1, n_points):
+                product = cross(pos, poses[i2])
+                if not zero(product, tol):
+                    normal = product
                     break
-            collinear = True
-            for i in range(i + 1, n_points):
-                if not parallel(axis, poses[i], tol):
-                    collinear = False
-                    break
-            if collinear:
-                axes.append(axis)
-                symmelems.append(InfRotationAxis(axis))
-                symmelems.append(AxisReflectionPlanes(axis))
-                if invertible:
-                    symmelems.append(InfRotoreflectionAxis(axis))
-                    symmelems.append(AxisRotationAxes(axis))
             else:
-                found = False
-                for i1 in range(n_points):
-                    pos = poses[i1]
-                    for i2 in range(i1 + 1, n_points):
-                        product = cross(pos, poses[i2])
-                        if not zero(product, tol):
-                            normal = product
-                            found = True
-                            break
-                    if found:
-                        break
-                coplanar = True
-                for i in range(i2 + 1, n_points):
-                    if not perpendicular(normal, poses[i], tol):
-                        coplanar = False
-                        break
-                if coplanar:
-                    normals.append(normal)
-                    symmelems.append(ReflectionPlane(normal))
+                continue
+            break
+        coplanar = False
+        for i in range(i2 + 1, n_points):
+            if not perpendicular(normal, poses[i], tol):
+                break
+        else:
+            coplanar = True
+            normals.append(normal)
+            symmelems.append(ReflectionPlane(normal))
         for _, idxs in self._groups:
             n_points = len(idxs)
-            collinear = False
-            coplanar = False
+            collinear_part = False
+            coplanar_part = False  # coplanar
             for i1 in range(n_points - 2):
-                if collinear or coplanar:
-                    break
                 pos1 = poses[idxs[i1]]
                 for i2 in range(i1 + 1, n_points - 1):
                     pos2 = poses[idxs[i2]]
                     segment = pos1 - pos2
                     if i2 == 1:
-                        collinear = True
+                        collinear_part = True
                     for i3 in range(i2 + 1, n_points):
                         pos3 = poses[idxs[i3]]
+                        # if not coplanar_part:
                         normal = cross(segment, pos1 - pos3)
+                        # else:
+                        #    normal = normals[0]
                         normal_norm = norm(normal)
                         if normal_norm <= tol:
                             continue
-                        collinear = False
+                        collinear_part = False
                         axis = normal / normal_norm
                         if not contains(axes, axis):
                             axes.append(axis)
                             dist = pos1.dot(axis)
+                            # if not coplanar_part:
                             max_order = 3
                             for i4 in range(i3 + 1, n_points):
                                 pos4 = poses[idxs[i4]]
+                                # check points on the other side, if dist > tol
                                 if abs(pos4.dot(axis) - dist) <= tol:
                                     max_order += 1
                             if i3 == 2 and max_order == n_points:
-                                coplanar = True
+                                coplanar_part = True
+                            # else:
+                            #     max_order = n_points
                             for order in range(max_order, 1, -1):
                                 if add(RotationAxis(axis, order)):
                                     break
+                            # limit the number of possible orders
+                            # divisors of n and n-1
                             orders = set(range(max_order, 2, -1)).union(
                                 range(2 * max_order, 4, -2)
                             )
                             for order in sorted(orders, reverse=True):
                                 if add(RotoreflectionAxis(axis, order)):
                                     break
-                    if collinear or coplanar:
+                    if collinear_part or coplanar_part:
                         break
+                else:
+                    continue
+                break
             for i1 in range(n_points - 1):
                 pos1 = poses[idxs[i1]]
                 for i2 in range(i1 + 1, n_points):
@@ -277,16 +285,20 @@ class Points(Transformables):
                     midpoint = 0.5 * (pos1 + pos2)
                     if not perpendicular(segment, midpoint, tol):
                         continue
-                    normal = segment / norm(segment)
+                    normal = normalize(segment)
                     midpoint_norm = norm(midpoint)
-                    if midpoint_norm > tol:
-                        axis = midpoint / midpoint_norm
-                    else:
-                        axis = normal
-                    if not contains(axes, axis):
-                        axes.append(axis)
-                        add(RotationAxis(axis, 2))
-                        add(RotoreflectionAxis(axis, 4))
+                    nonzero = midpoint_norm > tol
+                    if nonzero or coplanar:
+                        axis = (
+                            midpoint / midpoint_norm
+                            if nonzero
+                            else normalize(cross(segment, normals[0]))
+                        )
+                        if not contains(axes, axis):
+                            axes.append(axis)
+                            add(RotationAxis(axis, 2)):
+                            add(RotoreflectionAxis(axis, 4))
+                            # if S4 added, add automatically C2 (and above)
                     if not contains(normals, normal):
                         normals.append(normal)
                         add(ReflectionPlane(normal))
