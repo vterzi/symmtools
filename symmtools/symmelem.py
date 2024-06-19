@@ -363,14 +363,12 @@ class SymmetryElements:
                     symb2 = symmelem2.symb
                     vec2 = symmelem2.vec
                     angle = intersectangle(vec1, vec2)
-                    found = False
                     for special_angle in SPECIAL_ANGLES:
                         diff = abs(angle - special_angle)
                         if diff <= tol:
-                            found = True
                             angle = special_angle
                             break
-                    if not found:
+                    else:
                         nom, denom = rational(angle / PI, tol)
                         angle = nom * PI / denom
                     if angle == 0.0 and symmelem1.similar(symmelem2):
