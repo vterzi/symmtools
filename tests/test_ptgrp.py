@@ -33,7 +33,6 @@ class TestPtGrp(TestCase):
 
         collinear = Points.from_arr(chcoords(signvar([1])) + chcoords([[2]]))
         symmelems = collinear.symmelems(TOL)
-        print(symmelems)
         info = SymmetryElements()
         info.include(symmelems, TOL)
         self.assertEqual(",".join(info.symbs), "Coo,oosv")
