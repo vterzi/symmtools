@@ -56,7 +56,88 @@ _PointGroup = TypeVar("_PointGroup", bound="PointGroup")
 
 
 class PointGroup(Transformable):
-    """Point group."""
+    """
+    Point group.
+
+    Possible point group symbols and their symmetry elements (except E):
+    | Symbol       | Rotation      | Reflection | Inversion | Rotoreflection |
+    |--------------|---------------|------------|-----------|----------------|
+    | C1           |               |            |           |                |
+    | Cs           |               | s          |           |                |
+    | Ci           |               |            | i         |                |
+    | Cn           | Cn            |            |           |                |
+    | Cnv          | Cn            | ns         |           |                |
+    | C(n=2k)h     | Cn            | s          | i         | Sn             |
+    | C(n=2k+1)h   | Cn            | s          |           | Sn             |
+    | S(2(n=2k))   | Cn            |            |           | S(2n)          |
+    | S(2(n=2k+1)) | Cn            |            | i         | S(2n)          |
+    | Dn           | Cn,nC2        |            |           |                |
+    | D(n=2k)d     | Cn,nC2        | ns         |           | S(2n)          |
+    | D(n=2k+1)d   | Cn,nC2        | ns         | i         | S(2n)          |
+    | D(n=2k)h     | Cn,nC2        | (n+1)s     | i         | Sn             |
+    | D(n=2k+1)h   | Cn,nC2        | (n+1)s     |           | Sn             |
+    | T            | 4C3,3C2       |            |           |                |
+    | Td           | 4C3,3C2       | 6s         |           | 3S4            |
+    | Th           | 4C3,3C2       | 3s         | i         | 4S6            |
+    | O            | 3C4,4C3,6C2   |            |           |                |
+    | Oh           | 3C4,4C3,6C2   | 9s         | i         | 4S6,3S4        |
+    | I            | 6C5,10C3,15C2 |            |           |                |
+    | Ih           | 6C5,10C3,15C2 | 15s        | i         | 6S10,10S6      |
+    | Coo          | Coo           |            |           |                |
+    | Coov         | Coo           | oosv       |           |                |
+    | Cooh         | Coo           | s          | i         | Soo            |
+    | Doo          | Coo,ooC2      |            |           |                |
+    | Dooh         | Coo,ooC2      | oosv,s     | i         | Soo            |
+    | K            | ooCoo         |            |           |                |
+    | Kh           | ooCoo         | oos        | i         | ooSoo          |
+    General notation:
+    - n, k: positive integer
+    - oo: infinity
+    Symmetry element notation:
+    - E: identity element
+    - Cn: n-fold rotation axis (high-order if n > 2) (C1 = E)
+    - s: reflection plane
+    - i: inversion center
+    - Sn: n-fold rotoreflection axis (S1 = s, S2 = i)
+    - Cni: n-fold rotoinversion axis (C1i = i, C2i = s, C(n=4k)i = Sn,
+      C(n=2k+1)i = S(2n), C(2(n=2k+1))i = Sn)
+    Point group symbol notation:
+    1. Rotation symmetry:
+      - C: cyclic
+      - S: improper cyclic (Spiegel)
+      - D: dihedral
+      - T: tetrahedral
+      - O: octahedral
+      - I: icosahedral
+      - K: spherical (Kugel)
+    2. Highest (primary) rotation axis order for C (except Cs), S, and D
+    3. Reflection symmetry:
+    - s: only one reflection plane (Spiegel)
+    - i: only one inversion center
+    - v: vertical reflection planes (containing the primary rotation axis)
+    - d: diagonal reflection planes (containing the primary rotation axis and
+      diagonal to the secondary 2-fold rotation axes)
+    - h: horizontal reflection planes (perpendicular to high-order rotation
+      axes)
+
+    Redundant point group symbols:
+    - C1i = Ci
+    - C2i = Cs
+    - C(n=4k)i = Sn
+    - C(n=2k+1)i = S(2n)
+    - C(2(n=2k+1))i = Cnh
+    - Cooi = Cooh
+    - C1v = Cs
+    - C1h = Cs
+    - S1 = Cs
+    - S2 = Ci
+    - S(n=2k+1) = Cnh
+    - Soo = Cooh
+    - D1 = C2
+    - D1d = C2h
+    - Dood = Dooh
+    - D1h = C2v
+    """
 
     def __init__(
         self, symb: str, transform: Transformation = Identity()
