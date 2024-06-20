@@ -296,7 +296,7 @@ class Points(Transformables):
                         )
                         if not contains(axes, axis):
                             axes.append(axis)
-                            add(RotationAxis(axis, 2)):
+                            add(RotationAxis(axis, 2))
                             add(RotoreflectionAxis(axis, 4))
                             # if S4 added, add automatically C2 (and above)
                     if not contains(normals, normal):
