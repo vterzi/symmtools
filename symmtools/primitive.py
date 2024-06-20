@@ -172,11 +172,12 @@ class Points(Transformables):
         normals: List[Vector] = []
         symmelems: List[SymmetryElement] = []
 
-        def contains(array: List[Vector], vector: Vector) -> bool:  # new
+        def new(array: List[Vector], vector: Vector) -> bool:
             for elem in array:
                 if unitparallel(elem, vector, tol):
-                    return True
-            return False
+                    return False
+            array.append(vector)
+            return True
 
         def add(symmelem: SymmetryElement) -> bool:
             if symmelem.symmetric(self, tol):
@@ -223,12 +224,13 @@ class Points(Transformables):
                 break
         else:
             coplanar = True
+            normal = normalize(normal)
             normals.append(normal)
             symmelems.append(ReflectionPlane(normal))
         for _, idxs in self._groups:
             n_points = len(idxs)
             collinear_part = False
-            coplanar_part = False  # coplanar
+            coplanar_part = False
             for i1 in range(n_points - 2):
                 pos1 = poses[idxs[i1]]
                 for i2 in range(i1 + 1, n_points - 1):
@@ -237,40 +239,48 @@ class Points(Transformables):
                     if i2 == 1:
                         collinear_part = True
                     for i3 in range(i2 + 1, n_points):
-                        pos3 = poses[idxs[i3]]
-                        # if not coplanar_part:
-                        normal = cross(segment, pos1 - pos3)
-                        # else:
-                        #    normal = normals[0]
-                        normal_norm = norm(normal)
-                        if normal_norm <= tol:
-                            continue
+                        if not coplanar:
+                            pos3 = poses[idxs[i3]]
+                            normal = cross(segment, pos1 - pos3)
+                            normal_norm = norm(normal)
+                            if normal_norm <= tol:
+                                continue
+                            axis = normal / normal_norm
+                        else:
+                            axis = normals[0]
                         collinear_part = False
-                        axis = normal / normal_norm
-                        if not contains(axes, axis):
-                            axes.append(axis)
-                            dist = pos1.dot(axis)
-                            # if not coplanar_part:
-                            max_order = 3
-                            for i4 in range(i3 + 1, n_points):
-                                pos4 = poses[idxs[i4]]
-                                # check points on the other side, if dist > tol
-                                if abs(pos4.dot(axis) - dist) <= tol:
-                                    max_order += 1
+                        if new(axes, axis):
+                            if not coplanar:
+                                dist = pos1.dot(axis)
+                                max_order = 3
+                                for i4 in range(i3 + 1, n_points):
+                                    pos4 = poses[idxs[i4]]
+                                    if abs(pos4.dot(axis) - dist) <= tol:
+                                        max_order += 1
+                            else:
+                                max_order = n_points
                             if i3 == 2 and max_order == n_points:
                                 coplanar_part = True
-                            # else:
-                            #     max_order = n_points
                             for order in range(max_order, 1, -1):
+                                if (
+                                    max_order % order != 0
+                                    and (max_order - 1) % order != 0
+                                ):
+                                    continue
                                 if add(RotationAxis(axis, order)):
-                                    break
-                            # limit the number of possible orders
-                            # divisors of n and n-1
-                            orders = set(range(max_order, 2, -1)).union(
-                                range(2 * max_order, 4, -2)
-                            )
-                            for order in sorted(orders, reverse=True):
-                                if add(RotoreflectionAxis(axis, order)):
+                                    if not coplanar:
+                                        for factor in (2, 1):
+                                            new_order = order * factor
+                                            if new_order <= 2 or add(
+                                                RotoreflectionAxis(
+                                                    axis, new_order
+                                                )
+                                            ):
+                                                break
+                                    else:
+                                        symmelems.append(
+                                            RotoreflectionAxis(axis, order)
+                                        )
                                     break
                     if collinear_part or coplanar_part:
                         break
@@ -294,13 +304,10 @@ class Points(Transformables):
                             if nonzero
                             else normalize(cross(segment, normals[0]))
                         )
-                        if not contains(axes, axis):
-                            axes.append(axis)
-                            add(RotationAxis(axis, 2))
-                            add(RotoreflectionAxis(axis, 4))
-                            # if S4 added, add automatically C2 (and above)
-                    if not contains(normals, normal):
-                        normals.append(normal)
+                        if new(axes, axis):
+                            if add(RotationAxis(axis, 2)):
+                                add(RotoreflectionAxis(axis, 4))
+                    if new(normals, normal):
                         add(ReflectionPlane(normal))
         return tuple(symmelems)
 
