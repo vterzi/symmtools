@@ -10,8 +10,8 @@ from .const import (
     PHI,
     TOL,
     SYMB,
-    # ROT_SYMBS,
-    # REFL_SYMBS,
+    ROT_SYMBS,
+    REFL_SYMBS,
 )
 from .vecop import vector
 from .tools import signvar, ax3permut
@@ -41,13 +41,11 @@ from .symmelem import (
 )
 from .typehints import (
     TypeVar,
-    # Type,
     Any,
     Sequence,
-    # Set,
+    Set,
     Tuple,
     List,
-    # Dict,
     RealVector,
 )
 
@@ -632,99 +630,100 @@ class PointGroup(Transformable):
                         order = "1"
         return cls(rot + order + refl)
 
-    # @classmethod
-    # def from_symmelem_nums(
-    #     cls, symmelems: Sequence[SymmetryElement]
-    # ) -> "PointGroup":
-    #     """
-    #     Construct an instance from a set of symmetry elements `symmelems` using
-    #     only their types and numbers.
-    #     """
-    #     info = SymmetryElements()
-    #     info.include(symmelems)
-    #     max_rot_order = 0
-    #     max_rotorefl_order = 0
-    #     rot2_num = 0
-    #     refl_num = 0
-    #     invertible = False
-    #     for key, num in info.nums:
-    #         symmelem_type, order = key
-    #         order = abs(order)
-    #         if symmelem_type is RotationAxis:
-    #             if max_rot_order < order:
-    #                 max_rot_order = order
-    #             if order == 2:
-    #                 rot2_num = num
-    #         elif symmelem_type is RotoreflectionAxis:
-    #             if max_rotorefl_order < order:
-    #                 max_rotorefl_order = order
-    #         elif symmelem_type is ReflectionPlane:
-    #             refl_num = num
-    #         elif symmelem_type is InversionCenter:
-    #             invertible = True
-    #     variants: Dict[str, Dict[Tuple[Type[SymmetryElement], int], int]] = {}
-    #     variants.update(_LOW_POINT_GROUP_NUMS)
-    #     new_variants: Set[Tuple[int, int, int]] = set()
+    @classmethod
+    def from_part_symmelems(
+        cls, symmelems: Sequence[SymmetryElement], tol: float
+    ) -> "PointGroup":
+        """
+        Construct an instance from a set of symmetry elements `symmelems` using
+        only their types and numbers.
+        """
+        info = SymmetryElements()
+        info.include(symmelems, tol)
+        max_rot_order = 0
+        max_rotorefl_order = 0
+        rot2_num = 0
+        refl_num = 0
+        invertible = False
+        for prop, num in info.nums:
+            symmelem_type = prop[0]
+            if symmelem_type is RotationAxis:
+                order = prop[1]
+                if max_rot_order < order:
+                    max_rot_order = order
+                if order == 2:
+                    rot2_num = num
+            elif symmelem_type is RotoreflectionAxis:
+                order = prop[1]
+                if max_rotorefl_order < order:
+                    max_rotorefl_order = order
+            elif symmelem_type is ReflectionPlane:
+                refl_num = num
+            elif symmelem_type is InversionCenter:
+                invertible = True
+        variants = list(_LOW_POINT_GROUPS)
+        new_variants: Set[Tuple[int, int, int]] = set()
 
-    #     def add(rot: str, order: int, refl: str = "") -> None:
-    #         new_variants.add(
-    #             (ROT_SYMBS.index(rot), order, REFL_SYMBS.index(refl))
-    #         )
+        def add(rot: str, order: int, refl: str = "") -> None:
+            new_variants.add(
+                (ROT_SYMBS.index(rot), order, REFL_SYMBS.index(refl))
+            )
 
-    #     if max_rot_order > 1:
-    #         n = max_rot_order
-    #         add("C", n)
-    #         add("C", n, "v")
-    #         add("C", n, "h")
-    #         add("S", 2 * n)
-    #         add("D", n)
-    #         add("D", n, "d")
-    #         add("D", n, "h")
-    #     if max_rotorefl_order > 2:
-    #         n = max_rotorefl_order
-    #         add("C", n, "h")
-    #         if n % 2 == 0:
-    #             add("S", n)
-    #             add("D", n // 2, "d")
-    #         add("D", n, "h")
-    #     if rot2_num > 1:
-    #         n = rot2_num
-    #         n1 = n
-    #         n2 = n
-    #         if invertible:
-    #             if n % 2 == 0:
-    #                 n1 += 1
-    #             else:
-    #                 n2 += 1
-    #         add("D", n)
-    #         add("D", n1, "d")
-    #         add("D", n2, "h")
-    #     if refl_num > 1:
-    #         n = refl_num
-    #         n1 = n
-    #         n2 = n - 1
-    #         if invertible and n % 2 == 0:
-    #             n1 += 1
-    #             n2 += 1
-    #         add("C", n, "v")
-    #         add("D", n1, "d")
-    #         add("D", n2, "h")
-    #     for rot, order, refl in sorted(new_variants):
-    #         variant = f"{ROT_SYMBS[rot]}{order}{REFL_SYMBS[refl]}".strip()
-    #         variants[variant] = symmelems2nums(PointGroup(variant).symmelems)
-    #     variants.update(_HIGH_POINT_GROUP_NUMS)
-    #     remove = []
-    #     for variant, ref_nums in variants.items():
-    #         for key, num in nums.items():
-    #             if key not in ref_nums or ref_nums[key] < num:
-    #                 remove.append(variant)
-    #                 break
-    #     for variant in remove:
-    #         del variants[variant]
-    #     keys = tuple(variants.keys())
-    #     if len(keys) == 0:
-    #         raise ValueError("invalid combination of symmetry elements")
-    #     return cls(keys[0])
+        if max_rot_order > 1:
+            n = max_rot_order
+            add("C", n)
+            add("C", n, "v")
+            add("C", n, "h")
+            add("S", 2 * n)
+            add("D", n)
+            add("D", n, "d")
+            add("D", n, "h")
+        if max_rotorefl_order > 2:
+            n = max_rotorefl_order
+            add("C", n, "h")
+            if n % 2 == 0:
+                add("S", n)
+                add("D", n // 2, "d")
+            add("D", n, "h")
+        if rot2_num > 1:
+            n = rot2_num
+            n1 = n
+            n2 = n
+            if invertible:
+                if n % 2 == 0:
+                    n1 += 1
+                else:
+                    n2 += 1
+            add("D", n)
+            add("D", n1, "d")
+            add("D", n2, "h")
+        if refl_num > 1:
+            n = refl_num
+            n1 = n
+            n2 = n - 1
+            if invertible and n % 2 == 0:
+                n1 += 1
+                n2 += 1
+            add("C", n, "v")
+            add("D", n1, "d")
+            add("D", n2, "h")
+        # TODO analyze angles in `info` to suggest point groups
+        for rot, order, refl in sorted(new_variants):
+            symb = f"{ROT_SYMBS[rot]}{order}{REFL_SYMBS[refl]}".strip()
+            group = cls(symb)
+            ref_info = SymmetryElements()
+            ref_info.include(group.symmelems, TOL)
+            variants.append((group, ref_info))
+        variants.extend(_HIGH_POINT_GROUPS)
+        remove = []
+        for i, elem in enumerate(variants):
+            if not elem[1].contains(info):
+                remove.append(i)
+        for i in reversed(remove):
+            del variants[i]
+        if len(variants) == 0:
+            raise ValueError("invalid combination of symmetry elements")
+        return variants[0][0]
 
 
 def _init(
