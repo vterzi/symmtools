@@ -42,6 +42,7 @@ from .typehints import (
     Tuple,
     List,
     Dict,
+    Iterator,
     Int,
     RealVector,
 )
@@ -63,7 +64,7 @@ class SymmetryElement(ABC):
 
     @property
     @abstractmethod
-    def transforms(self) -> Sequence[Transformation]:
+    def transforms(self) -> Iterator[Transformation]:
         """Return the transformations."""
         pass
 
@@ -105,7 +106,7 @@ class InfSymmetryElement(SymmetryElement):
     """Symmetry element with an infinite number of transformations."""
 
     @property
-    def transforms(self) -> Sequence[Transformation]:
+    def transforms(self) -> Iterator[Transformation]:
         raise NotImplementedError("infinite number of transformations")
 
 
@@ -117,8 +118,8 @@ class IdentityElement(InvariantTransformable, SymmetryElement):
     _id = 1
 
     @property
-    def transforms(self) -> Sequence[Transformation]:
-        return ()
+    def transforms(self) -> Iterator[Transformation]:
+        return iter(())
 
 
 class InversionCenter(InvariantTransformable, SymmetryElement):
@@ -129,8 +130,8 @@ class InversionCenter(InvariantTransformable, SymmetryElement):
     _id = -2
 
     @property
-    def transforms(self) -> Sequence[Transformation]:
-        return (Inversion(),)
+    def transforms(self) -> Iterator[Transformation]:
+        yield Inversion()
 
 
 class RotationAxis(OrderedTransformable, SymmetryElement):
@@ -155,11 +156,9 @@ class RotationAxis(OrderedTransformable, SymmetryElement):
         self._id = self._order
 
     @property
-    def transforms(self) -> Sequence[Transformation]:
-        return tuple(
-            Rotation(self._vec, i / self._order * TAU)
-            for i in range(1, self._order)
-        )
+    def transforms(self) -> Iterator[Transformation]:
+        for i in range(1, self._order):
+            yield Rotation(self._vec, i / self._order * TAU)
 
 
 class InfRotationAxis(InfFoldTransformable, InfSymmetryElement):
@@ -177,8 +176,8 @@ class ReflectionPlane(DirectionTransformable, SymmetryElement):
     _id = -1
 
     @property
-    def transforms(self) -> Sequence[Transformation]:
-        return (Reflection(self._vec),)
+    def transforms(self) -> Iterator[Transformation]:
+        yield Reflection(self._vec)
 
 
 class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
@@ -209,21 +208,19 @@ class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
         self._id = -self._order
 
     @property
-    def transforms(self) -> Sequence[Transformation]:
-        res: List[Transformation] = []
+    def transforms(self) -> Iterator[Transformation]:
         for i in range(1, self._order * (1 if self._order % 2 == 0 else 2)):
             if i != self._order:
                 angle = (i % self._order) / self._order * TAU
                 if i % 2 == 0:
-                    res.append(Rotation(self._vec, angle))
+                    yield Rotation(self._vec, angle)
                 else:
                     if 2 * i != self._order:
-                        res.append(Rotoreflection(self._vec, angle))
+                        yield Rotoreflection(self._vec, angle)
                     else:
-                        res.append(Inversion())
+                        yield Inversion()
             else:
-                res.append(Reflection(self._vec))
-        return tuple(res)
+                yield Reflection(self._vec)
 
 
 class InfRotoreflectionAxis(InfFoldTransformable, InfSymmetryElement):
