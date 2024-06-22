@@ -172,11 +172,11 @@ class Points(Transformables):
         normals: List[Vector] = []
         symmelems: List[SymmetryElement] = []
 
-        def new(array: List[Vector], vector: Vector) -> bool:
-            for elem in array:
-                if unitparallel(elem, vector, tol):
+        def new(arr: List[Vector], vec: Vector) -> bool:
+            for elem in arr:
+                if unitparallel(elem, vec, tol):
                     return False
-            array.append(vector)
+            arr.append(vec)
             return True
 
         def add(symmelem: SymmetryElement) -> bool:
