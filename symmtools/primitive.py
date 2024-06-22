@@ -48,6 +48,7 @@ from .typehints import (
     Sequence,
     Tuple,
     List,
+    Iterator,
     Bool,
     Vector,
     Matrix,
@@ -154,7 +155,7 @@ class Points(Transformables):
         mat[2, 2] = zz
         return mat
 
-    def symmelems(self, tol: float = TOL) -> Sequence[SymmetryElement]:
+    def symmelems(self, tol: float = TOL) -> Iterator[SymmetryElement]:
         """
         Determine all symmetry elements of a set of points `points` within a
         tolerance `tol`.
@@ -170,7 +171,6 @@ class Points(Transformables):
         )
         axes: List[Vector] = []
         normals: List[Vector] = []
-        symmelems: List[SymmetryElement] = []
 
         def new(arr: List[Vector], vec: Vector) -> bool:
             for elem in arr:
@@ -179,19 +179,16 @@ class Points(Transformables):
             arr.append(vec)
             return True
 
-        def add(symmelem: SymmetryElement) -> bool:
-            if symmelem.symmetric(self, tol):
-                symmelems.append(symmelem)
-                return True
-            return False
-
-        invertible = add(InversionCenter())
+        center = InversionCenter()
+        invertible = center.symmetric(self, tol)
+        if invertible:
+            yield center
         n_points = len(poses)
         if n_points == 1:
-            symmelems.append(CenterRotationAxes())
-            symmelems.append(CenterReflectionPlanes())
-            symmelems.append(CenterRotoreflectionAxes())
-            return tuple(symmelems)
+            yield CenterRotationAxes()
+            yield CenterReflectionPlanes()
+            yield CenterRotoreflectionAxes()
+            return
         for i in range(n_points):
             pos = poses[i]
             if not zero(pos, tol):
@@ -201,13 +198,13 @@ class Points(Transformables):
             if not parallel(axis, poses[i], tol):
                 break
         else:
-            symmelems.append(InfRotationAxis(axis))
-            symmelems.append(AxisReflectionPlanes(axis))
+            yield InfRotationAxis(axis)
+            yield AxisReflectionPlanes(axis)
             if invertible:
-                symmelems.append(AxisRotationAxes(axis))
-                symmelems.append(ReflectionPlane(axis))
-                symmelems.append(InfRotoreflectionAxis(axis))
-            return tuple(symmelems)
+                yield AxisRotationAxes(axis)
+                yield ReflectionPlane(axis)
+                yield InfRotoreflectionAxis(axis)
+            return
         for i1 in range(n_points):
             pos = poses[i1]
             for i2 in range(i1 + 1, n_points):
@@ -226,7 +223,7 @@ class Points(Transformables):
             coplanar = True
             normal = normalize(normal)
             normals.append(normal)
-            symmelems.append(ReflectionPlane(normal))
+            yield ReflectionPlane(normal)
         for _, idxs in self._groups:
             n_points = len(idxs)
             collinear_part = False
@@ -267,20 +264,23 @@ class Points(Transformables):
                                     and (max_order - 1) % order != 0
                                 ):
                                     continue
-                                if add(RotationAxis(axis, order)):
+                                rot = RotationAxis(axis, order)
+                                if rot.symmetric(self, tol):
+                                    yield rot
                                     if not coplanar:
                                         for factor in (2, 1):
                                             new_order = order * factor
-                                            if new_order <= 2 or add(
-                                                RotoreflectionAxis(
+                                            if new_order > 2:
+                                                rotorefl = RotoreflectionAxis(
                                                     axis, new_order
                                                 )
-                                            ):
-                                                break
+                                                if rotorefl.symmetric(
+                                                    self, tol
+                                                ):
+                                                    yield rotorefl
+                                                    break
                                     else:
-                                        symmelems.append(
-                                            RotoreflectionAxis(axis, order)
-                                        )
+                                        yield RotoreflectionAxis(axis, order)
                                     break
                     if collinear_part or coplanar_part:
                         break
@@ -305,11 +305,16 @@ class Points(Transformables):
                             else normalize(cross(segment, normals[0]))
                         )
                         if new(axes, axis):
-                            if add(RotationAxis(axis, 2)):
-                                add(RotoreflectionAxis(axis, 4))
+                            rot = RotationAxis(axis, 2)
+                            if rot.symmetric(self, tol):
+                                yield rot
+                                rotorefl = RotoreflectionAxis(axis, 4)
+                                if rotorefl.symmetric(self, tol):
+                                    yield rotorefl
                     if new(normals, normal):
-                        add(ReflectionPlane(normal))
-        return tuple(symmelems)
+                        refl = ReflectionPlane(normal)
+                        if refl.symmetric(self, tol):
+                            yield refl
 
     @classmethod
     def from_arr(cls, vecs: RealVectors) -> "Points":
