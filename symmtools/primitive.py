@@ -97,11 +97,16 @@ _Points = TypeVar("_Points", bound="Points")
 class Points(Transformables):
     """Set of points."""
 
-    _elems: Sequence[Point] = ()
+    _elems: Tuple[Point, ...] = ()
 
     def __init__(self, points: Sequence[Point]) -> None:
         """Initialize the instance with a set of points `points`."""
         super().__init__(points)
+
+    @property
+    def elems(self) -> Tuple[Point, ...]:
+        """Return the set of elements."""
+        return self._elems
 
     @property
     def pos(self) -> Vector:
@@ -117,6 +122,10 @@ class Points(Transformables):
 
     def __getitem__(self, item: int) -> Point:
         return self._elems[item]
+
+    def __add__(self, other: "Points") -> "Points":
+        """Return the union of the instance with a set of points `other`."""
+        return type(self)(self._elems + other.elems)
 
     def center(self: _Points) -> _Points:
         """Center the points at the origin."""
