@@ -16,12 +16,12 @@ from symmtools import (
 
 
 class TestPtGrp(TestCase):
-    def test_symmelems(self) -> None:
+    def test_symm_elems(self) -> None:
         def init(points: Points) -> Tuple[str, str]:
-            symmelems = tuple(points.symmelems(TOL))
+            symm_elems = tuple(points.symm_elems(TOL))
             info = SymmetryElements()
-            info.include(symmelems, TOL)
-            group = PointGroup.from_all_symmelems(symmelems)
+            info.include(symm_elems, TOL)
+            group = PointGroup.from_all_symm_elems(symm_elems)
             return ",".join(info.symbs), group.symb
 
         triangle = Points.from_symm([[1, 0, 0]], [RotationAxis([0, 0, 1], 3)])

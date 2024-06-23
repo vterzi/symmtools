@@ -149,11 +149,11 @@ class PointGroup(Transformable):
         PRIMAX = vector((0.0, 0.0, 1.0))
         SECAX = vector((1.0, 0.0, 0.0))
         vec: RealVector
-        symmelems: List[SymmetryElement] = []
+        symm_elems: List[SymmetryElement] = []
         labels: List[str] = []
 
-        def add(symmelem: SymmetryElement, label: str = "") -> None:
-            symmelems.append(symmelem)
+        def add(symm_elem: SymmetryElement, label: str = "") -> None:
+            symm_elems.append(symm_elem)
             labels.append(label)
 
         while symb:
@@ -464,10 +464,10 @@ class PointGroup(Transformable):
                     + " 'I', or 'K'"
                 )
 
-        self._symmelems = (
-            tuple(symmelems)
+        self._symm_elems = (
+            tuple(symm_elems)
             if isinstance(transform, Identity)
-            else tuple(transform(symmelem) for symmelem in symmelems)
+            else tuple(transform(symm_elem) for symm_elem in symm_elems)
         )
         self._labels = tuple(labels)
         self._transform = transform
@@ -478,9 +478,9 @@ class PointGroup(Transformable):
         return self._symb
 
     @property
-    def symmelems(self) -> Sequence[SymmetryElement]:
+    def symm_elems(self) -> Sequence[SymmetryElement]:
         """Return the symmetry elements."""
-        return self._symmelems
+        return self._symm_elems
 
     @property
     def transform(self) -> Transformation:
@@ -530,11 +530,11 @@ class PointGroup(Transformable):
         return res
 
     @classmethod
-    def from_all_symmelems(
-        cls, symmelems: Sequence[SymmetryElement]
+    def from_all_symm_elems(
+        cls, symm_elems: Sequence[SymmetryElement]
     ) -> "PointGroup":
         """
-        Construct an instance from a set of symmetry elements `symmelems`
+        Construct an instance from a set of symmetry elements `symm_elems`
         assuming the set is complete.
         """
         rot = ""
@@ -546,41 +546,41 @@ class PointGroup(Transformable):
         refl_num = 0
         invertible = False
         rotorefl_num = 0
-        for symmelem in symmelems:
-            if isinstance(symmelem, RotationAxis):
-                rot_order = symmelem.order
+        for symm_elem in symm_elems:
+            if isinstance(symm_elem, RotationAxis):
+                rot_order = symm_elem.order
                 rot_num += 1
                 if rot_order > 2:
                     high_rot_num += 1
                 if max_rot_order < rot_order:
                     max_rot_order = rot_order
-            elif isinstance(symmelem, ReflectionPlane):
+            elif isinstance(symm_elem, ReflectionPlane):
                 refl_num += 1
-            elif isinstance(symmelem, InversionCenter):
+            elif isinstance(symm_elem, InversionCenter):
                 invertible = True
-            elif isinstance(symmelem, RotoreflectionAxis):
+            elif isinstance(symm_elem, RotoreflectionAxis):
                 rotorefl_num += 1
-            elif isinstance(symmelem, InfRotationAxis):
+            elif isinstance(symm_elem, InfRotationAxis):
                 order = SYMB.inf
-            elif isinstance(symmelem, InfRotoreflectionAxis):
+            elif isinstance(symm_elem, InfRotoreflectionAxis):
                 order = SYMB.inf
                 refl = "h"
                 if rot:
                     break
                 refl_num += 1
                 invertible = True
-            elif isinstance(symmelem, AxisRotationAxes):
+            elif isinstance(symm_elem, AxisRotationAxes):
                 rot = "D"
                 order = SYMB.inf
                 if refl:
                     break
-            elif isinstance(symmelem, AxisReflectionPlanes):
+            elif isinstance(symm_elem, AxisReflectionPlanes):
                 order = SYMB.inf
                 refl_num += 1
-            elif isinstance(symmelem, CenterRotationAxes):
+            elif isinstance(symm_elem, CenterRotationAxes):
                 rot = "K"
             elif isinstance(
-                symmelem, (CenterReflectionPlanes, CenterRotoreflectionAxes)
+                symm_elem, (CenterReflectionPlanes, CenterRotoreflectionAxes)
             ):
                 rot = "K"
                 refl = "h"
@@ -631,35 +631,37 @@ class PointGroup(Transformable):
         return cls(rot + order + refl)
 
     @classmethod
-    def from_part_symmelems(
-        cls, symmelems: Sequence[SymmetryElement], tol: float
+
+    @classmethod
+    def from_part_symm_elems(
+        cls, symm_elems: Sequence[SymmetryElement], tol: float
     ) -> "PointGroup":
         """
-        Construct an instance from a set of symmetry elements `symmelems` using
-        only their types and numbers.
+        Construct an instance from a set of symmetry elements `symm_elems`
+        using only their types and numbers.
         """
         info = SymmetryElements()
-        info.include(symmelems, tol)
+        info.include(symm_elems, tol)
         max_rot_order = 0
         max_rotorefl_order = 0
         rot2_num = 0
         refl_num = 0
         invertible = False
         for prop, num in info.nums:
-            symmelem_type = prop[0]
-            if symmelem_type is RotationAxis:
+            symm_elem_type = prop[0]
+            if symm_elem_type is RotationAxis:
                 order = prop[1]
                 if max_rot_order < order:
                     max_rot_order = order
                 if order == 2:
                     rot2_num = num
-            elif symmelem_type is RotoreflectionAxis:
+            elif symm_elem_type is RotoreflectionAxis:
                 order = prop[1]
                 if max_rotorefl_order < order:
                     max_rotorefl_order = order
-            elif symmelem_type is ReflectionPlane:
+            elif symm_elem_type is ReflectionPlane:
                 refl_num = num
-            elif symmelem_type is InversionCenter:
+            elif symm_elem_type is InversionCenter:
                 invertible = True
         variants = list(_LOW_POINT_GROUPS)
         new_variants: Set[Tuple[int, int, int]] = set()
@@ -712,7 +714,7 @@ class PointGroup(Transformable):
             symb = f"{ROT_SYMBS[rot]}{order}{REFL_SYMBS[refl]}".strip()
             group = cls(symb)
             ref_info = SymmetryElements()
-            ref_info.include(group.symmelems, TOL)
+            ref_info.include(group.symm_elems, TOL)
             variants.append((group, ref_info))
         variants.extend(_HIGH_POINT_GROUPS)
         remove = []
@@ -733,7 +735,7 @@ def _init(
     for symb in symbs:
         group = PointGroup(symb)
         info = SymmetryElements()
-        info.include(group.symmelems, TOL)
+        info.include(group.symm_elems, TOL)
         res.append((group, info))
     return tuple(res)
 

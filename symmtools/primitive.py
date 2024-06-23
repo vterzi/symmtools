@@ -155,7 +155,7 @@ class Points(Transformables):
         mat[2, 2] = zz
         return mat
 
-    def symmelems(self, tol: float = TOL) -> Iterator[SymmetryElement]:
+    def symm_elems(self, tol: float = TOL) -> Iterator[SymmetryElement]:
         """
         Determine all symmetry elements of a set of points `points` within a
         tolerance `tol`.
@@ -348,10 +348,10 @@ class Points(Transformables):
         to the array of 3D vectors `vecs`.
         """
         points = [Point(vec) for vec in vecs]
-        for symmelem in symm_elems:
+        for symm_elem in symm_elems:
             for i in range(len(points)):
                 point = points[i]
-                for transform in symmelem.transforms:
+                for transform in symm_elem.transforms:
                     points.append(transform(point))
         return cls(points)
 

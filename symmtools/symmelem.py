@@ -368,26 +368,26 @@ class SymmetryElements:
 
     def include(
         self,
-        symmelems: Union[SymmetryElement, Sequence[SymmetryElement]],
+        symm_elems: Union[SymmetryElement, Sequence[SymmetryElement]],
         tol: float,
     ) -> None:
         """
-        Include information of one or multiple symmetry elements `symmelems`
+        Include information of one or multiple symmetry elements `symm_elems`
         using a tolerance `tol` to calculate exact intersection angles.
         """
-        if not isinstance(symmelems, Sequence):
-            symmelems = (symmelems,)
-        for symmelem1 in symmelems:
-            prop1 = symmelem1.props
+        if not isinstance(symm_elems, Sequence):
+            symm_elems = (symm_elems,)
+        for symm_elem1 in symm_elems:
+            prop1 = symm_elem1.props
             rank1 = _prop2rank(prop1)
-            if isinstance(symmelem1, _DirectionSymmetryElements):
+            if isinstance(symm_elem1, _DirectionSymmetryElements):
                 if prop1 not in self._nums:
                     self._nums[prop1] = 0
                 self._nums[prop1] += 1
-                vec1 = symmelem1.vec
-                for symmelem2 in self._included:
-                    prop2 = symmelem2.props
-                    vec2 = symmelem2.vec
+                vec1 = symm_elem1.vec
+                for symm_elem2 in self._included:
+                    prop2 = symm_elem2.props
+                    vec2 = symm_elem2.vec
                     angle = intersectangle(vec1, vec2)
                     for special_angle in SPECIAL_ANGLES:
                         diff = abs(angle - special_angle)
@@ -397,9 +397,9 @@ class SymmetryElements:
                     else:
                         nom, denom = rational(angle / PI, tol)
                         angle = nom * PI / denom
-                    if angle == 0.0 and symmelem1.similar(symmelem2):
+                    if angle == 0.0 and symm_elem1.similar(symm_elem2):
                         raise ValueError(
-                            f"a parallel {symmelem1.name} already included"
+                            f"a parallel {symm_elem1.name} already included"
                         )
                     props = (
                         (prop1, prop2)
@@ -413,20 +413,20 @@ class SymmetryElements:
                     elif self._angles[props][angle] == 0:
                         raise ValueError(
                             f"the excluded angle of {angle} between"
-                            + f" a {symmelem1.name} and a {symmelem2.name}"
+                            + f" a {symm_elem1.name} and a {symm_elem2.name}"
                             + " cannot be included"
                         )
                     self._angles[props][angle] += 1
-                for symmelem2 in self._excluded:
-                    prop2 = symmelem2.props
-                    vec2 = symmelem2.vec
+                for symm_elem2 in self._excluded:
+                    prop2 = symm_elem2.props
+                    vec2 = symm_elem2.vec
                     angle = intersectangle(vec1, vec2)
                     if angle > tol:
                         continue
                     angle = 0.0
-                    if symmelem1.similar(symmelem2):
+                    if symm_elem1.similar(symm_elem2):
                         raise ValueError(
-                            f"the excluded parallel {symmelem1.name} cannot"
+                            f"the excluded parallel {symm_elem1.name} cannot"
                             + " be included"
                         )
                     props = (
@@ -442,15 +442,15 @@ class SymmetryElements:
                     ):
                         raise ValueError(
                             f"the included angle of {angle} between"
-                            + f" a {symmelem1.name} and a {symmelem2.name}"
+                            + f" a {symm_elem1.name} and a {symm_elem2.name}"
                             + " cannot be excluded"
                         )
                     self._angles[props][angle] = 0
-                self._included.append(symmelem1)
+                self._included.append(symm_elem1)
             else:
                 if prop1 in self._nums:
                     raise ValueError(
-                        f"an {symmelem1.name} already "
+                        f"an {symm_elem1.name} already "
                         + (
                             "included"
                             if self._nums[prop1] == 1
@@ -461,30 +461,30 @@ class SymmetryElements:
 
     def exclude(
         self,
-        symmelems: Union[SymmetryElement, Sequence[SymmetryElement]],
+        symm_elems: Union[SymmetryElement, Sequence[SymmetryElement]],
         tol: float,
     ) -> None:
         """
-        Exclude information of one or multiple symmetry elements `symmelems`
+        Exclude information of one or multiple symmetry elements `symm_elems`
         using a tolerance `tol` to calculate exact intersection angles.
         """
-        if not isinstance(symmelems, Sequence):
-            symmelems = (symmelems,)
-        for symmelem1 in symmelems:
-            prop1 = symmelem1.props
+        if not isinstance(symm_elems, Sequence):
+            symm_elems = (symm_elems,)
+        for symm_elem1 in symm_elems:
+            prop1 = symm_elem1.props
             rank1 = _prop2rank(prop1)
-            if isinstance(symmelem1, _DirectionSymmetryElements):
-                vec1 = symmelem1.vec
-                for symmelem2 in self._included:
-                    prop2 = symmelem2.props
-                    vec2 = symmelem2.vec
+            if isinstance(symm_elem1, _DirectionSymmetryElements):
+                vec1 = symm_elem1.vec
+                for symm_elem2 in self._included:
+                    prop2 = symm_elem2.props
+                    vec2 = symm_elem2.vec
                     angle = intersectangle(vec1, vec2)
                     if angle > tol:
                         continue
                     angle = 0.0
-                    if symmelem1.similar(symmelem2):
+                    if symm_elem1.similar(symm_elem2):
                         raise ValueError(
-                            f"the included parallel {symmelem1.name} cannot"
+                            f"the included parallel {symm_elem1.name} cannot"
                             + " be excluded"
                         )
                     props = (
@@ -500,23 +500,23 @@ class SymmetryElements:
                     ):
                         raise ValueError(
                             f"the included angle of {angle} between"
-                            + f" a {symmelem1.name} and a {symmelem2.name}"
+                            + f" a {symm_elem1.name} and a {symm_elem2.name}"
                             + " cannot be excluded"
                         )
                     self._angles[props][angle] = 0
-                for symmelem2 in self._excluded:
-                    prop2 = symmelem2.props
-                    vec2 = symmelem2.vec
+                for symm_elem2 in self._excluded:
+                    prop2 = symm_elem2.props
+                    vec2 = symm_elem2.vec
                     angle = intersectangle(vec1, vec2)
-                    if angle <= tol and symmelem1.similar(symmelem2):
+                    if angle <= tol and symm_elem1.similar(symm_elem2):
                         raise ValueError(
-                            f"a parallel {symmelem1.name} already excluded"
+                            f"a parallel {symm_elem1.name} already excluded"
                         )
-                self._excluded.append(symmelem1)
+                self._excluded.append(symm_elem1)
             else:
                 if prop1 in self._nums:
                     raise ValueError(
-                        f"an {symmelem1.name} already "
+                        f"an {symm_elem1.name} already "
                         + (
                             "included"
                             if self._nums[prop1] == 1

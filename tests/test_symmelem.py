@@ -27,37 +27,37 @@ from symmtools import (
 
 class TestIdentityElement(TestCase):
     def test_transformations(self) -> None:
-        symmelem = IdentityElement()
-        self.assertSequenceEqual(tuple(symmelem.transforms), [])
+        symm_elem = IdentityElement()
+        self.assertSequenceEqual(tuple(symm_elem.transforms), [])
 
     def test_symb(self) -> None:
-        symmelem = IdentityElement()
-        self.assertEqual(symmelem.symb, "E")
+        symm_elem = IdentityElement()
+        self.assertEqual(symm_elem.symb, "E")
 
     def test_symmetric(self) -> None:
-        symmelem = IdentityElement()
+        symm_elem = IdentityElement()
         points = [Point(randvec()) for _ in range(3)]
-        self.assertTrue(symmelem.symmetric(Points(points), TOL))
+        self.assertTrue(symm_elem.symmetric(Points(points), TOL))
 
 
 class TestInversionCenter(TestCase):
     def test_transformations(self) -> None:
-        symmelem = InversionCenter()
-        self.assertSequenceEqual(tuple(symmelem.transforms), [Inversion()])
+        symm_elem = InversionCenter()
+        self.assertSequenceEqual(tuple(symm_elem.transforms), [Inversion()])
 
     def test_symb(self) -> None:
-        symmelem = InversionCenter()
-        self.assertEqual(symmelem.symb, "i")
+        symm_elem = InversionCenter()
+        self.assertEqual(symm_elem.symb, "i")
 
     def test_symmetric(self) -> None:
-        symmelem = InversionCenter()
+        symm_elem = InversionCenter()
         points: List[Point] = []
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
-            for transform in tuple(symmelem.transforms):
+            for transform in tuple(symm_elem.transforms):
                 points.append(transform(points[i]))
-        self.assertTrue(symmelem.symmetric(Points(points), TOL))
+        self.assertTrue(symm_elem.symmetric(Points(points), TOL))
 
 
 class TestRotationAxis(TestCase):
@@ -68,17 +68,17 @@ class TestRotationAxis(TestCase):
 
     def test_transformations(self) -> None:
         vec = randunitvec()
-        symmelem = RotationAxis(vec, 3)
+        symm_elem = RotationAxis(vec, 3)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            tuple(symmelem.transforms),
+            tuple(symm_elem.transforms),
             [Rotation(vec, 1 / 3 * TAU), Rotation(vec, 2 / 3 * TAU)],
         )
         vec = randunitvec()
-        symmelem = RotationAxis(vec, 4)
+        symm_elem = RotationAxis(vec, 4)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            tuple(symmelem.transforms),
+            tuple(symm_elem.transforms),
             [
                 Rotation(vec, 1 / 4 * TAU),
                 Rotation(vec, 2 / 4 * TAU),
@@ -88,40 +88,42 @@ class TestRotationAxis(TestCase):
 
     def test_symb(self) -> None:
         order = 3
-        symmelem = RotationAxis(randunitvec(), order)
-        self.assertEqual(symmelem.symb, f"C{order}")
+        symm_elem = RotationAxis(randunitvec(), order)
+        self.assertEqual(symm_elem.symb, f"C{order}")
 
     def test_symmetric(self) -> None:
-        symmelem = RotationAxis(randunitvec(), 3)
+        symm_elem = RotationAxis(randunitvec(), 3)
         points: List[Point] = []
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
-            for transform in tuple(symmelem.transforms):
+            for transform in tuple(symm_elem.transforms):
                 points.append(transform(points[i]))
-        self.assertTrue(symmelem.symmetric(Points(points), TOL))
+        self.assertTrue(symm_elem.symmetric(Points(points), TOL))
 
 
 class TestReflectionPlane(TestCase):
     def test_transformations(self) -> None:
         vec = randunitvec()
-        symmelem = ReflectionPlane(vec)
+        symm_elem = ReflectionPlane(vec)
         vec = normalize(vec)
-        self.assertSequenceEqual(tuple(symmelem.transforms), [Reflection(vec)])
+        self.assertSequenceEqual(
+            tuple(symm_elem.transforms), [Reflection(vec)]
+        )
 
     def test_symb(self) -> None:
-        symmelem = ReflectionPlane(randunitvec())
-        self.assertEqual(symmelem.symb, SYMB.refl)
+        symm_elem = ReflectionPlane(randunitvec())
+        self.assertEqual(symm_elem.symb, SYMB.refl)
 
     def test_symmetric(self) -> None:
-        symmelem = ReflectionPlane(randunitvec())
+        symm_elem = ReflectionPlane(randunitvec())
         points: List[Point] = []
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
-            for transform in tuple(symmelem.transforms):
+            for transform in tuple(symm_elem.transforms):
                 points.append(transform(points[i]))
-        self.assertTrue(symmelem.symmetric(Points(points), TOL))
+        self.assertTrue(symm_elem.symmetric(Points(points), TOL))
 
 
 class TestRotoreflectionAxis(TestCase):
@@ -133,10 +135,10 @@ class TestRotoreflectionAxis(TestCase):
 
     def test_transformations(self) -> None:
         vec = randunitvec()
-        symmelem = RotoreflectionAxis(vec, 3)
+        symm_elem = RotoreflectionAxis(vec, 3)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            tuple(symmelem.transforms),
+            tuple(symm_elem.transforms),
             [
                 Rotoreflection(vec, 1 / 3 * TAU),
                 Rotation(vec, 2 / 3 * TAU),
@@ -146,10 +148,10 @@ class TestRotoreflectionAxis(TestCase):
             ],
         )
         vec = randunitvec()
-        symmelem = RotoreflectionAxis(vec, 4)
+        symm_elem = RotoreflectionAxis(vec, 4)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            tuple(symmelem.transforms),
+            tuple(symm_elem.transforms),
             [
                 Rotoreflection(vec, 1 / 4 * TAU),
                 Rotation(vec, 2 / 4 * TAU),
@@ -157,10 +159,10 @@ class TestRotoreflectionAxis(TestCase):
             ],
         )
         vec = randunitvec()
-        symmelem = RotoreflectionAxis(vec, 5)
+        symm_elem = RotoreflectionAxis(vec, 5)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            tuple(symmelem.transforms),
+            tuple(symm_elem.transforms),
             [
                 Rotoreflection(vec, 1 / 5 * TAU),
                 Rotation(vec, 2 / 5 * TAU),
@@ -174,10 +176,10 @@ class TestRotoreflectionAxis(TestCase):
             ],
         )
         vec = randunitvec()
-        symmelem = RotoreflectionAxis(vec, 6)
+        symm_elem = RotoreflectionAxis(vec, 6)
         vec = normalize(vec)
         self.assertSequenceEqual(
-            tuple(symmelem.transforms),
+            tuple(symm_elem.transforms),
             [
                 Rotoreflection(vec, 1 / 6 * TAU),
                 Rotation(vec, 2 / 6 * TAU),
@@ -189,18 +191,18 @@ class TestRotoreflectionAxis(TestCase):
 
     def test_symb(self) -> None:
         order = 3
-        symmelem = RotoreflectionAxis(randunitvec(), order)
-        self.assertEqual(symmelem.symb, f"S{order}")
+        symm_elem = RotoreflectionAxis(randunitvec(), order)
+        self.assertEqual(symm_elem.symb, f"S{order}")
 
     def test_symmetric(self) -> None:
-        symmelem = RotoreflectionAxis(randunitvec(), 3)
+        symm_elem = RotoreflectionAxis(randunitvec(), 3)
         points: List[Point] = []
         for _ in range(3):
             points.append(Point(randvec()))
         for i in range(len(points)):
-            for transform in tuple(symmelem.transforms):
+            for transform in tuple(symm_elem.transforms):
                 points.append(transform(points[i]))
-        self.assertTrue(symmelem.symmetric(Points(points), TOL))
+        self.assertTrue(symm_elem.symmetric(Points(points), TOL))
 
 
 if __name__ == "__main__":
