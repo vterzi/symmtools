@@ -279,7 +279,7 @@ class Points(Transformables):
                                                 ):
                                                     yield rotorefl
                                                     break
-                                    else:
+                                    elif order > 2:
                                         yield RotoreflectionAxis(axis, order)
                                     break
                     if collinear_part or coplanar_part:
