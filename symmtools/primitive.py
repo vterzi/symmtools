@@ -347,11 +347,10 @@ class Points(Transformables):
         Construct an instance by applying the symmetry elements `symm_elems`
         to the array of 3D vectors `vecs`.
         """
-        points = []
-        for vec in vecs:
-            point = Point(vec)
-            points.append(point)
-            for symmelem in symm_elems:
+        points = [Point(vec) for vec in vecs]
+        for symmelem in symm_elems:
+            for i in range(len(points)):
+                point = points[i]
                 for transform in symmelem.transforms:
                     points.append(transform(point))
         return cls(points)
