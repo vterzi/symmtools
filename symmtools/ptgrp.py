@@ -206,7 +206,7 @@ class PointGroup(Transformable):
                             if not inf:
                                 add(RotationAxis(PRIMAX, n))
                                 vec = SECAX.copy()
-                                step = PI / (2 * n)
+                                step = PI / n
                                 add(ReflectionPlane(vec), "v")
                                 if n % 2 == 1:
                                     angle = step
@@ -284,7 +284,7 @@ class PointGroup(Transformable):
                 if n > 0:
                     add(RotationAxis(PRIMAX, n))
                     vec = SECAX.copy()
-                    step = PI / (2 * n)
+                    step = PI / n
                     add(RotationAxis(vec, 2), "'")
                     if n % 2 == 1:
                         angle = step
@@ -326,7 +326,7 @@ class PointGroup(Transformable):
                         symb = f"D{order}h"
                     else:
                         vec = SECAX.copy()
-                        step = PI / (2 * n)
+                        step = PI / n
                         angle = 0.5 * step
                         for _ in range(n):
                             vec[0] = cos(angle)
@@ -343,7 +343,7 @@ class PointGroup(Transformable):
                         add(ReflectionPlane(PRIMAX), "h")
                         if not inf:
                             vec = SECAX.copy()
-                            step = PI / (2 * n)
+                            step = PI / n
                             add(ReflectionPlane(vec), "v")
                             if n % 2 == 1:
                                 angle = step
