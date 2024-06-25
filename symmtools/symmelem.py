@@ -83,6 +83,9 @@ class SymmetryElement(ABC):
         """Return the ID."""
         return self._id
 
+    def __iter__(self) -> Iterator[Transformation]:
+        return self.transforms
+
     def symmetric(self, transformables: Transformables, tol: float) -> bool:
         """
         Check whether a set of transformables `transformables` is symmetric

@@ -42,6 +42,7 @@ from .typehints import (
     Tuple,
     List,
     Dict,
+    Iterator,
     Int,
     Float,
     Vector,
@@ -222,6 +223,9 @@ class Transformables(Transformable):
 
     def __len__(self) -> int:
         return len(self._elems)
+
+    def __iter__(self) -> Iterator[Transformable]:
+        return iter(self._elems)
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
