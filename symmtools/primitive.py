@@ -4,7 +4,7 @@ __all__ = ["Point", "Points", "LabeledPoint", "Arrow", "StructPoint"]
 
 from re import findall
 
-from numpy import empty, zeros
+from numpy import zeros
 from numpy.linalg import eigh
 
 from .const import INF, TOL, LABEL_RE, FLOAT_RE
@@ -153,15 +153,6 @@ class Points(Transformables):
             )
         points = self.center()
         poses = tuple(elem.pos for elem in points._elems)
-        axes: List[Vector] = []
-        normals: List[Vector] = []
-
-        def new(arr: List[Vector], vec: Vector) -> bool:
-            for elem in arr:
-                if unitparallel(elem, vec, tol):
-                    return False
-            arr.append(vec)
-            return True
 
         center = InversionCenter()
         invertible = center.symmetric(points, tol)
@@ -192,9 +183,20 @@ class Points(Transformables):
                 yield InfRotoreflectionAxis(axis)
             return
 
+        axes: List[Vector] = []
+        normals: List[Vector] = []
+
+        def new(arr: List[Vector], vec: Vector) -> bool:
+            for elem in arr:
+                if unitparallel(elem, vec, tol):
+                    return False
+            arr.append(vec)
+            return True
+
         eigvals, eigvecs = eigh(inertia(poses))
         oblate = eigvals[1] - eigvals[0] <= tol
         prolate = eigvals[2] - eigvals[1] <= tol
+        coplanar = False
         cubic = False
         if oblate and prolate:
             cubic = True
@@ -208,14 +210,17 @@ class Points(Transformables):
             # D(n>3)h Cn,s,Sn
             # S(2n)   Cn,S(2n)
             axis = eigvecs[:, 2] if oblate else eigvecs[:, 0]
-            axes.append(axis)  # TODO use only perpendicular directions later
+            axes.append(axis)
             max_order = 2
+            coplanar = True
             for _, idxs in points._groups:
                 dists: Dict[float, int] = {}
                 n_points = len(idxs)
                 for i in range(n_points):
                     pos = poses[idxs[i]]
                     dist = pos.dot(axis)
+                    if coplanar and dist > tol:
+                        coplanar = False
                     for ref_dist in dists:
                         if abs(dist - ref_dist) <= tol:
                             dists[ref_dist] += 1
@@ -225,25 +230,26 @@ class Points(Transformables):
                 for count in dists.values():
                     if max_order < count:
                         max_order = count  # TODO combine different counts
-            # TODO some of the code later will become unreachable
             for order in range(max_order, 1, -1):
                 if max_order % order != 0 and (max_order - 1) % order != 0:
                     continue
                 rot = RotationAxis(axis, order)
                 if rot.symmetric(points, tol):
                     yield rot
-                    # TODO maybe check if coplanar
-                    for factor in (2, 1):
-                        new_order = order * factor
-                        if new_order > 2:
-                            rotorefl = RotoreflectionAxis(axis, new_order)
-                            if rotorefl.symmetric(points, tol):
-                                yield rotorefl
-                                break
+                    if not coplanar:
+                        for factor in (2, 1):
+                            new_order = order * factor
+                            if new_order > 2:
+                                rotorefl = RotoreflectionAxis(axis, new_order)
+                                if rotorefl.symmetric(points, tol):
+                                    yield rotorefl
+                                    break
+                    elif order > 2:
+                        yield RotoreflectionAxis(axis, order)
                     break
             normals.append(axis)
             refl = ReflectionPlane(axis)
-            if refl.symmetric(points, tol):
+            if coplanar or refl.symmetric(points, tol):
                 yield refl
         else:
             # asymmetric
@@ -282,27 +288,6 @@ class Points(Transformables):
                     yield refl
             return
 
-        for i1 in range(n_points):
-            pos = poses[i1]
-            for i2 in range(i1 + 1, n_points):
-                product = cross(pos, poses[i2])
-                if not zero(product, tol):
-                    normal = product
-                    break
-            else:
-                continue
-            break
-        coplanar = False
-        for i in range(i2 + 1, n_points):
-            if not perpendicular(normal, poses[i], tol):
-                break
-        else:
-            coplanar = True
-            normal = normalize(normal)
-            if new(normals, normal):
-                normals.append(normal)
-                yield ReflectionPlane(normal)
-
         for _, idxs in points._groups:
             n_points = len(idxs)
             collinear_part = False
@@ -316,28 +301,22 @@ class Points(Transformables):
                         if i2 == 1:
                             collinear_part = True
                         for i3 in range(i2 + 1, n_points):
-                            if not coplanar:
-                                pos3 = poses[idxs[i3]]
-                                normal = cross(segment, pos1 - pos3)
-                                normal_norm = norm(normal)
-                                if normal_norm <= tol:
-                                    continue
-                                axis = normal / normal_norm
-                            else:
-                                axis = normals[0]
+                            pos3 = poses[idxs[i3]]
+                            normal = cross(segment, pos1 - pos3)
+                            normal_norm = norm(normal)
+                            if normal_norm <= tol:
+                                continue
+                            axis = normal / normal_norm
                             collinear_part = False
                             if new(axes, axis):
-                                if not coplanar:
-                                    dist = pos1.dot(axis)
-                                    max_order = 3
-                                    for i4 in range(n_points):
-                                        if i4 == i1 or i4 == i2 or i4 == i3:
-                                            continue
-                                        pos4 = poses[idxs[i4]]
-                                        if abs(pos4.dot(axis) - dist) <= tol:
-                                            max_order += 1
-                                else:
-                                    max_order = n_points
+                                dist = pos1.dot(axis)
+                                max_order = 3
+                                for i4 in range(n_points):
+                                    if i4 == i1 or i4 == i2 or i4 == i3:
+                                        continue
+                                    pos4 = poses[idxs[i4]]
+                                    if abs(pos4.dot(axis) - dist) <= tol:
+                                        max_order += 1
                                 if i3 == 2 and max_order == n_points:
                                     coplanar_part = True
                                 for order in range(max_order, 1, -1):
@@ -349,24 +328,17 @@ class Points(Transformables):
                                     rot = RotationAxis(axis, order)
                                     if rot.symmetric(points, tol):
                                         yield rot
-                                        if not coplanar:
-                                            for factor in (2, 1):
-                                                new_order = order * factor
-                                                if new_order > 2:
-                                                    rotorefl = (
-                                                        RotoreflectionAxis(
-                                                            axis, new_order
-                                                        )
-                                                    )
-                                                    if rotorefl.symmetric(
-                                                        points, tol
-                                                    ):
-                                                        yield rotorefl
-                                                        break
-                                        elif order > 2:
-                                            yield RotoreflectionAxis(
-                                                axis, order
-                                            )
+                                        for factor in (2, 1):
+                                            new_order = order * factor
+                                            if new_order > 2:
+                                                rotorefl = RotoreflectionAxis(
+                                                    axis, new_order
+                                                )
+                                                if rotorefl.symmetric(
+                                                    points, tol
+                                                ):
+                                                    yield rotorefl
+                                                    break
                                         break
                         if collinear_part or coplanar_part:
                             break
