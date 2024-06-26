@@ -61,41 +61,38 @@ class TestPointGroup(TestCase):
         self.assertEqual(group_symb, "Ci")
 
     def test_var_from_all_symm_elems(self) -> None:
-        # S(2(n=2k))   | Cn,S(2n)
-        # S(2(n=2k+1)) | Cn,i,S(2n)
-
-        two_fold = Points.from_symm(
+        rot2 = Points.from_symm(
             [[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 2)]
         )
-        symm_elem_symbs, group_symb = self.stringify(two_fold)
+        symm_elem_symbs, group_symb = self.stringify(rot2)
         self.assertEqual(symm_elem_symbs, "C2")
         self.assertEqual(group_symb, "C2")
 
-        three_fold = Points.from_symm(
+        rot3 = Points.from_symm(
             [[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 3)]
         )
-        symm_elem_symbs, group_symb = self.stringify(three_fold)
+        symm_elem_symbs, group_symb = self.stringify(rot3)
         self.assertEqual(symm_elem_symbs, "C3")
         self.assertEqual(group_symb, "C3")
 
-        four_fold = Points.from_symm(
+        rot4 = Points.from_symm(
             [[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 4)]
         )
-        symm_elem_symbs, group_symb = self.stringify(four_fold)
+        symm_elem_symbs, group_symb = self.stringify(rot4)
         self.assertEqual(symm_elem_symbs, "C4")
         self.assertEqual(group_symb, "C4")
 
-        five_fold = Points.from_symm(
+        rot5 = Points.from_symm(
             [[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 5)]
         )
-        symm_elem_symbs, group_symb = self.stringify(five_fold)
+        symm_elem_symbs, group_symb = self.stringify(rot5)
         self.assertEqual(symm_elem_symbs, "C5")
         self.assertEqual(group_symb, "C5")
 
-        six_fold = Points.from_symm(
+        rot6 = Points.from_symm(
             [[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 6)]
         )
-        symm_elem_symbs, group_symb = self.stringify(six_fold)
+        symm_elem_symbs, group_symb = self.stringify(rot6)
         self.assertEqual(symm_elem_symbs, "C6")
         self.assertEqual(group_symb, "C6")
 
@@ -175,38 +172,38 @@ class TestPointGroup(TestCase):
         self.assertEqual(symm_elem_symbs, "C6,s,i,S6")
         self.assertEqual(group_symb, "C6h")
 
-        obj = Points.from_symm(
+        rotorefl4 = Points.from_symm(
             [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 4)]
         )
-        symm_elem_symbs, group_symb = self.stringify(obj)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl4)
         self.assertEqual(symm_elem_symbs, "C2,S4")
         self.assertEqual(group_symb, "S4")
 
-        obj = Points.from_symm(
+        rotorefl6 = Points.from_symm(
             [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 6)]
         )
-        symm_elem_symbs, group_symb = self.stringify(obj)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl6)
         self.assertEqual(symm_elem_symbs, "C3,i,S6")
         self.assertEqual(group_symb, "S6")
 
-        obj = Points.from_symm(
+        rotorefl8 = Points.from_symm(
             [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 8)]
         )
-        symm_elem_symbs, group_symb = self.stringify(obj)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl8)
         self.assertEqual(symm_elem_symbs, "C4,S8")
         self.assertEqual(group_symb, "S8")
 
-        obj = Points.from_symm(
+        rotorefl10 = Points.from_symm(
             [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 10)]
         )
-        symm_elem_symbs, group_symb = self.stringify(obj)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl10)
         self.assertEqual(symm_elem_symbs, "C5,i,S10")
         self.assertEqual(group_symb, "S10")
 
-        obj = Points.from_symm(
+        rotorefl12 = Points.from_symm(
             [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 12)]
         )
-        symm_elem_symbs, group_symb = self.stringify(obj)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl12)
         self.assertEqual(symm_elem_symbs, "C6,S12")
         self.assertEqual(group_symb, "S12")
 
