@@ -44,6 +44,7 @@ from .symmelem import (
 )
 from .typehints import (
     TypeVar,
+    Union,
     Any,
     Sequence,
     Tuple,
@@ -348,13 +349,21 @@ class Points(Transformables):
 
     @classmethod
     def from_symm(
-        cls, vecs: RealVectors, symm_elems: Sequence[SymmetryElement]
+        cls,
+        base: Union[RealVectors, "Points"],
+        symm_elems: Union[SymmetryElement, Sequence[SymmetryElement]],
     ) -> "Points":
         """
-        Construct an instance by applying the symmetry elements `symm_elems`
-        to the array of 3D vectors `vecs`.
+        Construct an instance by applying one or multiple symmetry elements
+        `symm_elems` to an array of 3D point position vectors or a set of
+        points `base`.
         """
-        points = [Point(vec) for vec in vecs]
+        if isinstance(base, Points):
+            points = list(base.elems)
+        else:
+            points = [Point(vec) for vec in base]
+        if not isinstance(symm_elems, Sequence):
+            symm_elems = (symm_elems,)
         for symm_elem in symm_elems:
             for i in range(len(points)):
                 point = points[i]
