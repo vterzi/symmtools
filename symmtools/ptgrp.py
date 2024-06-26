@@ -135,6 +135,21 @@ class PointGroup(Transformable):
     - D1d = C2h
     - Dood = Dooh
     - D1h = C2v
+
+    Possible point group symbols for different types of rotors:
+    | Top        | Point group                                     |
+    |------------|-------------------------------------------------|
+    | Spherical  | T,Td,Th,O,Oh,I,Ih                               |
+    | Degenerate | Kh                                              |
+    | Symmetric  | C(n>2),C(n>2)v,C(n>2)h,S(2n),D(n>3),Dnd,D(n>3)h |
+    | Linear     | Coov,Dooh                                       |
+    | Asymmetric | C1,Cs,Ci,C2,C2v,C2h,D2,D2h                      |
+    The relations of the principal moments of inertia (I1, I2, I3) are:
+    - spherical: I1 = I2 = I3
+    - degenerate (spherical): 0 = I1 = I2 = I3
+    - symmetric: oblate I1 = I2 < I3 or prolate I1 < I2 = I3
+    - linear (prolate): 0 = I1 < I2 = I3
+    - asymmetric: I1 < I2 < I3
     """
 
     def __init__(
