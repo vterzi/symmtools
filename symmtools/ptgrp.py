@@ -144,7 +144,7 @@ class PointGroup(Transformable):
     | Symmetric  | C(n>2),C(n>2)v,C(n>2)h,S(2n),D(n>3),Dnd,D(n>3)h |
     | Linear     | Coov,Dooh                                       |
     | Asymmetric | C1,Cs,Ci,C2,C2v,C2h,D2,D2h                      |
-    The relations of the principal moments of inertia (I1, I2, I3) are:
+    The relationship between the principal moments of inertia (I1, I2, I3) is:
     - spherical: I1 = I2 = I3
     - degenerate (spherical): 0 = I1 = I2 = I3
     - symmetric: oblate I1 = I2 < I3 or prolate I1 < I2 = I3
