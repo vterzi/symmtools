@@ -201,8 +201,8 @@ class Points(Transformables):
         if oblate and prolate:
             cubic = True
         elif oblate or prolate:
-            axis = eigvecs[:, 2] if oblate else eigvecs[:, 0]
-            axes.append(axis)
+            vec = eigvecs[:, 2] if oblate else eigvecs[:, 0]
+            axes.append(vec)
             coplanar = True
             orders = set()
             for _, idxs in points._groups:
@@ -210,7 +210,7 @@ class Points(Transformables):
                 n_points = len(idxs)
                 for i in range(n_points):
                     pos = poses[idxs[i]]
-                    dist = pos.dot(axis)
+                    dist = pos.dot(vec)
                     if coplanar and dist > tol:
                         coplanar = False
                     for ref_dist in dists:
@@ -227,7 +227,7 @@ class Points(Transformables):
                     if ref_order % order != 0 and (ref_order - 1) % order != 0:
                         break
                 else:
-                    rot = RotationAxis(axis, order)
+                    rot = RotationAxis(vec, order)
                     if rot.symmetric(points, tol):
                         yield rot
                         if not coplanar:
@@ -235,53 +235,54 @@ class Points(Transformables):
                                 new_order = order * factor
                                 if new_order > 2:
                                     rotorefl = RotoreflectionAxis(
-                                        axis, new_order
+                                        vec, new_order
                                     )
                                     if rotorefl.symmetric(points, tol):
                                         yield rotorefl
                                         break
                         elif order > 2:
-                            yield RotoreflectionAxis(axis, order)
+                            yield RotoreflectionAxis(vec, order)
                         break
-            normals.append(axis)
-            refl = ReflectionPlane(axis)
+            normals.append(vec)
+            refl = ReflectionPlane(vec)
             if coplanar or refl.symmetric(points, tol):
                 yield refl
         else:
-            # asymmetric
-            # C1
-            # Ci
-            # Cs      s
-            # C2      C2
-            # C2v     C2;s;s
-            # C2h     C2,s
-            # D2      C2;C2;C2
-            # D2h     C2,s;C2,s;C2,s
-
-            # C2,s -> C2h,D2h
-            # C2,s;C2,s -> D2h(+C2,s)
-            # C2,s;- -> C2h
-            # C2 -> C2,C2v,D2
-            # C2;C2 -> D2(+C2)
-            # C2;s -> C2v(+s)
-            # C2;- -> C2
-            # s -> Cs,C2v
-            # s;- -> Cs
-            # s;s -> C2v(+C2)
-            # s;C2 -> C2v(+s)
-            # - -> C1,Ci,Cs,C2,C2h
-            # [-;]-;C2,s -> C2h
-            # [-;]-;C2 -> C2
-            # [-;]-;s -> Cs
-            # -;-;- -> C1,Ci
-            for i in range(3):  # TODO improve
-                axis = eigvecs[:, i]
-                rot = RotationAxis(axis, 2)
+            curr_rot = False
+            curr_refl = False
+            for i in range(3):
+                prev_rot = curr_rot
+                prev_refl = curr_refl
+                curr_rot = False
+                curr_refl = False
+                vec = eigvecs[:, i]
+                rot = RotationAxis(vec, 2)
                 if rot.symmetric(points, tol):
                     yield rot
-                refl = ReflectionPlane(axis)
-                if refl.symmetric(points, tol):
+                    curr_rot = True
+                refl = ReflectionPlane(vec)
+                if (invertible and curr_rot) or refl.symmetric(points, tol):
                     yield refl
+                    curr_refl = True
+                if i == 1:
+                    vec = eigvecs[:, 2]
+                    if prev_rot and prev_refl:
+                        if curr_rot and curr_refl:
+                            yield RotationAxis(vec, 2)
+                            yield ReflectionPlane(vec)
+                    elif prev_rot:
+                        if curr_rot:
+                            yield RotationAxis(vec, 2)
+                        elif curr_refl:
+                            yield ReflectionPlane(vec)
+                    elif prev_refl:
+                        if curr_rot:
+                            yield ReflectionPlane(vec)
+                        elif curr_refl:
+                            yield RotationAxis(vec, 2)
+                    elif not (curr_rot or curr_refl):
+                        continue
+                    break
             return
 
         for _, idxs in points._groups:
