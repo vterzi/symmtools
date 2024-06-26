@@ -258,7 +258,9 @@ class Points(Transformables):
                             if not coplanar:
                                 dist = pos1.dot(axis)
                                 max_order = 3
-                                for i4 in range(i3 + 1, n_points):
+                                for i4 in range(n_points):
+                                    if i4 == i1 or i4 == i2 or i4 == i3:
+                                        continue
                                     pos4 = poses[idxs[i4]]
                                     if abs(pos4.dot(axis) - dist) <= tol:
                                         max_order += 1
