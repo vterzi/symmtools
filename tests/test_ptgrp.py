@@ -1,9 +1,12 @@
-from .init import TestCase, main, Union, Sequence, Tuple
+from .init import TestCase, main, Union, Sequence, Tuple, pi
 
 from symmtools import (
     chcoords,
     signvar,
     ax3permut,
+    Translation,
+    Inversion,
+    Rotation,
     Points,
     SymmetryElement,
     InversionCenter,
@@ -20,115 +23,88 @@ from symmtools import (
     TOL,
 )
 
+origin = (0, 0, 0)
+primax = (0, 0, 1)
+secax = (1, 0, 0)
+diagax = (2.0**-0.5, 2.0**-0.5, 0)
+pos_transl = Translation(primax)
+neg_transl = pos_transl.invert()
+orth_transl = Translation(secax)
+rot2 = RotationAxis(primax, 2)
+rot3 = RotationAxis(primax, 3)
+rot4 = RotationAxis(primax, 4)
+rot5 = RotationAxis(primax, 5)
+rot6 = RotationAxis(primax, 6)
+rotorefl4 = RotoreflectionAxis(primax, 4)
+rotorefl6 = RotoreflectionAxis(primax, 6)
+rotorefl8 = RotoreflectionAxis(primax, 8)
+rotorefl10 = RotoreflectionAxis(primax, 10)
+rotorefl12 = RotoreflectionAxis(primax, 12)
 
-asymmetric = Points.from_arr([[0, 0, 0], [1, 0, 0], [0, 2, 0], [0, 0, 3]])
-plane = Points.from_arr(chcoords([[0, 0], [1, 0], [0, 2]]))
-prism = Points.from_symm(
-    chcoords([[0, 0], [1, 0], [0, 2]], [0, 0, 1]),
-    [ReflectionPlane([0, 0, 1])],
-)
-antiprism = Points.from_symm(
-    chcoords([[0, 0], [1, 0], [0, 2]], [0, 0, 1]), [InversionCenter()]
-)
-rot2 = Points.from_symm([[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 2)])
-rot3 = Points.from_symm([[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 3)])
-rot4 = Points.from_symm([[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 4)])
-rot5 = Points.from_symm([[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 5)])
-rot6 = Points.from_symm([[2, 0, 0], [2, 1, 1]], [RotationAxis([0, 0, 1], 6)])
-angle = Points.from_arr(chcoords([[]]) + chcoords(signvar([1]), [0, 0, 1]))
-triangular_pyramid = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 1]], [RotationAxis([0, 0, 1], 3)]
-)
-quadrangular_pyramid = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 1]], [RotationAxis([0, 0, 1], 4)]
-)
-pentangular_pyramid = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 1]], [RotationAxis([0, 0, 1], 5)]
-)
-hexangular_pyramid = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 1]], [RotationAxis([0, 0, 1], 6)]
-)
-propeller = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 0], [2, 1, 0]], [RotationAxis([0, 0, 1], 2)]
-)
-triple_propeller = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 0], [2, 1, 0]], [RotationAxis([0, 0, 1], 3)]
-)
-quadruple_propeller = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 0], [2, 1, 0]], [RotationAxis([0, 0, 1], 4)]
-)
-pentuple_propeller = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 0], [2, 1, 0]], [RotationAxis([0, 0, 1], 5)]
-)
-hextuple_propeller = Points.from_arr(chcoords([[]])) + Points.from_symm(
-    [[1, 0, 0], [2, 1, 0]], [RotationAxis([0, 0, 1], 6)]
-)
-rotorefl4 = Points.from_symm(
-    [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 4)]
-)
-rotorefl6 = Points.from_symm(
-    [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 6)]
-)
-rotorefl8 = Points.from_symm(
-    [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 8)]
-)
-rotorefl10 = Points.from_symm(
-    [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 10)]
-)
-rotorefl12 = Points.from_symm(
-    [[1, 0, 2], [2, 1, 2]], [RotoreflectionAxis([0, 0, 1], 12)]
-)
-twist = Points.from_arr(
-    chcoords(signvar([2, 1], 1), [0, 0, 1])
-    + chcoords(signvar([1, 2], 1), [0, 0, -1])
-)
-triple_helix = Points.from_symm(
-    [[2, 1, 1], [2, -1, -1]], [RotationAxis([0, 0, 1], 3)]
-)
-quadruple_helix = Points.from_symm(
-    [[2, 1, 1], [2, -1, -1]], [RotationAxis([0, 0, 1], 4)]
-)
-pentuple_helix = Points.from_symm(
-    [[2, 1, 1], [2, -1, -1]], [RotationAxis([0, 0, 1], 5)]
-)
-hextuple_helix = Points.from_symm(
-    [[2, 1, 1], [2, -1, -1]], [RotationAxis([0, 0, 1], 6)]
-)
-quarter_twist = Points.from_symm(
-    [[1, 0, 2]], [RotoreflectionAxis([0, 0, 1], 4)]
-)
-triangular_antiprism = Points.from_symm(
-    [[1, 0, 2]], [RotoreflectionAxis([0, 0, 1], 6)]
-)
-quadrangular_antiprism = Points.from_symm(
-    [[1, 0, 2]], [RotoreflectionAxis([0, 0, 1], 8)]
-)
-pentangular_antiprism = Points.from_symm(
-    [[1, 0, 2]], [RotoreflectionAxis([0, 0, 1], 10)]
-)
-hexangular_antiprism = Points.from_symm(
-    [[1, 0, 2]], [RotoreflectionAxis([0, 0, 1], 12)]
-)
-rectangle = Points.from_arr(chcoords(signvar([2, 1])))
-rectangular_prism = Points.from_arr(signvar([3, 2, 1]))
-triangle = Points.from_symm([[1, 0, 0]], [RotationAxis([0, 0, 1], 3)])
-triangular_prism = Points.from_symm(
-    [[1, 0, 2]], [RotoreflectionAxis([0, 0, 1], 3)]
-)
-square = Points.from_arr(chcoords(signvar([1, 1])))
-quadrangular_prism = Points.from_symm(
-    [[1, 0, 2]],
-    [RotationAxis([0, 0, 1], 4), ReflectionPlane([0, 0, 1])],
-)
-pentagon = Points.from_symm([[1, 0, 0]], [RotationAxis([0, 0, 1], 5)])
-pentangular_prism = Points.from_symm(
-    [[1, 0, 2]], [RotoreflectionAxis([0, 0, 1], 5)]
-)
-hexagon = Points.from_symm([[1, 0, 0]], [RotationAxis([0, 0, 1], 6)])
-hexangular_prism = Points.from_symm(
-    [[1, 0, 2]],
-    [RotationAxis([0, 0, 1], 6), ReflectionPlane([0, 0, 1])],
-)
+point = Points.from_arr((origin,))
+two_points = point + pos_transl(point)
+three_collinear_points = two_points + neg_transl(neg_transl(point))
+asymmetric_triangle = Points.from_arr(chcoords([[0, 0], [0, 2], [3, 0]]))
+
+shifted_point = orth_transl(point)
+rectangle = Points.from_arr(chcoords(signvar([3, 2])))
+triangle = Points.from_symm(shifted_point, rot3)
+square = Points.from_symm(shifted_point, rot4)
+pentagon = Points.from_symm(shifted_point, rot5)
+hexagon = Points.from_symm(shifted_point, rot6)
+
+_base = pos_transl(asymmetric_triangle)
+asymmetric_pyramid = point + _base
+asymmetric_prism = _base + neg_transl(asymmetric_triangle)
+asymmetric_antiprism = _base + Inversion()(_base)
+
+_base = orth_transl(Rotation(secax, pi / 4)(two_points))
+rot2_obj = Points.from_symm(_base, rot2)
+rot3_obj = Points.from_symm(_base, rot3)
+rot4_obj = Points.from_symm(_base, rot4)
+rot5_obj = Points.from_symm(_base, rot5)
+rot6_obj = Points.from_symm(_base, rot6)
+
+angle = point + orth_transl(two_points.center())
+triangular_pyramid = point + pos_transl(triangle)
+quadrangular_pyramid = point + pos_transl(square)
+pentangular_pyramid = point + pos_transl(pentagon)
+hexangular_pyramid = point + pos_transl(hexagon)
+
+_base = orth_transl(Rotation(diagax, pi / 2)(two_points))
+double_propeller = Points.from_symm(_base, rot2)
+triple_propeller = Points.from_symm(_base, rot3)
+quadruple_propeller = Points.from_symm(_base, rot4)
+pentuple_propeller = Points.from_symm(_base, rot5)
+hextuple_propeller = Points.from_symm(_base, rot6)
+
+_base = pos_transl(pos_transl(_base))
+rotorefl4_obj = Points.from_symm(_base, rotorefl4)
+rotorefl6_obj = Points.from_symm(_base, rotorefl6)
+rotorefl8_obj = Points.from_symm(_base, rotorefl8)
+rotorefl10_obj = Points.from_symm(_base, rotorefl10)
+rotorefl12_obj = Points.from_symm(_base, rotorefl12)
+
+_base = orth_transl(Rotation(secax, pi / 3)(two_points.center()))
+double_helix = Points.from_symm(_base, rot2)
+triple_helix = Points.from_symm(_base, rot3)
+quadruple_helix = Points.from_symm(_base, rot4)
+pentuple_helix = Points.from_symm(_base, rot5)
+hextuple_helix = Points.from_symm(_base, rot6)
+
+_base = pos_transl(pos_transl(orth_transl(point)))
+quarter_twist = Points.from_symm(_base, rotorefl4)
+triangular_antiprism = Points.from_symm(_base, rotorefl6)
+quadrangular_antiprism = Points.from_symm(_base, rotorefl8)
+pentangular_antiprism = Points.from_symm(_base, rotorefl10)
+hexangular_antiprism = Points.from_symm(_base, rotorefl12)
+
+rectangular_prism = pos_transl(rectangle) + neg_transl(rectangle)
+triangular_prism = pos_transl(triangle) + neg_transl(triangle)
+quadrangular_prism = pos_transl(square) + neg_transl(square)
+pentangular_prism = pos_transl(pentagon) + neg_transl(pentagon)
+hexangular_prism = pos_transl(hexagon) + neg_transl(hexagon)
+
 tetrahedral = Points.from_arr(ax3permut(signvar([3, 2, 1], 1)))
 tetrahedron = Points.from_arr(signvar([1, 1, 1], 1))
 pyritohedron = Points.from_arr(ax3permut(signvar([2, 1])))
@@ -141,9 +117,6 @@ icosahedron = Points.from_arr(ax3permut(signvar([PHI, 1])))
 dodecahedron = Points.from_arr(
     signvar([PHI, PHI, PHI]) + ax3permut(signvar([PHI + 1, 1]))
 )
-asymmetric_line = Points.from_arr(chcoords(signvar([1])) + chcoords([[2]]))
-symmetric_line = Points.from_arr(chcoords(signvar([1])))
-point = Points.from_arr(chcoords([[]]))
 
 
 class TestPointGroup(TestCase):
@@ -158,40 +131,40 @@ class TestPointGroup(TestCase):
         return ",".join(info.symbs), group.symb
 
     def test_low_from_all_symm_elems(self) -> None:
-        symm_elem_symbs, group_symb = self.stringify(asymmetric)
+        symm_elem_symbs, group_symb = self.stringify(asymmetric_pyramid)
         self.assertEqual(symm_elem_symbs, "")
         self.assertEqual(group_symb, "C1")
 
-        symm_elem_symbs, group_symb = self.stringify(plane)
+        symm_elem_symbs, group_symb = self.stringify(asymmetric_triangle)
         self.assertEqual(symm_elem_symbs, "s")
         self.assertEqual(group_symb, "Cs")
 
-        symm_elem_symbs, group_symb = self.stringify(prism)
+        symm_elem_symbs, group_symb = self.stringify(asymmetric_prism)
         self.assertEqual(symm_elem_symbs, "s")
         self.assertEqual(group_symb, "Cs")
 
-        symm_elem_symbs, group_symb = self.stringify(antiprism)
+        symm_elem_symbs, group_symb = self.stringify(asymmetric_antiprism)
         self.assertEqual(symm_elem_symbs, "i")
         self.assertEqual(group_symb, "Ci")
 
     def test_var_from_all_symm_elems(self) -> None:
-        symm_elem_symbs, group_symb = self.stringify(rot2)
+        symm_elem_symbs, group_symb = self.stringify(rot2_obj)
         self.assertEqual(symm_elem_symbs, "C2")
         self.assertEqual(group_symb, "C2")
 
-        symm_elem_symbs, group_symb = self.stringify(rot3)
+        symm_elem_symbs, group_symb = self.stringify(rot3_obj)
         self.assertEqual(symm_elem_symbs, "C3")
         self.assertEqual(group_symb, "C3")
 
-        symm_elem_symbs, group_symb = self.stringify(rot4)
+        symm_elem_symbs, group_symb = self.stringify(rot4_obj)
         self.assertEqual(symm_elem_symbs, "C4")
         self.assertEqual(group_symb, "C4")
 
-        symm_elem_symbs, group_symb = self.stringify(rot5)
+        symm_elem_symbs, group_symb = self.stringify(rot5_obj)
         self.assertEqual(symm_elem_symbs, "C5")
         self.assertEqual(group_symb, "C5")
 
-        symm_elem_symbs, group_symb = self.stringify(rot6)
+        symm_elem_symbs, group_symb = self.stringify(rot6_obj)
         self.assertEqual(symm_elem_symbs, "C6")
         self.assertEqual(group_symb, "C6")
 
@@ -215,7 +188,7 @@ class TestPointGroup(TestCase):
         self.assertEqual(symm_elem_symbs, "C6,6s")
         self.assertEqual(group_symb, "C6v")
 
-        symm_elem_symbs, group_symb = self.stringify(propeller)
+        symm_elem_symbs, group_symb = self.stringify(double_propeller)
         self.assertEqual(symm_elem_symbs, "C2,s,i")
         self.assertEqual(group_symb, "C2h")
 
@@ -235,27 +208,27 @@ class TestPointGroup(TestCase):
         self.assertEqual(symm_elem_symbs, "C6,s,i,S6")
         self.assertEqual(group_symb, "C6h")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl4)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl4_obj)
         self.assertEqual(symm_elem_symbs, "C2,S4")
         self.assertEqual(group_symb, "S4")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl6)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl6_obj)
         self.assertEqual(symm_elem_symbs, "C3,i,S6")
         self.assertEqual(group_symb, "S6")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl8)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl8_obj)
         self.assertEqual(symm_elem_symbs, "C4,S8")
         self.assertEqual(group_symb, "S8")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl10)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl10_obj)
         self.assertEqual(symm_elem_symbs, "C5,i,S10")
         self.assertEqual(group_symb, "S10")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl12)
+        symm_elem_symbs, group_symb = self.stringify(rotorefl12_obj)
         self.assertEqual(symm_elem_symbs, "C6,S12")
         self.assertEqual(group_symb, "S12")
 
-        symm_elem_symbs, group_symb = self.stringify(twist)
+        symm_elem_symbs, group_symb = self.stringify(double_helix)
         self.assertEqual(symm_elem_symbs, "3C2")
         self.assertEqual(group_symb, "D2")
 
@@ -391,7 +364,7 @@ class TestPointGroup(TestCase):
         self.assertEqual(symm_elem_symbs, "Coo,s,i,Soo")
         self.assertEqual(group_symb, "Cooh")
 
-        symm_elem_symbs, group_symb = self.stringify(asymmetric_line)
+        symm_elem_symbs, group_symb = self.stringify(three_collinear_points)
         self.assertEqual(symm_elem_symbs, "Coo,oosv")
         self.assertEqual(group_symb, "Coov")
 
@@ -403,7 +376,7 @@ class TestPointGroup(TestCase):
         self.assertEqual(symm_elem_symbs, "Coo,ooC2")
         self.assertEqual(group_symb, "Doo")
 
-        symm_elem_symbs, group_symb = self.stringify(symmetric_line)
+        symm_elem_symbs, group_symb = self.stringify(two_points)
         self.assertEqual(symm_elem_symbs, "Coo,ooC2,oosv,s,i,Soo")
         self.assertEqual(group_symb, "Dooh")
 
