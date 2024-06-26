@@ -18,6 +18,7 @@ from .vecop import (
     parallel,
     unitparallel,
     perpendicular,
+    inertia,
 )
 from .transform import (
     Transformable,
@@ -137,35 +138,8 @@ class Points(Transformables):
     @property
     def inertia(self) -> Matrix:
         """Return the inertia tensor of the points of unit mass."""
-        xx = 0.0
-        yy = 0.0
-        zz = 0.0
-        xy = 0.0
-        zx = 0.0
-        yz = 0.0
         centroid = self.pos
-        for elem in self._elems:
-            x, y, z = elem.pos - centroid
-            xs = x * x
-            ys = y * y
-            zs = z * z
-            xx += ys + zs
-            yy += zs + xs
-            zz += xs + ys
-            xy -= x * y
-            zx -= x * z
-            yz -= y * z
-        mat = empty((3, 3))
-        mat[0, 0] = xx
-        mat[0, 1] = xy
-        mat[0, 2] = zx
-        mat[1, 0] = xy
-        mat[1, 1] = yy
-        mat[1, 2] = yz
-        mat[2, 0] = zx
-        mat[2, 1] = yz
-        mat[2, 2] = zz
-        return mat
+        return inertia(tuple(elem.pos - centroid for elem in self._elems))
 
     def symm_elems(self, tol: float = TOL) -> Iterator[SymmetryElement]:
         """
@@ -218,34 +192,7 @@ class Points(Transformables):
                 yield InfRotoreflectionAxis(axis)
             return
 
-        xx = 0.0
-        yy = 0.0
-        zz = 0.0
-        xy = 0.0
-        zx = 0.0
-        yz = 0.0
-        for pos in poses:
-            x, y, z = pos
-            xs = x * x
-            ys = y * y
-            zs = z * z
-            xx += ys + zs
-            yy += zs + xs
-            zz += xs + ys
-            xy -= x * y
-            zx -= x * z
-            yz -= y * z
-        mat = empty((3, 3))
-        mat[0, 0] = xx
-        mat[0, 1] = xy
-        mat[0, 2] = zx
-        mat[1, 0] = xy
-        mat[1, 1] = yy
-        mat[1, 2] = yz
-        mat[2, 0] = zx
-        mat[2, 1] = yz
-        mat[2, 2] = zz
-        eigvals, eigvecs = eigh(mat)
+        eigvals, eigvecs = eigh(inertia(poses))
         oblate = eigvals[1] - eigvals[0] <= tol
         prolate = eigvals[2] - eigvals[1] <= tol
         cubic = False

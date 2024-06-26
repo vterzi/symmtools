@@ -26,13 +26,14 @@ __all__ = [
     "reflect",
     "rotmat",
     "reflmat",
+    "inertia",
 ]
 
 from math import sqrt, sin, cos, acos
 from numpy import array, empty
 
 from .const import PI, PI_2
-from .typehints import Float, Vector, Matrix, RealVector
+from .typehints import Sequence, Float, Vector, Matrix, RealVector
 
 # `max` is faster than `numpy.ndarray.max`
 # `float` is faster than `numpy.float64.item`
@@ -286,4 +287,39 @@ def reflmat(normal: Vector) -> Matrix:
     mat[2, 0] = zx
     mat[2, 1] = yz
     mat[2, 2] = 1.0 - z * dz
+    return mat
+
+
+def inertia(vecs: Sequence[Vector]) -> Matrix:
+    """
+    Calculate the inertia tensor of the points of unit mass with positions
+    `vecs`.
+    """
+    xx = 0.0
+    yy = 0.0
+    zz = 0.0
+    xy = 0.0
+    zx = 0.0
+    yz = 0.0
+    for vec in vecs:
+        x, y, z = vec
+        xs = x * x
+        ys = y * y
+        zs = z * z
+        xx += ys + zs
+        yy += zs + xs
+        zz += xs + ys
+        xy -= x * y
+        zx -= x * z
+        yz -= y * z
+    mat = empty((3, 3))
+    mat[0, 0] = xx
+    mat[0, 1] = xy
+    mat[0, 2] = zx
+    mat[1, 0] = xy
+    mat[1, 1] = yy
+    mat[1, 2] = yz
+    mat[2, 0] = zx
+    mat[2, 1] = yz
+    mat[2, 2] = zz
     return mat
