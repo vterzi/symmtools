@@ -174,10 +174,8 @@ class Points(Transformables):
                 "at least two identical elements in the instance of for the"
                 + " given tolerance"
             )
-        centroid = self.pos
-        poses: Sequence[Vector] = tuple(
-            elem.pos - centroid for elem in self._elems
-        )
+        points = self.center()
+        poses = tuple(elem.pos for elem in points._elems)
         axes: List[Vector] = []
         normals: List[Vector] = []
 
@@ -189,7 +187,7 @@ class Points(Transformables):
             return True
 
         center = InversionCenter()
-        invertible = center.symmetric(self, tol)
+        invertible = center.symmetric(points, tol)
         if invertible:
             yield center
         n_points = len(poses)
@@ -233,7 +231,7 @@ class Points(Transformables):
             normal = normalize(normal)
             normals.append(normal)
             yield ReflectionPlane(normal)
-        for _, idxs in self._groups:
+        for _, idxs in points._groups:
             n_points = len(idxs)
             collinear_part = False
             coplanar_part = False
@@ -274,7 +272,7 @@ class Points(Transformables):
                                 ):
                                     continue
                                 rot = RotationAxis(axis, order)
-                                if rot.symmetric(self, tol):
+                                if rot.symmetric(points, tol):
                                     yield rot
                                     if not coplanar:
                                         for factor in (2, 1):
@@ -284,7 +282,7 @@ class Points(Transformables):
                                                     axis, new_order
                                                 )
                                                 if rotorefl.symmetric(
-                                                    self, tol
+                                                    points, tol
                                                 ):
                                                     yield rotorefl
                                                     break
@@ -315,14 +313,14 @@ class Points(Transformables):
                         )
                         if new(axes, axis):
                             rot = RotationAxis(axis, 2)
-                            if rot.symmetric(self, tol):
+                            if rot.symmetric(points, tol):
                                 yield rot
                                 rotorefl = RotoreflectionAxis(axis, 4)
-                                if rotorefl.symmetric(self, tol):
+                                if rotorefl.symmetric(points, tol):
                                     yield rotorefl
                     if new(normals, normal):
                         refl = ReflectionPlane(normal)
-                        if refl.symmetric(self, tol):
+                        if refl.symmetric(points, tol):
                             yield refl
 
     @classmethod
