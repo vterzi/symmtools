@@ -234,10 +234,10 @@ class Transformables(Transformable):
                 for (_, idxs1), (_, idxs2) in zip(self._groups, obj.groups):
                     n = max(len(idxs1), len(idxs2))
                     diffs = empty((n, n))
-                    for i1 in idxs1:
-                        elem = self._elems[i1]
-                        for i2 in idxs2:
-                            diffs[i1, i2] = elem.diff(obj[i2])
+                    for i1, idx1 in enumerate(idxs1):
+                        elem = self._elems[idx1]
+                        for i2, idx2 in enumerate(idxs2):
+                            diffs[i1, i2] = elem.diff(obj[idx2])
                     order = linear_sum_assignment(diffs)[1]
                     for i in range(n):
                         res = max(res, diffs[i, order[i]])
