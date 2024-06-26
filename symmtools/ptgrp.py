@@ -631,8 +631,6 @@ class PointGroup(Transformable):
         return cls(rot + order + refl)
 
     @classmethod
-
-    @classmethod
     def from_part_symm_elems(
         cls, symm_elems: Sequence[SymmetryElement], tol: float
     ) -> "PointGroup":
