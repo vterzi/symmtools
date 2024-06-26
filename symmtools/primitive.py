@@ -201,18 +201,10 @@ class Points(Transformables):
         if oblate and prolate:
             cubic = True
         elif oblate or prolate:
-            # symmetric
-            # C(n>2)  Cn
-            # C(n>2)v Cn
-            # C(n>2)h Cn,s,Sn
-            # D(n>3)  Cn
-            # Dnd     Cn,S(2n)
-            # D(n>3)h Cn,s,Sn
-            # S(2n)   Cn,S(2n)
             axis = eigvecs[:, 2] if oblate else eigvecs[:, 0]
             axes.append(axis)
-            max_order = 2
             coplanar = True
+            orders = set()
             for _, idxs in points._groups:
                 dists: Dict[float, int] = {}
                 n_points = len(idxs)
@@ -228,25 +220,29 @@ class Points(Transformables):
                     else:
                         dists[dist] = 1
                 for count in dists.values():
-                    if max_order < count:
-                        max_order = count  # TODO combine different counts
-            for order in range(max_order, 1, -1):
-                if max_order % order != 0 and (max_order - 1) % order != 0:
-                    continue
-                rot = RotationAxis(axis, order)
-                if rot.symmetric(points, tol):
-                    yield rot
-                    if not coplanar:
-                        for factor in (2, 1):
-                            new_order = order * factor
-                            if new_order > 2:
-                                rotorefl = RotoreflectionAxis(axis, new_order)
-                                if rotorefl.symmetric(points, tol):
-                                    yield rotorefl
-                                    break
-                    elif order > 2:
-                        yield RotoreflectionAxis(axis, order)
-                    break
+                    orders.add(count)
+            ref_orders = sorted(orders, reverse=True)
+            for order in range(ref_orders[0], 1, -1):
+                for ref_order in ref_orders:
+                    if ref_order % order != 0 and (ref_order - 1) % order != 0:
+                        break
+                else:
+                    rot = RotationAxis(axis, order)
+                    if rot.symmetric(points, tol):
+                        yield rot
+                        if not coplanar:
+                            for factor in (2, 1):
+                                new_order = order * factor
+                                if new_order > 2:
+                                    rotorefl = RotoreflectionAxis(
+                                        axis, new_order
+                                    )
+                                    if rotorefl.symmetric(points, tol):
+                                        yield rotorefl
+                                        break
+                        elif order > 2:
+                            yield RotoreflectionAxis(axis, order)
+                        break
             normals.append(axis)
             refl = ReflectionPlane(axis)
             if coplanar or refl.symmetric(points, tol):
