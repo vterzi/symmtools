@@ -56,6 +56,7 @@ class SymmetryElement(ABC):
     _symb = ""
     _name = ""
     _id = 0
+    label = ""
 
     @property
     @abstractmethod
