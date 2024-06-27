@@ -11,6 +11,7 @@ __all__ = [
     "Tuple",
     "List",
     "Dict",
+    "Iterable",
     "Iterator",
     "Bool",
     "Int",
@@ -41,6 +42,7 @@ from typing import (
     Tuple,
     List,
     Dict,
+    Iterable,
     Iterator,
 )
 
