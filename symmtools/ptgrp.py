@@ -39,6 +39,7 @@ from .symmelem import (
     CenterRotoreflectionAxes,
     SymmetryElements,
 )
+from .primitive import Points
 from .typehints import (
     TypeVar,
     Any,
@@ -644,6 +645,14 @@ class PointGroup(Transformable):
                     else:
                         order = "1"
         return cls(rot + order + refl)
+
+    @classmethod
+    def from_points(cls, points: Points, tol: float) -> "PointGroup":
+        """
+        Construct an instance from a set of points `points` using a tolerance
+        `tol` to determine its symmetry elements.
+        """
+        return cls.from_all_symm_elems(tuple(points.symm_elems(tol)))
 
     @classmethod
     def from_part_symm_elems(
