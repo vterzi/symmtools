@@ -120,237 +120,509 @@ dodecahedron = Points.from_arr(
 
 
 class TestPointGroup(TestCase):
-    def stringify(
-        self, symm_elems: Union[Sequence[SymmetryElement], Points]
-    ) -> Tuple[str, str]:
-        if isinstance(symm_elems, Points):
-            symm_elems = tuple(symm_elems.symm_elems(TOL))
-        info = SymmetryElements()
-        info.include(symm_elems, TOL)
-        group = PointGroup.from_all_symm_elems(symm_elems)
-        return ",".join(info.symbs), group.symb
+    def test_init(self) -> None:
+        def stringify(symb: str) -> Tuple[str, str]:
+            group = PointGroup(symb)
+            info = SymmetryElements()
+            info.include(tuple(group.symm_elems), TOL)
+            return ",".join(info.symbs), group.symb
 
-    def test_low_from_all_symm_elems(self) -> None:
-        symm_elem_symbs, group_symb = self.stringify(asymmetric_pyramid)
+        symm_elem_symbs, group_symb = stringify("Cs")
+        self.assertEqual(group_symb, "Cs")
+        self.assertEqual(symm_elem_symbs, "s")
+
+        symm_elem_symbs, group_symb = stringify("Ci")
+        self.assertEqual(group_symb, "Ci")
+        self.assertEqual(symm_elem_symbs, "i")
+
+        symm_elem_symbs, group_symb = stringify("C1")
+        self.assertEqual(group_symb, "C1")
+        self.assertEqual(symm_elem_symbs, "")
+
+        symm_elem_symbs, group_symb = stringify("C2")
+        self.assertEqual(group_symb, "C2")
+        self.assertEqual(symm_elem_symbs, "C2")
+
+        symm_elem_symbs, group_symb = stringify("C3")
+        self.assertEqual(group_symb, "C3")
+        self.assertEqual(symm_elem_symbs, "C3")
+
+        symm_elem_symbs, group_symb = stringify("C4")
+        self.assertEqual(group_symb, "C4")
+        self.assertEqual(symm_elem_symbs, "C4")
+
+        symm_elem_symbs, group_symb = stringify("C5")
+        self.assertEqual(group_symb, "C5")
+        self.assertEqual(symm_elem_symbs, "C5")
+
+        symm_elem_symbs, group_symb = stringify("C6")
+        self.assertEqual(group_symb, "C6")
+        self.assertEqual(symm_elem_symbs, "C6")
+
+        symm_elem_symbs, group_symb = stringify("Coo")
+        self.assertEqual(group_symb, "Coo")
+        self.assertEqual(symm_elem_symbs, "Coo")
+
+        symm_elem_symbs, group_symb = stringify("C1i")
+        self.assertEqual(group_symb, "Ci")
+        self.assertEqual(symm_elem_symbs, "i")
+
+        symm_elem_symbs, group_symb = stringify("C2i")
+        self.assertEqual(group_symb, "Cs")
+        self.assertEqual(symm_elem_symbs, "s")
+
+        symm_elem_symbs, group_symb = stringify("C3i")
+        self.assertEqual(group_symb, "S6")
+        self.assertEqual(symm_elem_symbs, "C3,i,S6")
+
+        symm_elem_symbs, group_symb = stringify("C4i")
+        self.assertEqual(group_symb, "S4")
+        self.assertEqual(symm_elem_symbs, "C2,S4")
+
+        symm_elem_symbs, group_symb = stringify("C5i")
+        self.assertEqual(group_symb, "S10")
+        self.assertEqual(symm_elem_symbs, "C5,i,S10")
+
+        symm_elem_symbs, group_symb = stringify("C6i")
+        self.assertEqual(group_symb, "C3h")
+        self.assertEqual(symm_elem_symbs, "C3,s,S3")
+
+        symm_elem_symbs, group_symb = stringify("Cooi")
+        self.assertEqual(group_symb, "Cooh")
+        self.assertEqual(symm_elem_symbs, "Coo,s,i,Soo")
+
+        symm_elem_symbs, group_symb = stringify("C1v")
+        self.assertEqual(group_symb, "Cs")
+        self.assertEqual(symm_elem_symbs, "s")
+
+        symm_elem_symbs, group_symb = stringify("C2v")
+        self.assertEqual(group_symb, "C2v")
+        self.assertEqual(symm_elem_symbs, "C2,2s")
+
+        symm_elem_symbs, group_symb = stringify("C3v")
+        self.assertEqual(group_symb, "C3v")
+        self.assertEqual(symm_elem_symbs, "C3,3s")
+
+        symm_elem_symbs, group_symb = stringify("C4v")
+        self.assertEqual(group_symb, "C4v")
+        self.assertEqual(symm_elem_symbs, "C4,4s")
+
+        symm_elem_symbs, group_symb = stringify("C5v")
+        self.assertEqual(group_symb, "C5v")
+        self.assertEqual(symm_elem_symbs, "C5,5s")
+
+        symm_elem_symbs, group_symb = stringify("C6v")
+        self.assertEqual(group_symb, "C6v")
+        self.assertEqual(symm_elem_symbs, "C6,6s")
+
+        symm_elem_symbs, group_symb = stringify("Coov")
+        self.assertEqual(group_symb, "Coov")
+        self.assertEqual(symm_elem_symbs, "Coo,oosv")
+
+        symm_elem_symbs, group_symb = stringify("C1h")
+        self.assertEqual(group_symb, "Cs")
+        self.assertEqual(symm_elem_symbs, "s")
+
+        symm_elem_symbs, group_symb = stringify("C2h")
+        self.assertEqual(group_symb, "C2h")
+        self.assertEqual(symm_elem_symbs, "C2,s,i")
+
+        symm_elem_symbs, group_symb = stringify("C3h")
+        self.assertEqual(group_symb, "C3h")
+        self.assertEqual(symm_elem_symbs, "C3,s,S3")
+
+        symm_elem_symbs, group_symb = stringify("C4h")
+        self.assertEqual(group_symb, "C4h")
+        self.assertEqual(symm_elem_symbs, "C4,s,i,S4")
+
+        symm_elem_symbs, group_symb = stringify("C5h")
+        self.assertEqual(group_symb, "C5h")
+        self.assertEqual(symm_elem_symbs, "C5,s,S5")
+
+        symm_elem_symbs, group_symb = stringify("C6h")
+        self.assertEqual(group_symb, "C6h")
+        self.assertEqual(symm_elem_symbs, "C6,s,i,S6")
+
+        symm_elem_symbs, group_symb = stringify("Cooh")
+        self.assertEqual(group_symb, "Cooh")
+        self.assertEqual(symm_elem_symbs, "Coo,s,i,Soo")
+
+        symm_elem_symbs, group_symb = stringify("S1")
+        self.assertEqual(group_symb, "Cs")
+        self.assertEqual(symm_elem_symbs, "s")
+
+        symm_elem_symbs, group_symb = stringify("S2")
+        self.assertEqual(group_symb, "Ci")
+        self.assertEqual(symm_elem_symbs, "i")
+
+        symm_elem_symbs, group_symb = stringify("S3")
+        self.assertEqual(group_symb, "C3h")
+        self.assertEqual(symm_elem_symbs, "C3,s,S3")
+
+        symm_elem_symbs, group_symb = stringify("S4")
+        self.assertEqual(group_symb, "S4")
+        self.assertEqual(symm_elem_symbs, "C2,S4")
+
+        symm_elem_symbs, group_symb = stringify("S5")
+        self.assertEqual(group_symb, "C5h")
+        self.assertEqual(symm_elem_symbs, "C5,s,S5")
+
+        symm_elem_symbs, group_symb = stringify("S6")
+        self.assertEqual(group_symb, "S6")
+        self.assertEqual(symm_elem_symbs, "C3,i,S6")
+
+        symm_elem_symbs, group_symb = stringify("Soo")
+        self.assertEqual(group_symb, "Cooh")
+        self.assertEqual(symm_elem_symbs, "Coo,s,i,Soo")
+
+        symm_elem_symbs, group_symb = stringify("D1")
+        self.assertEqual(group_symb, "C2")
+        self.assertEqual(symm_elem_symbs, "C2")
+
+        symm_elem_symbs, group_symb = stringify("D2")
+        self.assertEqual(group_symb, "D2")
+        self.assertEqual(symm_elem_symbs, "3C2")
+
+        symm_elem_symbs, group_symb = stringify("D3")
+        self.assertEqual(group_symb, "D3")
+        self.assertEqual(symm_elem_symbs, "C3,3C2")
+
+        symm_elem_symbs, group_symb = stringify("D4")
+        self.assertEqual(group_symb, "D4")
+        self.assertEqual(symm_elem_symbs, "C4,4C2")
+
+        symm_elem_symbs, group_symb = stringify("D5")
+        self.assertEqual(group_symb, "D5")
+        self.assertEqual(symm_elem_symbs, "C5,5C2")
+
+        symm_elem_symbs, group_symb = stringify("D6")
+        self.assertEqual(group_symb, "D6")
+        self.assertEqual(symm_elem_symbs, "C6,6C2")
+
+        symm_elem_symbs, group_symb = stringify("Doo")
+        self.assertEqual(group_symb, "Doo")
+        self.assertEqual(symm_elem_symbs, "Coo,ooC2")
+
+        symm_elem_symbs, group_symb = stringify("D1d")
+        self.assertEqual(group_symb, "C2h")
+        self.assertEqual(symm_elem_symbs, "C2,s,i")
+
+        symm_elem_symbs, group_symb = stringify("D2d")
+        self.assertEqual(group_symb, "D2d")
+        self.assertEqual(symm_elem_symbs, "3C2,2s,S4")
+
+        symm_elem_symbs, group_symb = stringify("D3d")
+        self.assertEqual(group_symb, "D3d")
+        self.assertEqual(symm_elem_symbs, "C3,3C2,3s,i,S6")
+
+        symm_elem_symbs, group_symb = stringify("D4d")
+        self.assertEqual(group_symb, "D4d")
+        self.assertEqual(symm_elem_symbs, "C4,4C2,4s,S8")
+
+        symm_elem_symbs, group_symb = stringify("D5d")
+        self.assertEqual(group_symb, "D5d")
+        self.assertEqual(symm_elem_symbs, "C5,5C2,5s,i,S10")
+
+        symm_elem_symbs, group_symb = stringify("D6d")
+        self.assertEqual(group_symb, "D6d")
+        self.assertEqual(symm_elem_symbs, "C6,6C2,6s,S12")
+
+        symm_elem_symbs, group_symb = stringify("Dood")
+        self.assertEqual(group_symb, "Dooh")
+        self.assertEqual(symm_elem_symbs, "Coo,ooC2,oosv,s,i,Soo")
+
+        symm_elem_symbs, group_symb = stringify("D1h")
+        self.assertEqual(group_symb, "C2v")
+        self.assertEqual(symm_elem_symbs, "C2,2s")
+
+        symm_elem_symbs, group_symb = stringify("D2h")
+        self.assertEqual(group_symb, "D2h")
+        self.assertEqual(symm_elem_symbs, "3C2,3s,i")
+
+        symm_elem_symbs, group_symb = stringify("D3h")
+        self.assertEqual(group_symb, "D3h")
+        self.assertEqual(symm_elem_symbs, "C3,3C2,4s,S3")
+
+        symm_elem_symbs, group_symb = stringify("D4h")
+        self.assertEqual(group_symb, "D4h")
+        self.assertEqual(symm_elem_symbs, "C4,4C2,5s,i,S4")
+
+        symm_elem_symbs, group_symb = stringify("D5h")
+        self.assertEqual(group_symb, "D5h")
+        self.assertEqual(symm_elem_symbs, "C5,5C2,6s,S5")
+
+        symm_elem_symbs, group_symb = stringify("D6h")
+        self.assertEqual(group_symb, "D6h")
+        self.assertEqual(symm_elem_symbs, "C6,6C2,7s,i,S6")
+
+        symm_elem_symbs, group_symb = stringify("Dooh")
+        self.assertEqual(group_symb, "Dooh")
+        self.assertEqual(symm_elem_symbs, "Coo,ooC2,oosv,s,i,Soo")
+
+        symm_elem_symbs, group_symb = stringify("T")
+        self.assertEqual(group_symb, "T")
+        self.assertEqual(symm_elem_symbs, "4C3,3C2")
+
+        symm_elem_symbs, group_symb = stringify("Td")
+        self.assertEqual(group_symb, "Td")
+        self.assertEqual(symm_elem_symbs, "4C3,3C2,6s,3S4")
+
+        symm_elem_symbs, group_symb = stringify("Th")
+        self.assertEqual(group_symb, "Th")
+        self.assertEqual(symm_elem_symbs, "4C3,3C2,3s,i,4S6")
+
+        symm_elem_symbs, group_symb = stringify("O")
+        self.assertEqual(group_symb, "O")
+        self.assertEqual(symm_elem_symbs, "3C4,4C3,6C2")
+
+        symm_elem_symbs, group_symb = stringify("Oh")
+        self.assertEqual(group_symb, "Oh")
+        self.assertEqual(symm_elem_symbs, "3C4,4C3,6C2,9s,i,4S6,3S4")
+
+        symm_elem_symbs, group_symb = stringify("I")
+        self.assertEqual(group_symb, "I")
+        self.assertEqual(symm_elem_symbs, "6C5,10C3,15C2")
+
+        symm_elem_symbs, group_symb = stringify("Ih")
+        self.assertEqual(group_symb, "Ih")
+        self.assertEqual(symm_elem_symbs, "6C5,10C3,15C2,15s,i,6S10,10S6")
+
+        symm_elem_symbs, group_symb = stringify("K")
+        self.assertEqual(group_symb, "K")
+        self.assertEqual(symm_elem_symbs, "ooCoo")
+
+        symm_elem_symbs, group_symb = stringify("Kh")
+        self.assertEqual(group_symb, "Kh")
+        self.assertEqual(symm_elem_symbs, "ooCoo,oos,i,ooSoo")
+
+    def test_from_all_symm_elems(self) -> None:
+        def stringify(
+            symm_elems: Union[Sequence[SymmetryElement], Points]
+        ) -> Tuple[str, str]:
+            if isinstance(symm_elems, Points):
+                symm_elems = tuple(symm_elems.symm_elems(TOL))
+            info = SymmetryElements()
+            info.include(symm_elems, TOL)
+            group = PointGroup.from_all_symm_elems(symm_elems)
+            return ",".join(info.symbs), group.symb
+
+        symm_elem_symbs, group_symb = stringify(asymmetric_pyramid)
         self.assertEqual(symm_elem_symbs, "")
         self.assertEqual(group_symb, "C1")
 
-        symm_elem_symbs, group_symb = self.stringify(asymmetric_triangle)
+        symm_elem_symbs, group_symb = stringify(asymmetric_triangle)
         self.assertEqual(symm_elem_symbs, "s")
         self.assertEqual(group_symb, "Cs")
 
-        symm_elem_symbs, group_symb = self.stringify(asymmetric_prism)
+        symm_elem_symbs, group_symb = stringify(asymmetric_prism)
         self.assertEqual(symm_elem_symbs, "s")
         self.assertEqual(group_symb, "Cs")
 
-        symm_elem_symbs, group_symb = self.stringify(asymmetric_antiprism)
+        symm_elem_symbs, group_symb = stringify(asymmetric_antiprism)
         self.assertEqual(symm_elem_symbs, "i")
         self.assertEqual(group_symb, "Ci")
 
-    def test_var_from_all_symm_elems(self) -> None:
-        symm_elem_symbs, group_symb = self.stringify(rot2_obj)
+        symm_elem_symbs, group_symb = stringify(rot2_obj)
         self.assertEqual(symm_elem_symbs, "C2")
         self.assertEqual(group_symb, "C2")
 
-        symm_elem_symbs, group_symb = self.stringify(rot3_obj)
+        symm_elem_symbs, group_symb = stringify(rot3_obj)
         self.assertEqual(symm_elem_symbs, "C3")
         self.assertEqual(group_symb, "C3")
 
-        symm_elem_symbs, group_symb = self.stringify(rot4_obj)
+        symm_elem_symbs, group_symb = stringify(rot4_obj)
         self.assertEqual(symm_elem_symbs, "C4")
         self.assertEqual(group_symb, "C4")
 
-        symm_elem_symbs, group_symb = self.stringify(rot5_obj)
+        symm_elem_symbs, group_symb = stringify(rot5_obj)
         self.assertEqual(symm_elem_symbs, "C5")
         self.assertEqual(group_symb, "C5")
 
-        symm_elem_symbs, group_symb = self.stringify(rot6_obj)
+        symm_elem_symbs, group_symb = stringify(rot6_obj)
         self.assertEqual(symm_elem_symbs, "C6")
         self.assertEqual(group_symb, "C6")
 
-        symm_elem_symbs, group_symb = self.stringify(angle)
+        symm_elem_symbs, group_symb = stringify(angle)
         self.assertEqual(symm_elem_symbs, "C2,2s")
         self.assertEqual(group_symb, "C2v")
 
-        symm_elem_symbs, group_symb = self.stringify(triangular_pyramid)
+        symm_elem_symbs, group_symb = stringify(triangular_pyramid)
         self.assertEqual(symm_elem_symbs, "C3,3s")
         self.assertEqual(group_symb, "C3v")
 
-        symm_elem_symbs, group_symb = self.stringify(quadrangular_pyramid)
+        symm_elem_symbs, group_symb = stringify(quadrangular_pyramid)
         self.assertEqual(symm_elem_symbs, "C4,4s")
         self.assertEqual(group_symb, "C4v")
 
-        symm_elem_symbs, group_symb = self.stringify(pentangular_pyramid)
+        symm_elem_symbs, group_symb = stringify(pentangular_pyramid)
         self.assertEqual(symm_elem_symbs, "C5,5s")
         self.assertEqual(group_symb, "C5v")
 
-        symm_elem_symbs, group_symb = self.stringify(hexangular_pyramid)
+        symm_elem_symbs, group_symb = stringify(hexangular_pyramid)
         self.assertEqual(symm_elem_symbs, "C6,6s")
         self.assertEqual(group_symb, "C6v")
 
-        symm_elem_symbs, group_symb = self.stringify(double_propeller)
+        symm_elem_symbs, group_symb = stringify(double_propeller)
         self.assertEqual(symm_elem_symbs, "C2,s,i")
         self.assertEqual(group_symb, "C2h")
 
-        symm_elem_symbs, group_symb = self.stringify(triple_propeller)
+        symm_elem_symbs, group_symb = stringify(triple_propeller)
         self.assertEqual(symm_elem_symbs, "C3,s,S3")
         self.assertEqual(group_symb, "C3h")
 
-        symm_elem_symbs, group_symb = self.stringify(quadruple_propeller)
+        symm_elem_symbs, group_symb = stringify(quadruple_propeller)
         self.assertEqual(symm_elem_symbs, "C4,s,i,S4")
         self.assertEqual(group_symb, "C4h")
 
-        symm_elem_symbs, group_symb = self.stringify(pentuple_propeller)
+        symm_elem_symbs, group_symb = stringify(pentuple_propeller)
         self.assertEqual(symm_elem_symbs, "C5,s,S5")
         self.assertEqual(group_symb, "C5h")
 
-        symm_elem_symbs, group_symb = self.stringify(hextuple_propeller)
+        symm_elem_symbs, group_symb = stringify(hextuple_propeller)
         self.assertEqual(symm_elem_symbs, "C6,s,i,S6")
         self.assertEqual(group_symb, "C6h")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl4_obj)
+        symm_elem_symbs, group_symb = stringify(rotorefl4_obj)
         self.assertEqual(symm_elem_symbs, "C2,S4")
         self.assertEqual(group_symb, "S4")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl6_obj)
+        symm_elem_symbs, group_symb = stringify(rotorefl6_obj)
         self.assertEqual(symm_elem_symbs, "C3,i,S6")
         self.assertEqual(group_symb, "S6")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl8_obj)
+        symm_elem_symbs, group_symb = stringify(rotorefl8_obj)
         self.assertEqual(symm_elem_symbs, "C4,S8")
         self.assertEqual(group_symb, "S8")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl10_obj)
+        symm_elem_symbs, group_symb = stringify(rotorefl10_obj)
         self.assertEqual(symm_elem_symbs, "C5,i,S10")
         self.assertEqual(group_symb, "S10")
 
-        symm_elem_symbs, group_symb = self.stringify(rotorefl12_obj)
+        symm_elem_symbs, group_symb = stringify(rotorefl12_obj)
         self.assertEqual(symm_elem_symbs, "C6,S12")
         self.assertEqual(group_symb, "S12")
 
-        symm_elem_symbs, group_symb = self.stringify(double_helix)
+        symm_elem_symbs, group_symb = stringify(double_helix)
         self.assertEqual(symm_elem_symbs, "3C2")
         self.assertEqual(group_symb, "D2")
 
-        symm_elem_symbs, group_symb = self.stringify(triple_helix)
+        symm_elem_symbs, group_symb = stringify(triple_helix)
         self.assertEqual(symm_elem_symbs, "C3,3C2")
         self.assertEqual(group_symb, "D3")
 
-        symm_elem_symbs, group_symb = self.stringify(quadruple_helix)
+        symm_elem_symbs, group_symb = stringify(quadruple_helix)
         self.assertEqual(symm_elem_symbs, "C4,4C2")
         self.assertEqual(group_symb, "D4")
 
-        symm_elem_symbs, group_symb = self.stringify(pentuple_helix)
+        symm_elem_symbs, group_symb = stringify(pentuple_helix)
         self.assertEqual(symm_elem_symbs, "C5,5C2")
         self.assertEqual(group_symb, "D5")
 
-        symm_elem_symbs, group_symb = self.stringify(hextuple_helix)
+        symm_elem_symbs, group_symb = stringify(hextuple_helix)
         self.assertEqual(symm_elem_symbs, "C6,6C2")
         self.assertEqual(group_symb, "D6")
 
-        symm_elem_symbs, group_symb = self.stringify(quarter_twist)
+        symm_elem_symbs, group_symb = stringify(quarter_twist)
         self.assertEqual(symm_elem_symbs, "3C2,2s,S4")
         self.assertEqual(group_symb, "D2d")
 
-        symm_elem_symbs, group_symb = self.stringify(triangular_antiprism)
+        symm_elem_symbs, group_symb = stringify(triangular_antiprism)
         self.assertEqual(symm_elem_symbs, "C3,3C2,3s,i,S6")
         self.assertEqual(group_symb, "D3d")
 
-        symm_elem_symbs, group_symb = self.stringify(quadrangular_antiprism)
+        symm_elem_symbs, group_symb = stringify(quadrangular_antiprism)
         self.assertEqual(symm_elem_symbs, "C4,4C2,4s,S8")
         self.assertEqual(group_symb, "D4d")
 
-        symm_elem_symbs, group_symb = self.stringify(pentangular_antiprism)
+        symm_elem_symbs, group_symb = stringify(pentangular_antiprism)
         self.assertEqual(symm_elem_symbs, "C5,5C2,5s,i,S10")
         self.assertEqual(group_symb, "D5d")
 
-        symm_elem_symbs, group_symb = self.stringify(hexangular_antiprism)
+        symm_elem_symbs, group_symb = stringify(hexangular_antiprism)
         self.assertEqual(symm_elem_symbs, "C6,6C2,6s,S12")
         self.assertEqual(group_symb, "D6d")
 
-        symm_elem_symbs, group_symb = self.stringify(rectangle)
+        symm_elem_symbs, group_symb = stringify(rectangle)
         self.assertEqual(symm_elem_symbs, "3C2,3s,i")
         self.assertEqual(group_symb, "D2h")
 
-        symm_elem_symbs, group_symb = self.stringify(rectangular_prism)
+        symm_elem_symbs, group_symb = stringify(rectangular_prism)
         self.assertEqual(symm_elem_symbs, "3C2,3s,i")
         self.assertEqual(group_symb, "D2h")
 
-        symm_elem_symbs, group_symb = self.stringify(triangle)
+        symm_elem_symbs, group_symb = stringify(triangle)
         self.assertEqual(symm_elem_symbs, "C3,3C2,4s,S3")
         self.assertEqual(group_symb, "D3h")
 
-        symm_elem_symbs, group_symb = self.stringify(triangular_prism)
+        symm_elem_symbs, group_symb = stringify(triangular_prism)
         self.assertEqual(symm_elem_symbs, "C3,3C2,4s,S3")
         self.assertEqual(group_symb, "D3h")
 
-        symm_elem_symbs, group_symb = self.stringify(square)
+        symm_elem_symbs, group_symb = stringify(square)
         self.assertEqual(symm_elem_symbs, "C4,4C2,5s,i,S4")
         self.assertEqual(group_symb, "D4h")
 
-        symm_elem_symbs, group_symb = self.stringify(quadrangular_prism)
+        symm_elem_symbs, group_symb = stringify(quadrangular_prism)
         self.assertEqual(symm_elem_symbs, "C4,4C2,5s,i,S4")
         self.assertEqual(group_symb, "D4h")
 
-        symm_elem_symbs, group_symb = self.stringify(pentagon)
+        symm_elem_symbs, group_symb = stringify(pentagon)
         self.assertEqual(symm_elem_symbs, "C5,5C2,6s,S5")
         self.assertEqual(group_symb, "D5h")
 
-        symm_elem_symbs, group_symb = self.stringify(pentangular_prism)
+        symm_elem_symbs, group_symb = stringify(pentangular_prism)
         self.assertEqual(symm_elem_symbs, "C5,5C2,6s,S5")
         self.assertEqual(group_symb, "D5h")
 
-        symm_elem_symbs, group_symb = self.stringify(hexagon)
+        symm_elem_symbs, group_symb = stringify(hexagon)
         self.assertEqual(symm_elem_symbs, "C6,6C2,7s,i,S6")
         self.assertEqual(group_symb, "D6h")
 
-        symm_elem_symbs, group_symb = self.stringify(hexangular_prism)
+        symm_elem_symbs, group_symb = stringify(hexangular_prism)
         self.assertEqual(symm_elem_symbs, "C6,6C2,7s,i,S6")
         self.assertEqual(group_symb, "D6h")
 
-    def test_high_from_all_symm_elems(self) -> None:
-        symm_elem_symbs, group_symb = self.stringify(tetrahedral)
+        symm_elem_symbs, group_symb = stringify(tetrahedral)
         self.assertEqual(symm_elem_symbs, "4C3,3C2")
         self.assertEqual(group_symb, "T")
 
-        symm_elem_symbs, group_symb = self.stringify(tetrahedron)
+        symm_elem_symbs, group_symb = stringify(tetrahedron)
         self.assertEqual(symm_elem_symbs, "4C3,3C2,6s,3S4")
         self.assertEqual(group_symb, "Td")
 
-        symm_elem_symbs, group_symb = self.stringify(pyritohedron)
+        symm_elem_symbs, group_symb = stringify(pyritohedron)
         self.assertEqual(symm_elem_symbs, "4C3,3C2,3s,i,4S6")
         self.assertEqual(group_symb, "Th")
 
-        symm_elem_symbs, group_symb = self.stringify(octahedral)
+        symm_elem_symbs, group_symb = stringify(octahedral)
         self.assertEqual(symm_elem_symbs, "3C4,4C3,6C2")
         self.assertEqual(group_symb, "O")
 
-        symm_elem_symbs, group_symb = self.stringify(cube)
+        symm_elem_symbs, group_symb = stringify(cube)
         self.assertEqual(symm_elem_symbs, "3C4,4C3,6C2,9s,i,4S6,3S4")
         self.assertEqual(group_symb, "Oh")
 
-        symm_elem_symbs, group_symb = self.stringify(octahedron)
+        symm_elem_symbs, group_symb = stringify(octahedron)
         self.assertEqual(symm_elem_symbs, "3C4,4C3,6C2,9s,i,4S6,3S4")
         self.assertEqual(group_symb, "Oh")
 
         # icosahedral = Points.from_arr(...)
-        # symm_elem_symbs, group_symb = self.stringify(icosahedral)
+        # symm_elem_symbs, group_symb = stringify(icosahedral)
         # self.assertEqual(symm_elem_symbs, "6C5,10C3,15C2")
         # self.assertEqual(group_symb, "I")
 
-        symm_elem_symbs, group_symb = self.stringify(icosahedron)
+        symm_elem_symbs, group_symb = stringify(icosahedron)
         self.assertEqual(symm_elem_symbs, "6C5,10C3,15C2,15s,i,6S10,10S6")
         self.assertEqual(group_symb, "Ih")
 
-        symm_elem_symbs, group_symb = self.stringify(dodecahedron)
+        symm_elem_symbs, group_symb = stringify(dodecahedron)
         self.assertEqual(symm_elem_symbs, "6C5,10C3,15C2,15s,i,6S10,10S6")
         self.assertEqual(group_symb, "Ih")
 
-    def test_inf_from_all_symm_elems(self) -> None:
         symm_elems: Sequence[SymmetryElement]
 
         symm_elems = [InfRotationAxis([0, 0, 1])]
-        symm_elem_symbs, group_symb = self.stringify(symm_elems)
+        symm_elem_symbs, group_symb = stringify(symm_elems)
         self.assertEqual(symm_elem_symbs, "Coo")
         self.assertEqual(group_symb, "Coo")
 
@@ -360,11 +632,11 @@ class TestPointGroup(TestCase):
             InversionCenter(),
             InfRotoreflectionAxis([0, 0, 1]),
         ]
-        symm_elem_symbs, group_symb = self.stringify(symm_elems)
+        symm_elem_symbs, group_symb = stringify(symm_elems)
         self.assertEqual(symm_elem_symbs, "Coo,s,i,Soo")
         self.assertEqual(group_symb, "Cooh")
 
-        symm_elem_symbs, group_symb = self.stringify(three_collinear_points)
+        symm_elem_symbs, group_symb = stringify(three_collinear_points)
         self.assertEqual(symm_elem_symbs, "Coo,oosv")
         self.assertEqual(group_symb, "Coov")
 
@@ -372,20 +644,20 @@ class TestPointGroup(TestCase):
             InfRotationAxis([0, 0, 1]),
             AxisRotationAxes([0, 0, 1]),
         ]
-        symm_elem_symbs, group_symb = self.stringify(symm_elems)
+        symm_elem_symbs, group_symb = stringify(symm_elems)
         self.assertEqual(symm_elem_symbs, "Coo,ooC2")
         self.assertEqual(group_symb, "Doo")
 
-        symm_elem_symbs, group_symb = self.stringify(two_points)
+        symm_elem_symbs, group_symb = stringify(two_points)
         self.assertEqual(symm_elem_symbs, "Coo,ooC2,oosv,s,i,Soo")
         self.assertEqual(group_symb, "Dooh")
 
         symm_elems = [CenterRotationAxes()]
-        symm_elem_symbs, group_symb = self.stringify(symm_elems)
+        symm_elem_symbs, group_symb = stringify(symm_elems)
         self.assertEqual(symm_elem_symbs, "ooCoo")
         self.assertEqual(group_symb, "K")
 
-        symm_elem_symbs, group_symb = self.stringify(point)
+        symm_elem_symbs, group_symb = stringify(point)
         self.assertEqual(symm_elem_symbs, "ooCoo,oos,i,ooSoo")
         self.assertEqual(group_symb, "Kh")
 
