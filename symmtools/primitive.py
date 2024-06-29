@@ -23,6 +23,7 @@ from .vecop import (
 from .transform import (
     Transformable,
     Transformables,
+    Transformation,
     VectorTransformable,
     DirectionTransformable,
     Translation,
@@ -420,6 +421,40 @@ class Points(Transformables):
                 point = points[i]
                 for transform in symm_elem.transforms:
                     points.append(transform(point))
+        return cls(points)
+
+    @classmethod
+    def from_transform(
+        cls,
+        base: Union[RealVectors, "Points"],
+        transforms: Union[Transformation, Sequence[Transformation]],
+        tol: float,
+    ) -> "Points":
+        """
+        Construct an instance by applying repeatedly one or multiple
+        trnasfomations `transforms` to an array of 3D point position vectors or
+        a set of points `base` and generating only unique points within a
+        tolerance `tol`.
+        """
+        if isinstance(base, Points):
+            points = list(base.elems)
+        else:
+            points = [Point(vec) for vec in base]
+        if not isinstance(transforms, Sequence):
+            transforms = (transforms,)
+        fi = 0
+        li = len(points)
+        while fi < li:
+            for transform in transforms:
+                for i in range(fi, li):
+                    point = transform(points[i])
+                    for ref_point in points:
+                        if point.same(ref_point, tol):
+                            break
+                    else:
+                        points.append(point)
+            fi = li
+            li = len(points)
         return cls(points)
 
 
