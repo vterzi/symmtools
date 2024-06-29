@@ -1,4 +1,4 @@
-from .init import TestCase, main, Union, Sequence, Tuple, pi
+from .init import TestCase, main, Union, Sequence, Tuple, pi, roots
 
 from symmtools import (
     chcoords,
@@ -106,11 +106,18 @@ pentangular_prism = pos_transl(pentagon) + neg_transl(pentagon)
 hexangular_prism = pos_transl(hexagon) + neg_transl(hexagon)
 
 tetrahedral = Points.from_arr(ax3permut(signvar([3, 2, 1], 1)))
-tetrahedron = Points.from_arr(signvar([1, 1, 1], 1))
 pyritohedron = Points.from_arr(ax3permut(signvar([2, 1])))
 octahedral = Points.from_arr(
     ax3permut(signvar([3, 2, 1], 1)) + ax3permut(signvar([2, 3, 1], -1))
 )
+XI = abs(roots([1, -2, 0, PHI**2])[2])
+icosahedral = Points.from_transform(
+    [[PHI**2 * (1 - XI), PHI * (XI * (1 + XI) - PHI**2), XI]],
+    [Rotation([0, 1, PHI], 2 * pi / 5), Rotation([1, 1, 1], 2 * pi / 3)],
+    TOL,
+)
+
+tetrahedron = Points.from_arr(signvar([1, 1, 1], 1))
 cube = Points.from_arr(signvar([1, 1, 1]))
 octahedron = Points.from_arr(ax3permut(signvar([1])))
 icosahedron = Points.from_arr(ax3permut(signvar([PHI, 1])))
@@ -606,10 +613,9 @@ class TestPointGroup(TestCase):
         self.assertEqual(symm_elem_symbs, "3C4,4C3,6C2,9s,i,4S6,3S4")
         self.assertEqual(group_symb, "Oh")
 
-        # icosahedral = Points.from_arr(...)
-        # symm_elem_symbs, group_symb = stringify(icosahedral)
-        # self.assertEqual(symm_elem_symbs, "6C5,10C3,15C2")
-        # self.assertEqual(group_symb, "I")
+        symm_elem_symbs, group_symb = stringify(icosahedral)
+        self.assertEqual(symm_elem_symbs, "6C5,10C3,15C2")
+        self.assertEqual(group_symb, "I")
 
         symm_elem_symbs, group_symb = stringify(icosahedron)
         self.assertEqual(symm_elem_symbs, "6C5,10C3,15C2,15s,i,6S10,10S6")

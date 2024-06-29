@@ -17,6 +17,7 @@ __all__ = [
     "sin",
     "cos",
     "cross",
+    "roots",
     "norm",
     "ndarray",
     "float64",
@@ -36,7 +37,18 @@ from unittest import TestCase, main
 from random import random, choice, randrange, randint, normalvariate
 from typing import Union, Sequence, Tuple, List
 
-from numpy import pi, array, zeros, eye, sin, cos, cross, ndarray, float64
+from numpy import (
+    pi,
+    array,
+    zeros,
+    eye,
+    sin,
+    cos,
+    cross,
+    roots,
+    ndarray,
+    float64,
+)
 from numpy.linalg import norm
 from numpy.typing import NDArray
 
