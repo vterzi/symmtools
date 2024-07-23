@@ -64,14 +64,14 @@ def chcoords(
 
 
 def signvar(
-    vec: RealVector, parity: Int = 0, unique: Bool = False
+    vec: RealVector, parity: Int = 0, indep: Bool = False
 ) -> List[List[Real]]:
     """
     Generate vectors with all possible sign changes of the coordinates of a
     vector `vec` that satisfy a parity `parity`.  If `parity` is
     positive/negative, only the vectors resulting from even/odd number of sign
     changes are returned.  If `parity` is zero, all vectors are returned.  If
-    `unique` is `True`, only linearly independent vectors are returned.
+    `indep` is `True`, only linearly independent vectors are returned.
     """
     res = []
     for n in range(2 ** len(vec)):
@@ -85,7 +85,7 @@ def signvar(
             n //= 2
             i += 1
         if (sign * parity >= 0 and new not in res) and not (
-            unique and [-coord for coord in new] in res
+            indep and [-coord for coord in new] in res
         ):
             res.append(new)
     return res
