@@ -2,22 +2,32 @@
 
 __all__ = ["Point", "Points", "LabeledPoint", "Arrow", "StructPoint"]
 
+from abc import ABC, abstractmethod
 from re import findall
 
 from numpy import zeros
 from numpy.linalg import eigh
 
-from .const import INF, TOL, LABEL_RE, FLOAT_RE
+from .const import (
+    INF,
+    TOL,
+    SPECIAL_ANGLES,
+    SPECIAL_COMPONENTS,
+    LABEL_RE,
+    FLOAT_RE,
+)
 from .vecop import (
     norm,
     cross,
     normalize,
+    orthogonalize,
     diff,
     zero,
     unitindep,
     parallel,
     unitparallel,
     perpendicular,
+    angle,
     inertia,
 )
 from .transform import (
@@ -60,6 +70,368 @@ from .typehints import (
     RealVector,
     RealVectors,
 )
+
+_Indices = Sequence[Tuple[int, int, int]]
+
+
+class _Vecs(ABC):
+    def __init__(
+        self, idxs1: _Indices, idxs2: _Indices, idxs3: _Indices
+    ) -> None:
+        self.vecs = tuple(
+            tuple(
+                tuple(SPECIAL_COMPONENTS[idx] for idx in idxs)
+                for idxs in arr_idxs
+            )
+            for arr_idxs in (idxs1, idxs2, idxs3)
+        )
+
+    @abstractmethod
+    def symm_elems(
+        self, ax1: Vector, ax2: Vector, ax3: Vector, suffix: str
+    ) -> Iterator[SymmetryElement]:
+        pass
+
+
+class _VecsT(_Vecs):
+    def symm_elems(
+        self, ax1: Vector, ax2: Vector, ax3: Vector, suffix: str
+    ) -> Iterator[SymmetryElement]:
+        d = suffix == "d"
+        h = suffix == "h"
+        for vec in self.vecs[0]:
+            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            yield RotationAxis(vec, 3)
+            if h:
+                yield RotoreflectionAxis(vec, 6)
+        for vec in self.vecs[1]:
+            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            yield RotationAxis(vec, 2)
+            if d:
+                yield RotoreflectionAxis(vec, 4)
+            elif h:
+                yield ReflectionPlane(vec)
+        if d:
+            for vec in self.vecs[2]:
+                vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+                yield ReflectionPlane(vec)
+
+
+class _VecsO(_Vecs):
+    def symm_elems(
+        self, ax1: Vector, ax2: Vector, ax3: Vector, suffix: str
+    ) -> Iterator[SymmetryElement]:
+        h = suffix == "h"
+        for vec in self.vecs[0]:
+            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            yield RotationAxis(vec, 4)
+            if h:
+                yield RotoreflectionAxis(vec, 4)
+                yield ReflectionPlane(vec)
+        for vec in self.vecs[1]:
+            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            yield RotationAxis(vec, 3)
+            if h:
+                yield RotoreflectionAxis(vec, 6)
+        for vec in self.vecs[2]:
+            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            yield RotationAxis(vec, 2)
+            if h:
+                yield ReflectionPlane(vec)
+
+
+class _VecsI(_Vecs):
+    def symm_elems(
+        self, ax1: Vector, ax2: Vector, ax3: Vector, suffix: str
+    ) -> Iterator[SymmetryElement]:
+        h = suffix == "h"
+        for vec in self.vecs[0]:
+            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            yield RotationAxis(vec, 5)
+            if h:
+                yield RotoreflectionAxis(vec, 10)
+        for vec in self.vecs[1]:
+            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            yield RotationAxis(vec, 3)
+            if h:
+                yield RotoreflectionAxis(vec, 6)
+        for vec in self.vecs[2]:
+            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            yield RotationAxis(vec, 2)
+            if h:
+                yield ReflectionPlane(vec)
+
+
+_T_ROT3_IDXS_0 = (
+    (41, 41, 41),
+    (41, 41, -41),
+    (41, -41, 41),
+    (-41, 41, 41),
+)
+_T_ROT2_IDXS_0 = (
+    (79, 0, 0),
+    (0, 79, 0),
+    (0, 0, 79),
+)
+_TD_REFL_IDXS_0 = (
+    (53, 53, 0),
+    (53, 0, 53),
+    (0, 53, 53),
+    (53, -53, 0),
+    (53, 0, -53),
+    (0, 53, -53),
+)
+_T_ROT3_IDXS_1 = (
+    (79, 0, 0),
+    (24, 74, 0),
+    (24, -33, 63),
+    (-24, 33, 63),
+)
+_T_ROT2_IDXS_1 = (
+    (41, -63, 0),
+    (41, 29, 53),
+    (41, 29, -53),
+)
+_TD_REFL_IDXS_1 = (
+    (63, 41, 0),
+    (63, -20, 36),
+    (-63, 20, 36),
+    (0, 66, 36),
+    (0, 66, -36),
+    (0, 0, 79),
+)
+_T_VECS = (
+    _VecsT(_T_ROT3_IDXS_0, _T_ROT2_IDXS_0, _TD_REFL_IDXS_0),
+    _VecsT(_T_ROT3_IDXS_1, _T_ROT2_IDXS_1, _TD_REFL_IDXS_1),
+)
+_O_VECS = (
+    _VecsO(_T_ROT2_IDXS_0, _T_ROT3_IDXS_0, _TD_REFL_IDXS_0),
+    _VecsO(_T_ROT2_IDXS_1, _T_ROT3_IDXS_1, _TD_REFL_IDXS_1),
+    _VecsO(
+        (
+            (79, 0, 0),
+            (0, 53, 53),
+            (0, 53, -53),
+        ),
+        (
+            (41, 63, 0),
+            (41, 0, 63),
+            (41, -63, 0),
+            (41, 0, -63),
+        ),
+        (
+            (0, 79, 0),
+            (0, 0, 79),
+            (53, 36, 36),
+            (53, 36, -36),
+            (53, -36, 36),
+            (-53, 36, 36),
+        ),
+    ),
+)
+_I_VECS = (
+    _VecsI(
+        (
+            (64, 37, 0),
+            (37, 0, 64),
+            (0, 64, 37),
+            (64, -37, 0),
+            (-37, 0, 64),
+            (0, 64, -37),
+        ),
+        _T_ROT3_IDXS_0
+        + (
+            (26, 73, 0),
+            (73, 0, 26),
+            (0, 26, 73),
+            (26, -73, 0),
+            (-73, 0, 26),
+            (0, 26, -73),
+        ),
+        _T_ROT2_IDXS_0
+        + (
+            (62, 22, 36),
+            (62, 22, -36),
+            (62, -22, 36),
+            (-62, 22, 36),
+            (36, 62, 22),
+            (36, 62, -22),
+            (36, -62, 22),
+            (-36, 62, 22),
+            (22, 36, 62),
+            (22, 36, -62),
+            (22, -36, 62),
+            (-22, 36, 62),
+        ),
+    ),
+    _VecsI(
+        (
+            (61, 39, -14),
+            (61, -2, 44),
+            (-61, 34, 27),
+            (11, 58, 44),
+            (11, 7, -76),
+            (11, -70, 27),
+        ),
+        _T_ROT3_IDXS_1
+        + (
+            (56, 38, 29),
+            (56, 3, -49),
+            (56, -47, 16),
+            (24, 15, 71),
+            (24, 51, -49),
+            (-24, 69, 16),
+        ),
+        _T_ROT2_IDXS_1
+        + (
+            (73, 19, 13),
+            (73, 1, -25),
+            (73, -23, 8),
+            (41, 59, 13),
+            (41, -42, 40),
+            (-41, 12, 60),
+            (26, 65, -25),
+            (26, -5, 72),
+            (-26, 55, 40),
+            (0, 78, 8),
+            (0, 28, 72),
+            (0, 46, -60),
+        ),
+    ),
+    _VecsI(
+        (
+            (79, 0, 0),
+            (31, 68, 0),
+            (31, 18, 64),
+            (31, 18, -64),
+            (31, -54, 37),
+            (-31, 54, 37),
+        ),
+        (
+            (61, -45, 0),
+            (61, 35, 26),
+            (61, 35, -26),
+            (61, -11, 41),
+            (-61, 11, 41),
+            (11, -77, 0),
+            (11, 61, 41),
+            (11, 61, -41),
+            (11, -21, 73),
+            (-11, 21, 73),
+        ),
+        (
+            (64, 37, 0),
+            (64, 9, 36),
+            (64, 9, -36),
+            (64, -30, 22),
+            (-64, 30, 22),
+            (37, -64, 0),
+            (37, 52, 36),
+            (37, 52, -36),
+            (37, -17, 62),
+            (-37, 17, 62),
+            (0, 43, 62),
+            (0, 43, -62),
+            (0, 75, 22),
+            (0, -75, 22),
+            (0, 0, 79),
+        ),
+    ),
+    _VecsI(
+        (
+            (61, 21, 37),
+            (61, 21, -37),
+            (61, -45, 0),
+            (11, 77, 0),
+            (11, -35, 64),
+            (-11, 35, 64),
+        ),
+        (
+            (79, 0, 0),
+            (56, 50, 0),
+            (56, -24, 41),
+            (-56, 24, 41),
+            (24, 56, 41),
+            (24, 56, -41),
+            (24, -67, 26),
+            (-24, 67, 26),
+            (24, 6, -73),
+            (24, 6, 73),
+        ),
+        (
+            (73, 26, 0),
+            (73, -10, 22),
+            (-73, 10, 22),
+            (41, 57, 22),
+            (41, 57, -22),
+            (41, -48, 36),
+            (-41, 48, 36),
+            (41, -4, 62),
+            (-41, 4, 62),
+            (26, -73, 0),
+            (26, 32, 62),
+            (26, 32, -62),
+            (0, 66, 36),
+            (0, 66, -36),
+            (0, 0, 79),
+        ),
+    ),
+)
+_VARIANTS: Dict[
+    Tuple[int, int],
+    Dict[float, Tuple[Tuple[_Vecs, Tuple[int, int, int]], ...]],
+] = {
+    (5, 5): {SPECIAL_ANGLES[11]: ((_I_VECS[2], (0, 1, 2)),)},
+    (5, 3): {
+        SPECIAL_ANGLES[5]: ((_I_VECS[2], (0, -1, 2)),),
+        SPECIAL_ANGLES[15]: ((_I_VECS[2], (0, -1, 2)),),
+    },
+    (5, 2): {
+        SPECIAL_ANGLES[2]: ((_I_VECS[2], (0, 1, 2)),),
+        SPECIAL_ANGLES[9]: ((_I_VECS[2], (0, -1, 2)),),
+        SPECIAL_ANGLES[16]: ((_I_VECS[1], (0, 2, 1)),),
+    },
+    (4, 4): {SPECIAL_ANGLES[16]: ((_O_VECS[0], (0, 1, 2)),)},
+    (4, 3): {SPECIAL_ANGLES[8]: ((_O_VECS[2], (0, 1, 2)),)},
+    (4, 2): {
+        SPECIAL_ANGLES[7]: ((_O_VECS[0], (0, 1, 2)),),
+        SPECIAL_ANGLES[16]: ((_O_VECS[2], (0, 1, 2)),),
+    },
+    (3, 3): {
+        SPECIAL_ANGLES[6]: ((_I_VECS[3], (0, 1, 2)),),
+        SPECIAL_ANGLES[13]: (
+            (_I_VECS[1], (0, 1, 2)),
+            (_O_VECS[1], (0, 1, 2)),
+            (_T_VECS[1], (0, 1, 2)),
+        ),
+    },
+    (3, 2): {
+        SPECIAL_ANGLES[1]: ((_I_VECS[3], (0, 1, 2)),),
+        SPECIAL_ANGLES[3]: ((_O_VECS[1], (0, 1, 2)),),
+        SPECIAL_ANGLES[8]: (
+            (_I_VECS[1], (0, -1, 2)),
+            (_T_VECS[1], (0, -1, 2)),
+        ),
+        SPECIAL_ANGLES[12]: ((_I_VECS[3], (0, -1, 2)),),
+        SPECIAL_ANGLES[16]: (
+            (_I_VECS[3], (0, 2, -1)),
+            (_O_VECS[1], (0, 2, -1)),
+        ),
+    },
+    (2, 2): {
+        SPECIAL_ANGLES[4]: ((_I_VECS[2], (2, 1, 0)),),
+        SPECIAL_ANGLES[10]: (
+            (_I_VECS[3], (2, 1, 0)),
+            (_O_VECS[0], (0, 1, 2)),
+        ),
+        SPECIAL_ANGLES[14]: ((_I_VECS[2], (2, -1, 0)),),
+        SPECIAL_ANGLES[16]: (
+            (_I_VECS[0], (0, 1, 2)),
+            (_O_VECS[2], (2, 0, 1)),
+            (_T_VECS[0], (0, 1, 2)),
+        ),
+    },
+}
 
 
 class Point(VectorTransformable):
@@ -142,7 +514,9 @@ class Points(Transformables):
         centroid = self.pos
         return inertia(tuple(elem.pos - centroid for elem in self._elems))
 
-    def symm_elems(self, tol: float = TOL) -> Iterator[SymmetryElement]:
+    def symm_elems(
+        self, tol: float = TOL, fast: bool = True
+    ) -> Iterator[SymmetryElement]:
         """
         Determine all symmetry elements of a set of points `points` within a
         tolerance `tol`.
@@ -186,14 +560,6 @@ class Points(Transformables):
 
         axes: List[Vector] = []
         normals: List[Vector] = []
-
-        def new(arr: List[Vector], vec: Vector) -> bool:
-            for elem in arr:
-                if unitparallel(elem, vec, tol):
-                    return False
-            arr.append(vec)
-            return True
-
         eigvals, eigvecs = eigh(inertia(poses))
         oblate = eigvals[1] - eigvals[0] <= tol
         prolate = eigvals[2] - eigvals[1] <= tol
@@ -286,46 +652,55 @@ class Points(Transformables):
                     break
             return
 
-        for _, idxs in points._groups:
+        def new(arr: List[Vector], vec: Vector) -> bool:
+            for elem in arr:
+                if unitparallel(elem, vec, tol):
+                    return False
+            arr.append(vec)
+            return True
+
+        def high_symm_elems(
+            idxs: Tuple[int, ...]
+        ) -> Iterator[Union[RotationAxis, RotoreflectionAxis]]:
             n_points = len(idxs)
             collinear_part = False
             coplanar_part = False
-            if cubic:
-                for i1 in range(n_points - 2):
-                    pos1 = poses[idxs[i1]]
-                    for i2 in range(i1 + 1, n_points - 1):
-                        pos2 = poses[idxs[i2]]
-                        segment = pos1 - pos2
-                        if i2 == 1:
-                            collinear_part = True
-                        for i3 in range(i2 + 1, n_points):
-                            pos3 = poses[idxs[i3]]
-                            normal = cross(segment, pos1 - pos3)
-                            normal_norm = norm(normal)
-                            if normal_norm <= tol:
-                                continue
-                            axis = normal / normal_norm
-                            collinear_part = False
-                            if new(axes, axis):
-                                dist = pos1.dot(axis)
-                                max_order = 3
-                                for i4 in range(n_points):
-                                    if i4 == i1 or i4 == i2 or i4 == i3:
-                                        continue
-                                    pos4 = poses[idxs[i4]]
-                                    if abs(pos4.dot(axis) - dist) <= tol:
-                                        max_order += 1
-                                if i3 == 2 and max_order == n_points:
-                                    coplanar_part = True
-                                for order in range(max_order, 1, -1):
-                                    if (
-                                        max_order % order != 0
-                                        and (max_order - 1) % order != 0
-                                    ):
-                                        continue
-                                    rot = RotationAxis(axis, order)
-                                    if rot.symmetric(points, tol):
-                                        yield rot
+            for i1 in range(n_points - 2):
+                pos1 = poses[idxs[i1]]
+                for i2 in range(i1 + 1, n_points - 1):
+                    pos2 = poses[idxs[i2]]
+                    segment = pos1 - pos2
+                    if i2 == 1:
+                        collinear_part = True
+                    for i3 in range(i2 + 1, n_points):
+                        pos3 = poses[idxs[i3]]
+                        normal = cross(segment, pos1 - pos3)
+                        normal_norm = norm(normal)
+                        if normal_norm <= tol:
+                            continue
+                        axis = normal / normal_norm
+                        collinear_part = False
+                        if new(axes, axis):
+                            dist = pos1.dot(axis)
+                            max_order = 3
+                            for i4 in range(n_points):
+                                if i4 == i1 or i4 == i2 or i4 == i3:
+                                    continue
+                                pos4 = poses[idxs[i4]]
+                                if abs(pos4.dot(axis) - dist) <= tol:
+                                    max_order += 1
+                            if i3 == 2 and max_order == n_points:
+                                coplanar_part = True
+                            for order in range(max_order, 1, -1):
+                                if (
+                                    max_order % order != 0
+                                    and (max_order - 1) % order != 0
+                                ):
+                                    continue
+                                rot = RotationAxis(axis, order)
+                                if rot.symmetric(points, tol):
+                                    yield rot
+                                    if not fast:
                                         for factor in (2, 1):
                                             new_order = order * factor
                                             if new_order > 2:
@@ -337,12 +712,15 @@ class Points(Transformables):
                                                 ):
                                                     yield rotorefl
                                                     break
-                                        break
-                        if collinear_part or coplanar_part:
-                            break
-                    else:
-                        continue
-                    break
+                                    break
+                    if collinear_part or coplanar_part:
+                        break
+                else:
+                    continue
+                break
+
+        def low_symm_elems(idxs: Tuple[int, ...]) -> Iterator[SymmetryElement]:
+            n_points = len(idxs)
             for i1 in range(n_points - 1):
                 pos1 = poses[idxs[i1]]
                 for i2 in range(i1 + 1, n_points):
@@ -375,6 +753,80 @@ class Points(Transformables):
                         refl = ReflectionPlane(normal)
                         if refl.symmetric(points, tol):
                             yield refl
+
+        generator: Iterator[SymmetryElement]
+        for _, idxs in points._groups:
+            n_points = len(idxs)
+            if cubic:
+                generator = high_symm_elems(idxs)
+                if fast:
+                    rot1 = next(generator)
+                    vec1 = rot1.vec
+                    order1 = rot1.order
+                    rot2 = next(generator)
+                    vec2 = rot2.vec
+                    order2 = rot2.order
+                    if order1 < order2:
+                        vec1, vec2 = vec2, vec1
+                        order1, order2 = order2, order1
+                    if vec1.dot(vec2) < 0.0:
+                        vec2 = -vec2
+                    original_axes = [vec1, orthogonalize(vec2, vec1)]
+                    original_axes.append(
+                        normalize(cross(original_axes[0], original_axes[1]))
+                    )
+                    intersect_angle = angle(vec1, vec2)
+                    min_diff = INF
+                    for ref_angle, ref_variants in _VARIANTS[
+                        (order1, order2)
+                    ].items():
+                        diff = abs(intersect_angle - ref_angle)
+                        if min_diff > diff:
+                            min_diff = diff
+                            variants = ref_variants
+                    suffix = "h" if invertible else ""
+                    n_variants = len(variants)
+                    for i_variant in range(n_variants):
+                        vecs_obj, axes_order = variants[i_variant]
+                        permut_axes = tuple(
+                            (
+                                original_axes[i_axis]
+                                if i_axis >= 0
+                                else -original_axes[-i_axis]
+                            )
+                            for i_axis in axes_order
+                        )
+                        if suffix == "" and isinstance(vecs_obj, _VecsT):
+                            vec = vecs_obj.vecs[1][0]
+                            rotorefl = RotoreflectionAxis(
+                                vec[0] * permut_axes[0]
+                                + vec[1] * permut_axes[1]
+                                + vec[2] * permut_axes[2],
+                                4,
+                            )
+                            if rotorefl.symmetric(points, tol):
+                                suffix = "d"
+                        generator = vecs_obj.symm_elems(
+                            permut_axes[0],
+                            permut_axes[1],
+                            permut_axes[2],
+                            suffix,
+                        )
+                        if i_variant < n_variants - 1:
+                            symm_elem = next(generator)
+                            if symm_elem.symmetric(points, tol):
+                                yield symm_elem
+                                break
+                yield from generator
+                if fast:
+                    return
+            generator = low_symm_elems(idxs)
+            # if fast:
+            #     ...
+            #     return
+            # else:
+            #     yield from generator
+            yield from generator
 
     @classmethod
     def from_arr(cls, vecs: RealVectors) -> "Points":
