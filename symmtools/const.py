@@ -28,17 +28,23 @@ EPS = 7.0 / 3.0 - 4.0 / 3.0 - 1.0
 TOL = 2**8 * EPS
 PHI = 0.5 * (1.0 + 5.0**0.5)
 SPECIAL_ANGLES = (
+    0.0,
     atan(1.0 / PHI**2),
     atan(1.0 / PHI),
     atan(1.0 / sqrt(2.0)),
+    PI / 5.0,
     atan(2.0 / PHI**2),
     atan(2.0 / sqrt(5.0)),
+    PI / 4.0,
     atan(sqrt(2.0)),
     atan(PHI),
+    PI / 3.0,
     atan(2.0),
     atan(PHI**2),
     atan(2.0 * sqrt(2.0)),
+    2.0 * PI / 5.0,
     atan(2.0 * PHI**2),
+    PI / 2.0,
 )
 SPECIAL_COMPONENTS = (
     0.0,
