@@ -67,7 +67,9 @@ _OH_ROTOREFL6_VECS = _O_ROT3_VECS
 _OH_ROTOREFL4_VECS = _O_ROT4_VECS
 _I_ROT5_VECS = ax3permut(signvar((PHI, 1.0), 0, True))
 _I_ROT3_VECS = _T_ROT3_VECS + ax3permut(signvar((1.0, 1.0 + PHI), 0, True))
-_I_ROT2_VECS = ax3permut(((1.0,), *signvar((1.0, PHI, 1.0 + PHI), 0, True)))
+_I_ROT2_VECS = _T_ROT2_VECS + ax3permut(
+    signvar((1.0, PHI, 1.0 + PHI), 0, True)
+)
 _IH_REFL_VECS = _I_ROT2_VECS
 _IH_ROTOREFL10_VECS = _I_ROT5_VECS
 _IH_ROTOREFL6_VECS = _I_ROT3_VECS
