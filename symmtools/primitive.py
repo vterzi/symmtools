@@ -80,7 +80,14 @@ class _Vecs(ABC):
     ) -> None:
         self.vecs = tuple(
             tuple(
-                tuple(SPECIAL_COMPONENTS[idx] for idx in idxs)
+                tuple(
+                    (
+                        SPECIAL_COMPONENTS[idx]
+                        if idx >= 0
+                        else -SPECIAL_COMPONENTS[-idx]
+                    )
+                    for idx in idxs
+                )
                 for idxs in arr_idxs
             )
             for arr_idxs in (idxs1, idxs2, idxs3)
@@ -771,7 +778,10 @@ class Points(Transformables):
                         order1, order2 = order2, order1
                     if vec1.dot(vec2) < 0.0:
                         vec2 = -vec2
-                    original_axes = [vec1, orthogonalize(vec2, vec1)]
+                    original_axes = [
+                        vec1,
+                        normalize(orthogonalize(vec2, vec1)),
+                    ]
                     original_axes.append(
                         normalize(cross(original_axes[0], original_axes[1]))
                     )
