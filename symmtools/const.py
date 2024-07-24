@@ -25,7 +25,7 @@ PI = pi
 TAU = 2.0 * pi
 PI_2 = 0.5 * pi
 EPS = 7.0 / 3.0 - 4.0 / 3.0 - 1.0
-TOL = 2**8 * EPS
+TOL = 2**10 * EPS
 PHI = 0.5 * (1.0 + 5.0**0.5)
 SPECIAL_ANGLES = (
     0.0,
