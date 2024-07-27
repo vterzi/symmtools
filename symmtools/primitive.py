@@ -10,6 +10,7 @@ from numpy.linalg import eigh
 
 from .const import (
     INF,
+    PI,
     TOL,
     SPECIAL_ANGLES,
     SPECIAL_COMPONENTS,
@@ -29,6 +30,7 @@ from .vecop import (
     perpendicular,
     angle,
     inertia,
+    rotate,
 )
 from .transform import (
     Transformable,
@@ -104,21 +106,21 @@ class _VecsT(_Vecs):
     def symm_elems(
         self, ax1: Vector, ax2: Vector, ax3: Vector, suffix: str
     ) -> Iterator[SymmetryElement]:
-        d = suffix == "d"
-        h = suffix == "h"
+        diag = suffix == "d"
+        horiz = suffix == "h"
         for vec in self.vecs[0]:
             vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
             yield RotationAxis(vec, 3)
-            if h:
+            if horiz:
                 yield RotoreflectionAxis(vec, 6)
         for vec in self.vecs[1]:
             vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
             yield RotationAxis(vec, 2)
-            if d:
+            if diag:
                 yield RotoreflectionAxis(vec, 4)
-            elif h:
+            elif horiz:
                 yield ReflectionPlane(vec)
-        if d:
+        if diag:
             for vec in self.vecs[2]:
                 vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
                 yield ReflectionPlane(vec)
@@ -128,22 +130,22 @@ class _VecsO(_Vecs):
     def symm_elems(
         self, ax1: Vector, ax2: Vector, ax3: Vector, suffix: str
     ) -> Iterator[SymmetryElement]:
-        h = suffix == "h"
+        horiz = suffix == "h"
         for vec in self.vecs[0]:
             vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
             yield RotationAxis(vec, 4)
-            if h:
+            if horiz:
                 yield RotoreflectionAxis(vec, 4)
                 yield ReflectionPlane(vec)
         for vec in self.vecs[1]:
             vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
             yield RotationAxis(vec, 3)
-            if h:
+            if horiz:
                 yield RotoreflectionAxis(vec, 6)
         for vec in self.vecs[2]:
             vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
             yield RotationAxis(vec, 2)
-            if h:
+            if horiz:
                 yield ReflectionPlane(vec)
 
 
@@ -151,21 +153,21 @@ class _VecsI(_Vecs):
     def symm_elems(
         self, ax1: Vector, ax2: Vector, ax3: Vector, suffix: str
     ) -> Iterator[SymmetryElement]:
-        h = suffix == "h"
+        horiz = suffix == "h"
         for vec in self.vecs[0]:
             vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
             yield RotationAxis(vec, 5)
-            if h:
+            if horiz:
                 yield RotoreflectionAxis(vec, 10)
         for vec in self.vecs[1]:
             vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
             yield RotationAxis(vec, 3)
-            if h:
+            if horiz:
                 yield RotoreflectionAxis(vec, 6)
         for vec in self.vecs[2]:
             vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
             yield RotationAxis(vec, 2)
-            if h:
+            if horiz:
                 yield ReflectionPlane(vec)
 
 
@@ -526,7 +528,7 @@ class Points(Transformables):
     ) -> Iterator[SymmetryElement]:
         """
         Determine all symmetry elements of a set of points `points` within a
-        tolerance `tol`.
+        tolerance `tol`. Use the fast algorithm if `fast` is `True`.
         """
         if not self.nondegen(tol):
             raise ValueError(
@@ -604,6 +606,7 @@ class Points(Transformables):
                     rot = RotationAxis(vec, order)
                     if rot.symmetric(points, tol):
                         yield rot
+                        max_order = order
                         if not coplanar:
                             for factor in (2, 1):
                                 new_order = order * factor
@@ -750,9 +753,10 @@ class Points(Transformables):
                             rot = RotationAxis(axis, 2)
                             if rot.symmetric(points, tol):
                                 yield rot
-                                rotorefl = RotoreflectionAxis(axis, 4)
-                                if rotorefl.symmetric(points, tol):
-                                    yield rotorefl
+                                if not fast:
+                                    rotorefl = RotoreflectionAxis(axis, 4)
+                                    if rotorefl.symmetric(points, tol):
+                                        yield rotorefl
                     normal = normalize(segment)
                     if (cubic or perpendicular(normal, axes[0], tol)) and new(
                         normals, normal
@@ -763,10 +767,9 @@ class Points(Transformables):
 
         generator: Iterator[SymmetryElement]
         for _, idxs in points._groups:
-            n_points = len(idxs)
-            if cubic:
-                generator = high_symm_elems(idxs)
-                if fast:
+            if fast:
+                if cubic:
+                    generator = high_symm_elems(idxs)
                     rot1 = next(generator)
                     vec1 = rot1.vec
                     order1 = rot1.order
@@ -827,16 +830,70 @@ class Points(Transformables):
                             if symm_elem.symmetric(points, tol):
                                 yield symm_elem
                                 break
-                yield from generator
-                if fast:
-                    return
-            generator = low_symm_elems(idxs)
-            # if fast:
-            #     ...
-            #     return
-            # else:
-            #     yield from generator
-            yield from generator
+                    yield from generator
+                else:
+                    try:
+                        symm_elem = next(low_symm_elems(idxs))
+                    except StopIteration:
+                        continue
+                    yield symm_elem
+                    axis = axes[0]
+                    if isinstance(symm_elem, RotationAxis):
+                        vec = symm_elem.vec
+                        intersect_angle = 0.0
+                        step = PI / max_order
+                        refl = ReflectionPlane(vec)
+                        vert = refl.symmetric(points, tol)
+                        if vert:
+                            yield refl
+                        else:
+                            half_step = 0.5 * step
+                            refl = ReflectionPlane(
+                                rotate(vec, axis, half_step)
+                            )
+                            diag = refl.symmetric(points, tol)
+                            if diag:
+                                yield refl
+                        for factor in range(1, max_order):
+                            intersect_angle += step
+                            new_vec = rotate(vec, axis, intersect_angle)
+                            yield RotationAxis(new_vec, 2)
+                            if vert:
+                                yield ReflectionPlane(new_vec)
+                            elif diag:
+                                new_vec = rotate(
+                                    vec, axis, intersect_angle + half_step
+                                )
+                                yield ReflectionPlane(new_vec)
+                    elif isinstance(symm_elem, ReflectionPlane):
+                        vec = symm_elem.vec
+                        intersect_angle = 0.0
+                        step = PI / max_order
+                        rot = RotationAxis(vec, 2)
+                        vert = rot.symmetric(points, tol)
+                        if vert:
+                            yield rot
+                        else:
+                            half_step = 0.5 * step
+                            rot = RotationAxis(rotate(vec, axis, half_step), 2)
+                            diag = rot.symmetric(points, tol)
+                            if diag:
+                                yield rot
+                        for factor in range(1, max_order):
+                            intersect_angle += step
+                            new_vec = rotate(vec, axis, intersect_angle)
+                            yield ReflectionPlane(new_vec)
+                            if vert:
+                                yield RotationAxis(new_vec, 2)
+                            elif diag:
+                                new_vec = rotate(
+                                    vec, axis, intersect_angle + half_step
+                                )
+                                yield RotationAxis(new_vec, 2)
+            else:
+                if cubic:
+                    yield from high_symm_elems(idxs)
+                yield from low_symm_elems(idxs)
 
     @classmethod
     def from_arr(cls, vecs: RealVectors) -> "Points":
