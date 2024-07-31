@@ -530,7 +530,7 @@ class SymmetryElements:
         """
         Check whether another instance `other` is a subset of the instance.
         """
-        for key1, num in other.nums.items():
+        for key1, num in other._nums.items():
             if key1 in self._nums:
                 ref_num = self._nums[key1]
             else:
@@ -539,7 +539,7 @@ class SymmetryElements:
             ref_zero = ref_num == 0
             if ref_num < num or zero != ref_zero:
                 return False
-        for key2, angles in other.angles.items():
+        for key2, angles in other._angles.items():
             for angle, num in angles.items():
                 if angle in self._angles[key2]:
                     ref_num = self._angles[key2][angle]
