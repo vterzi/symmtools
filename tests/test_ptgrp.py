@@ -626,17 +626,18 @@ class TestPointGroup(TestCase):
         self.assertEqual(group_symb, "Ih")
 
         symm_elems: Sequence[SymmetryElement]
+        primax = (0.0, 0.0, 1.0)
 
-        symm_elems = [InfRotationAxis([0, 0, 1])]
+        symm_elems = [InfRotationAxis(primax)]
         symm_elem_symbs, group_symb = stringify(symm_elems)
         self.assertEqual(symm_elem_symbs, "Coo")
         self.assertEqual(group_symb, "Coo")
 
         symm_elems = [
-            InfRotationAxis([0, 0, 1]),
-            ReflectionPlane([0, 0, 1]),
+            InfRotationAxis(primax),
+            ReflectionPlane(primax),
             InversionCenter(),
-            InfRotoreflectionAxis([0, 0, 1]),
+            InfRotoreflectionAxis(primax),
         ]
         symm_elem_symbs, group_symb = stringify(symm_elems)
         self.assertEqual(symm_elem_symbs, "Coo,s,i,Soo")
@@ -647,8 +648,8 @@ class TestPointGroup(TestCase):
         self.assertEqual(group_symb, "Coov")
 
         symm_elems = [
-            InfRotationAxis([0, 0, 1]),
-            AxisRotationAxes([0, 0, 1]),
+            InfRotationAxis(primax),
+            AxisRotationAxes(primax),
         ]
         symm_elem_symbs, group_symb = stringify(symm_elems)
         self.assertEqual(symm_elem_symbs, "Coo,ooC2")
