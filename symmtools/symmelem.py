@@ -356,19 +356,16 @@ class SymmetryElements:
         return tuple(self._excluded)
 
     @property
-    def nums(self) -> Sequence[Tuple[Tuple, int]]:
+    def nums(self) -> Dict[Tuple, int]:
         """Return the types and numbers of symmetry elements."""
-        return tuple((prop, num) for prop, num in self._nums.items())
+        return self._nums.copy()
 
     @property
     def angles(
         self,
-    ) -> Sequence[Tuple[Tuple[Tuple, Tuple], Sequence[Tuple[float, int]]]]:
+    ) -> Dict[Tuple[Tuple, Tuple], Dict[float, int]]:
         """Return the angles between axes or normals of symmetry elements."""
-        return tuple(
-            (props, tuple((angle, num) for angle, num in angles.items()))
-            for props, angles in self._angles.items()
-        )
+        return {props: angles.copy() for props, angles in self._angles.items()}
 
     def include(
         self,
@@ -533,7 +530,7 @@ class SymmetryElements:
         """
         Check whether another instance `other` is a subset of the instance.
         """
-        for key1, num in other.nums:
+        for key1, num in other.nums.items():
             if key1 in self._nums:
                 ref_num = self._nums[key1]
             else:
@@ -542,8 +539,8 @@ class SymmetryElements:
             ref_zero = ref_num == 0
             if ref_num < num or zero != ref_zero:
                 return False
-        for key2, angles in other.angles:
-            for angle, num in angles:
+        for key2, angles in other.angles.items():
+            for angle, num in angles.items():
                 if angle in self._angles[key2]:
                     ref_num = self._angles[key2][angle]
                 else:
