@@ -355,7 +355,7 @@ class SymmetryElements:
         """Initialize the instance."""
         self._included: List[VectorSymmetryElement] = []
         self._excluded: List[VectorSymmetryElement] = []
-        self._nums: Dict[Tuple, int] = {}
+        self._types: Dict[Tuple, int] = {}
         self._angles: Dict[FrozenSet[Tuple], Dict[float, int]] = {}
 
     @property
@@ -369,15 +369,18 @@ class SymmetryElements:
         return tuple(self._excluded)
 
     @property
-    def nums(self) -> Dict[Tuple, int]:
-        """Return the types and numbers of symmetry elements."""
-        return self._nums.copy()
+    def types(self) -> Dict[Tuple, int]:
+        """Return the types of symmetry elements and their numbers."""
+        return self._types.copy()
 
     @property
     def angles(
         self,
     ) -> Dict[FrozenSet[Tuple], Dict[float, int]]:
-        """Return the angles between axes or normals of symmetry elements."""
+        """
+        Return the angles between axes or normals of symmetry elements and
+        their numbers.
+        """
         return {props: angles.copy() for props, angles in self._angles.items()}
 
     def include(
@@ -394,9 +397,9 @@ class SymmetryElements:
         for symm_elem in symm_elems:
             prop = symm_elem.props
             if isinstance(symm_elem, VEC_SYMM_ELEMS):
-                if prop not in self._nums:
-                    self._nums[prop] = 0
-                self._nums[prop] += 1
+                if prop not in self._types:
+                    self._types[prop] = 0
+                self._types[prop] += 1
                 vec = symm_elem.vec
                 for vec_symm_elem in self._included:
                     angle = intersectangle(vec, vec_symm_elem.vec)
@@ -449,12 +452,16 @@ class SymmetryElements:
                     self._angles[props][angle] = 0
                 self._included.append(symm_elem)
             else:
-                if prop in self._nums:
+                if prop in self._types:
                     raise ValueError(
                         f"an {symm_elem.name} already "
-                        + ("included" if self._nums[prop] == 1 else "excluded")
+                        + (
+                            "included"
+                            if self._types[prop] == 1
+                            else "excluded"
+                        )
                     )
-                self._nums[prop] = 1
+                self._types[prop] = 1
 
     def exclude(
         self,
@@ -502,20 +509,24 @@ class SymmetryElements:
                         )
                 self._excluded.append(symm_elem)
             else:
-                if prop in self._nums:
+                if prop in self._types:
                     raise ValueError(
                         f"an {symm_elem.name} already "
-                        + ("included" if self._nums[prop] == 1 else "excluded")
+                        + (
+                            "included"
+                            if self._types[prop] == 1
+                            else "excluded"
+                        )
                     )
-                self._nums[prop] = 0
+                self._types[prop] = 0
 
     def contains(self, other: "SymmetryElements") -> bool:
         """
         Check whether another instance `other` is a subset of the instance.
         """
-        for key1, num in other._nums.items():
-            if key1 in self._nums:
-                ref_num = self._nums[key1]
+        for key1, num in other._types.items():
+            if key1 in self._types:
+                ref_num = self._types[key1]
             else:
                 ref_num = 0
             zero = num == 0
@@ -538,7 +549,7 @@ class SymmetryElements:
     def symbs(self) -> Sequence[str]:
         """Return the sorted symbols of the symmetry elements."""
         res = {}
-        for prop, num in self._nums.items():
+        for prop, num in self._types.items():
             if num > 0:
                 symb = prop[0]._symb
                 if len(prop) > 1:
