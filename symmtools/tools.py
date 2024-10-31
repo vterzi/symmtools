@@ -2,19 +2,16 @@
 
 __all__ = [
     "rational",
-    "chcoords",
     "signvar",
-    "ax3permut",
+    "circshift",
 ]
 
 from .typehints import (
-    Optional,
     Tuple,
     List,
     Bool,
     Int,
     Real,
-    Ints,
     RealVector,
     RealVectors,
 )
@@ -41,28 +38,6 @@ def rational(num: float, tol: float) -> Tuple[int, int]:
     return nom, denom
 
 
-def chcoords(
-    vecs: RealVectors,
-    origin: RealVector = (0.0, 0.0, 0.0),
-    axes: Optional[Ints] = None,
-) -> List[List[Real]]:
-    """
-    Change the coordinate system of vectors `vecs` to a coordinate system with
-    an origin `origin` and an axes order `axes`.  If `axes` is `None`, the
-    original axes order is used.
-    """
-    if axes is None:
-        axes = tuple(range(len(origin)))
-    origin = tuple(-coord for coord in origin)
-    res = []
-    for vec in vecs:
-        new = [*origin]
-        for ax, coord in zip(axes, vec):
-            new[ax] += coord
-        res.append(new)
-    return res
-
-
 def signvar(
     vec: RealVector, parity: Int = 0, indep: Bool = False
 ) -> List[List[Real]]:
@@ -73,32 +48,49 @@ def signvar(
     changes are returned.  If `parity` is zero, all vectors are returned.  If
     `indep` is `True`, only linearly independent vectors are returned.
     """
+    nonzeros = 0
+    for coord in vec:
+        if coord != 0:
+            nonzeros += 1
     res = []
-    for n in range(2 ** len(vec)):
-        new = [*vec]
-        sign = 1
+    excluded = []
+    for n in range(2**nonzeros):
+        change = nonzeros * [False]
         i = 0
+        sign = 1
         while n > 0:
             if n % 2 == 1:
-                new[i] *= -1
-                sign *= -1
-            n //= 2
+                change[i] = True
+                sign = -sign
             i += 1
-        if (sign * parity >= 0 and new not in res) and not (
-            indep and [-coord for coord in new] in res
-        ):
+            n //= 2
+        if sign * parity >= 0:
+            if indep:
+                if change in excluded:
+                    continue
+                excluded.append([not ch for ch in change])
+            new = [*vec]
+            i = 0
+            for idx, coord in enumerate(new):
+                if coord != 0:
+                    if change[i]:
+                        new[idx] = -coord
+                    i += 1
             res.append(new)
     return res
 
 
-def ax3permut(vecs: RealVectors) -> List[List[Real]]:
+def circshift(vecs: RealVectors) -> List[List[Real]]:
     """
-    Generate all possible vectors by applying a circular permutation on the
-    coordinates of 3D vectors `vecs`.
+    Generate all possible vectors by applying circular shifts on the
+    coordinates of vectors `vecs`.
     """
-    vecs = chcoords(vecs)
     res = []
-    for i in range(3):
-        for vec in vecs:
-            res.append([vec[i % 3], vec[(i + 1) % 3], vec[(i + 2) % 3]])
+    for vec in vecs:
+        n = len(vec)
+        for i in range(n):
+            new = []
+            for ii in range(n):
+                new.append(vec[(i + ii) % n])
+            res.append(new)
     return res

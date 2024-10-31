@@ -1,9 +1,8 @@
 from .init import TestCase, main, Union, Sequence, Tuple, pi, roots
 
 from symmtools import (
-    chcoords,
     signvar,
-    ax3permut,
+    circshift,
     Translation,
     Inversion,
     Rotation,
@@ -44,10 +43,10 @@ rotorefl12 = RotoreflectionAxis(primax, 12)
 point = Points.from_arr((origin,))
 two_points = point + pos_transl(point)
 three_collinear_points = two_points + neg_transl(neg_transl(point))
-asymmetric_triangle = Points.from_arr(chcoords([[0, 0], [0, 2], [3, 0]]))
+asymmetric_triangle = Points.from_arr([[0, 0, 0], [0, 2, 0], [3, 0, 0]])
 
 shifted_point = orth_transl(point)
-rectangle = Points.from_arr(chcoords(signvar([3, 2])))
+rectangle = Points.from_arr(signvar([3, 2, 0]))
 triangle = Points.from_symm(shifted_point, rot3)
 square = Points.from_symm(shifted_point, rot4)
 pentagon = Points.from_symm(shifted_point, rot5)
@@ -105,10 +104,10 @@ quadrangular_prism = pos_transl(square) + neg_transl(square)
 pentangular_prism = pos_transl(pentagon) + neg_transl(pentagon)
 hexangular_prism = pos_transl(hexagon) + neg_transl(hexagon)
 
-tetrahedral = Points.from_arr(ax3permut(signvar([3, 2, 1], 1)))
-pyritohedron = Points.from_arr(ax3permut(signvar([2, 1])))
+tetrahedral = Points.from_arr(circshift(signvar([3, 2, 1], 1)))
+pyritohedron = Points.from_arr(circshift(signvar([2, 1, 0])))
 octahedral = Points.from_arr(
-    ax3permut(signvar([3, 2, 1], 1)) + ax3permut(signvar([2, 3, 1], -1))
+    circshift(signvar([3, 2, 1], 1)) + circshift(signvar([2, 3, 1], -1))
 )
 XI = abs(roots([1, -2, 0, PHI**2])[2])
 icosahedral = Points.from_transform(
@@ -119,10 +118,10 @@ icosahedral = Points.from_transform(
 
 tetrahedron = Points.from_arr(signvar([1, 1, 1], 1))
 cube = Points.from_arr(signvar([1, 1, 1]))
-octahedron = Points.from_arr(ax3permut(signvar([1])))
-icosahedron = Points.from_arr(ax3permut(signvar([PHI, 1])))
+octahedron = Points.from_arr(circshift(signvar([1, 0, 0])))
+icosahedron = Points.from_arr(circshift(signvar([PHI, 1, 0])))
 dodecahedron = Points.from_arr(
-    signvar([PHI, PHI, PHI]) + ax3permut(signvar([PHI + 1, 1]))
+    signvar([PHI, PHI, PHI]) + circshift(signvar([PHI + 1, 1, 0]))
 )
 
 
