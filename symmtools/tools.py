@@ -69,13 +69,14 @@ def signvar(
                 if change in excluded:
                     continue
                 excluded.append([not ch for ch in change])
-            new = [*vec]
+            new = []
             i = 0
-            for idx, coord in enumerate(new):
+            for coord in vec:
                 if coord != 0:
                     if change[i]:
-                        new[idx] = -coord
+                        coord = -coord
                     i += 1
+                new.append(coord)
             res.append(new)
     return res
 
