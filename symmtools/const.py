@@ -8,6 +8,10 @@ __all__ = [
     "EPS",
     "TOL",
     "PHI",
+    "ORIGIN",
+    "PRIMAX",
+    "SECAX",
+    "TERTAX",
     "SPECIAL_ANGLES",
     "SPECIAL_COMPONENTS",
     "ROT_SYMBS",
@@ -27,6 +31,10 @@ PI_2 = 0.5 * pi
 EPS = 7.0 / 3.0 - 4.0 / 3.0 - 1.0
 TOL = 2**10 * EPS
 PHI = 0.5 * (1.0 + 5.0**0.5)
+ORIGIN = (0.0, 0.0, 0.0)
+PRIMAX = (0.0, 0.0, 1.0)
+SECAX = (1.0, 0.0, 0.0)
+TERTAX = (0.0, 1.0, 0.0)
 SPECIAL_ANGLES = (
     0.0,
     atan(1.0 / PHI**2),
