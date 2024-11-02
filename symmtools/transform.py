@@ -496,11 +496,18 @@ class Transformation(ABC):
         """Apply the transformation."""
         pass
 
-    @property
     @abstractmethod
+    def apply(self, vec: Vector) -> Vector:
+        """Apply the transformation to a vector `vec`."""
+        pass
+
+    @property
     def mat(self) -> Matrix:
         """Return the transformation matrix."""
-        pass
+        res = eye(3)
+        for i in range(len(res)):
+            res[i] = self.apply(res[i])
+        return res.T
 
 
 class Identity(InvariantTransformable, Transformation):
@@ -508,6 +515,9 @@ class Identity(InvariantTransformable, Transformation):
 
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.copy()
+
+    def apply(self, vec: Vector) -> Vector:
+        return vec.copy()
 
     @property
     def mat(self) -> Matrix:
@@ -519,6 +529,9 @@ class Translation(VectorTransformable, Transformation):
 
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.translate(self)
+
+    def apply(self, vec: Vector) -> Vector:
+        return translate(vec, self._vec)
 
     @property
     def mat(self) -> Matrix:
@@ -532,6 +545,9 @@ class Inversion(InvariantTransformable, Transformation):
 
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.invert()
+
+    def apply(self, vec: Vector) -> Vector:
+        return invert(vec)
 
     @property
     def mat(self) -> Matrix:
@@ -595,12 +611,8 @@ class Rotation(DirectionTransformable, Transformation):
             res = max(res, vec_diff, angle_diff)
         return res
 
-    @property
-    def mat(self) -> Matrix:
-        res = eye(3)
-        for i in range(len(res)):
-            res[i] = move2(res[i], self._vec, self._cos, self._sin)
-        return res.T
+    def apply(self, vec: Vector) -> Vector:
+        return move2(vec, self._vec, self._cos, self._sin)
 
 
 class Reflection(DirectionTransformable, Transformation):
@@ -609,12 +621,8 @@ class Reflection(DirectionTransformable, Transformation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.reflect(self)
 
-    @property
-    def mat(self) -> Matrix:
-        res = eye(3)
-        for i in range(len(res)):
-            res[i] = reflect(res[i], self._vec)
-        return res.T
+    def apply(self, vec: Vector) -> Vector:
+        return reflect(vec, self._vec)
 
 
 class Rotoreflection(Rotation):
@@ -635,11 +643,5 @@ class Rotoreflection(Rotation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.rotoreflect(self)
 
-    @property
-    def mat(self) -> Matrix:
-        res = eye(3)
-        for i in range(len(res)):
-            res[i] = reflect(
-                move2(res[i], self._vec, self._cos, self._sin), self._vec
-            )
-        return res.T
+    def apply(self, vec: Vector) -> Vector:
+        return reflect(move2(vec, self._vec, self._cos, self._sin), self._vec)
