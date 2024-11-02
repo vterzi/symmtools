@@ -84,6 +84,11 @@ class Quaternion(VectorTransformable):
             res[i, :] = self(Point(res[i, :])).vec
         return res.T
 
+    @property
+    def rotation(self) -> Rotation:
+        """Return the rotation."""
+        return Rotation(self.axis, self.angle)
+
     @classmethod
     def from_point(cls, point: Point) -> "Quaternion":
         """Construct an instance from a point `point`."""
