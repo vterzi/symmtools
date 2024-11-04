@@ -487,7 +487,7 @@ class SpecialPointGroupInfo(PointGroupInfo):
                     best_ang = 0.0
                     for special_ang in SPECIAL_ANGLES:
                         diff = abs(ang - special_ang)
-                        if min_diff > diff:
+                        if diff < min_diff:
                             min_diff = diff
                             best_ang = special_ang
                     ang = best_ang

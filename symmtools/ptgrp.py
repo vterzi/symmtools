@@ -513,7 +513,7 @@ class PointGroup(Transformable):
                 rot_num += 1
                 if rot_order > 2:
                     high_rot_num += 1
-                if max_rot_order < rot_order:
+                if rot_order > max_rot_order:
                     max_rot_order = rot_order
             elif isinstance(symm_elem, ReflectionPlane):
                 refl_num += 1
@@ -932,13 +932,13 @@ class PointGroup(Transformable):
             symm_elem_type = prop[0]
             if symm_elem_type is RotationAxis:
                 order = prop[1]
-                if max_rot_order < order:
+                if order > max_rot_order:
                     max_rot_order = order
                 if order == 2:
                     rot2_num = num
             elif symm_elem_type is RotoreflectionAxis:
                 order = prop[1]
-                if max_rotorefl_order < order:
+                if order > max_rotorefl_order:
                     max_rotorefl_order = order
             elif symm_elem_type is ReflectionPlane:
                 refl_num = num

@@ -427,7 +427,7 @@ class Points(Transformables):
                         (order1, order2)
                     ].items():
                         diff = abs(ang - ref_ang)
-                        if min_diff > diff:
+                        if diff < min_diff:
                             min_diff = diff
                             variants = ref_variants
                     suffix = "h" if invertible else ""
