@@ -358,36 +358,33 @@ class VectorTransformable(Transformable):
         self: _VectorTransformable, transl: "Translation"
     ) -> _VectorTransformable:
         res = self.copy()
-        res._vec = translate(self._vec, transl.vec)
+        res._vec = transl.apply(self._vec)
         return res
 
     def invert(self: _VectorTransformable) -> _VectorTransformable:
         res = self.copy()
-        res._vec = invert(self._vec)
+        res._vec = Inversion.apply(self._vec)
         return res
 
     def rotate(
         self: _VectorTransformable, rot: "Rotation"
     ) -> _VectorTransformable:
         res = self.copy()
-        res._vec = move2(self._vec, rot.vec, rot.cos, rot.sin)
+        res._vec = rot.apply(self._vec)
         return res
 
     def reflect(
         self: _VectorTransformable, refl: "Reflection"
     ) -> _VectorTransformable:
         res = self.copy()
-        res._vec = reflect(self._vec, refl.vec)
+        res._vec = refl.apply(self._vec)
         return res
 
     def rotoreflect(
         self: _VectorTransformable, rotorefl: "Rotoreflection"
     ) -> _VectorTransformable:
         res = self.copy()
-        res._vec = reflect(
-            move2(self._vec, rotorefl.vec, rotorefl.cos, rotorefl.sin),
-            rotorefl.vec,
-        )
+        res._vec = rotorefl.apply(self._vec)
         return res
 
 
@@ -516,7 +513,8 @@ class Identity(InvariantTransformable, Transformation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.copy()
 
-    def apply(self, vec: Vector) -> Vector:
+    @classmethod
+    def apply(cls, vec: Vector) -> Vector:
         return vec.copy()
 
     @property
@@ -546,7 +544,8 @@ class Inversion(InvariantTransformable, Transformation):
     def __call__(self, obj: _Transformable) -> _Transformable:
         return obj.invert()
 
-    def apply(self, vec: Vector) -> Vector:
+    @classmethod
+    def apply(cls, vec: Vector) -> Vector:
         return invert(vec)
 
     @property
