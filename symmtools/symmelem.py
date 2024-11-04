@@ -21,7 +21,7 @@ __all__ = [
     "symm_elem_rank",
 ]
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 from .const import PI, TAU, SYMB, SPECIAL_ANGLES
 from .vecop import intersectangle
@@ -55,18 +55,13 @@ from .typehints import (
 _Transformable = TypeVar("_Transformable", bound=Transformable)
 
 
-class SymmetryElement(ABC):
+class SymmetryElement(Transformable):
     """Symmetry element."""
 
     _symb = ""
     _name = ""
     _id = 0
     label = ""
-
-    @property
-    @abstractmethod
-    def props(self) -> Tuple:
-        pass
 
     @property
     @abstractmethod

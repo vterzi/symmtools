@@ -458,38 +458,11 @@ class InfFoldTransformable(DirectionTransformable):
         return INF
 
 
-_Any = TypeVar("_Any", bound=Any)
-
-
-class Transformation(ABC):
+class Transformation(Transformable):
     """Transformation."""
 
     @abstractmethod
-    def diff(self, obj: Any) -> float:
-        pass
-
-    @abstractmethod
-    def translate(self: _Any, transl: "Translation") -> _Any:
-        pass
-
-    @abstractmethod
-    def invert(self: _Any) -> _Any:
-        pass
-
-    @abstractmethod
-    def rotate(self: _Any, rot: "Rotation") -> _Any:
-        pass
-
-    @abstractmethod
-    def reflect(self: _Any, refl: "Reflection") -> _Any:
-        pass
-
-    @abstractmethod
-    def rotoreflect(self: _Any, rotorefl: "Rotoreflection") -> _Any:
-        pass
-
-    @abstractmethod
-    def __call__(self, obj: _Any) -> _Any:
+    def __call__(self, obj: _Transformable) -> _Transformable:
         """Apply the transformation."""
         pass
 
