@@ -2,15 +2,15 @@
 
 __all__ = ["Quaternion"]
 
-from math import sin, cos, atan2
+from math import sqrt, sin, cos, atan2
 
 from numpy import eye
 
 from .const import INF
-from .vecop import norm, normalize, cross
+from .vecop import cross
 from .transform import VectorTransformable, Rotation
 from .primitive import Point
-from .typehints import TypeVar, Any, Float, Vector, Matrix, RealVector
+from .typehints import TypeVar, Any, Float, Matrix, RealVector
 
 _Quaternion = TypeVar("_Quaternion", bound="Quaternion")
 _VectorTransformable = TypeVar(
@@ -42,16 +42,6 @@ class Quaternion(VectorTransformable):
         if res < INF:
             res = max(res, abs(self._scalar - obj.scalar))
         return res
-
-    @property
-    def axis(self) -> Vector:
-        """Return the axis of rotation."""
-        return normalize(self._vec)
-
-    @property
-    def angle(self) -> float:
-        """Return the angle of rotation."""
-        return 2.0 * atan2(norm(self._vec), self._scalar)
 
     def conjugate(self: _Quaternion) -> _Quaternion:
         """Return the conjugate of the instance."""
@@ -87,7 +77,13 @@ class Quaternion(VectorTransformable):
     @property
     def rotation(self) -> Rotation:
         """Return the rotation."""
-        return Rotation(self.axis, self.angle)
+        vec = self._vec
+        sq_vec_norm = vec.dot(vec)
+        if sq_vec_norm == 0.0:
+            raise ValueError("zero vector as the rotation axis")
+        return Rotation(
+            self._vec, 2.0 * atan2(sqrt(sq_vec_norm), self._scalar)
+        )
 
     @classmethod
     def from_point(cls, point: Point) -> "Quaternion":
