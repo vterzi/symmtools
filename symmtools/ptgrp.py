@@ -8,6 +8,7 @@ from .const import (
     INF,
     PI,
     TOL,
+    ORIGIN,
     PRIMAX,
     SECAX,
     SYMB,
@@ -56,6 +57,7 @@ from .primitive import Points
 from .typehints import (
     TypeVar,
     Union,
+    Optional,
     Any,
     Sequence,
     Iterator,
@@ -67,6 +69,7 @@ from .typehints import (
     Dict,
 )
 
+_ORIGIN = vector(ORIGIN)
 _PRIMAX = vector(PRIMAX)
 _SECAX = vector(SECAX)
 
@@ -74,10 +77,14 @@ _SECAX = vector(SECAX)
 def axis_transform(
     from_axis: Vector, to_axis: Vector
 ) -> Union[Identity, Rotation]:
+    """
+    Return the (proper) transformation from one axis `from_axis` to another
+    axis `to_axis`.  Antiparallel axis vectors are considered to be equivalent.
+    """
     axis = cross(from_axis, to_axis)
     return (
         Rotation(axis, angle(from_axis, to_axis))
-        if norm(axis) > 0.0
+        if axis.dot(axis) > 0.0
         else Identity()
     )
 
@@ -85,6 +92,11 @@ def axis_transform(
 def axes_transform(
     from_axis1: Vector, from_axis2: Vector, to_axis1: Vector, to_axis2: Vector
 ) -> Union[Identity, Rotation]:
+    """
+    Return the (proper) transformation from one pair of axes `from_axis1` and
+    `from_axis2` to another pair of axes `to_axis1` and `to_axis2`.  The axes
+    in each pair are assumed to be orthogonal to each other.
+    """
     transform1 = axis_transform(from_axis1, to_axis1)
     if isinstance(transform1, Identity) and from_axis1.dot(to_axis1) < 0.0:
         transform1 = Rotation(to_axis2, PI)
@@ -587,7 +599,7 @@ class PointGroup(Transformable):
         """
         if not points.nondegen(tol):
             raise ValueError(
-                "at least two identical elements in the instance of for the"
+                "at least two identical elements in the set of points for the"
                 + " given tolerance"
             )
         points = points.center()
@@ -600,7 +612,15 @@ class PointGroup(Transformable):
             # degenerate: Kh
             return cls("Kh")
 
-        main_axis = _PRIMAX
+        def transformation(
+            axis1: Vector, axis2: Optional[Vector] = None
+        ) -> Union[Identity, Rotation]:
+            if axis2:
+                return axes_transform(_PRIMAX, _SECAX, axis1, axis2)
+            else:
+                return axis_transform(_PRIMAX, axis1)
+
+        main_axis = _ORIGIN
         for i in range(n_points):
             pos = poses[i]
             if not zero(pos, tol):
@@ -613,10 +633,8 @@ class PointGroup(Transformable):
             # linear: Coov,Dooh
             if _PRIMAX.dot(main_axis) < 0.0:
                 main_axis = -main_axis
-            axis = cross(_PRIMAX, main_axis)
             return cls(
-                "Dooh" if invertible else "Coov",
-                axis_transform(_PRIMAX, main_axis),
+                "Dooh" if invertible else "Coov", transformation(main_axis)
             )
 
         axes: List[Vector] = []
@@ -744,9 +762,7 @@ class PointGroup(Transformable):
                         break
             return cls(
                 f"{vecs_obj.symb}{suffix}",
-                axes_transform(
-                    _PRIMAX, _SECAX, permut_axes[0], permut_axes[1]
-                ),
+                transformation(permut_axes[0], permut_axes[1]),
             )
         elif oblate or prolate:
             # symmetric: C(n>2),C(n>2)v,C(n>2)h,S(2n),D(n>3),Dnd,D(n>3)h
@@ -817,9 +833,7 @@ class PointGroup(Transformable):
                                     points, tol
                                 )
                             ):
-                                transform = axes_transform(
-                                    _PRIMAX, _SECAX, main_axis, axis
-                                )
+                                transform = transformation(main_axis, axis)
                                 if rotorefl_factor == 2:
                                     return cls(f"D{max_order}d", transform)
                                 elif rotorefl_factor == 1:
@@ -832,9 +846,7 @@ class PointGroup(Transformable):
                             and new(normals, normal)
                             and ReflectionPlane(normal).symmetric(points, tol)
                         ):
-                            transform = axes_transform(
-                                _PRIMAX,
-                                _SECAX,
+                            transform = transformation(
                                 main_axis,
                                 (
                                     Rotation(
@@ -850,7 +862,7 @@ class PointGroup(Transformable):
                                 return cls(f"D{max_order}h", transform)
                             else:
                                 return cls(f"C{max_order}v", transform)
-                transform = axis_transform(_PRIMAX, main_axis)
+                transform = transformation(main_axis)
                 if rotorefl_factor == 2:
                     return cls(f"S{2*max_order}", transform)
                 elif rotorefl_factor == 1:
@@ -878,11 +890,9 @@ class PointGroup(Transformable):
                 nums[idx] += 1
                 if i > 0:
                     if len(axes) == 2:
-                        transform = axes_transform(
-                            _PRIMAX, _SECAX, axes[0], axes[1]
-                        )
+                        transform = transformation(axes[0], axes[1])
                     elif len(axes) == 1:
-                        transform = axis_transform(_PRIMAX, axes[0])
+                        transform = transformation(axes[0])
                     if invertible:
                         if nums[3] > 1:
                             return cls("D2h", transform)
