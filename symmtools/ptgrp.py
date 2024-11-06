@@ -609,20 +609,28 @@ class PointGroup(Transformable):
         n_points = len(poses)
 
         if n_points == 1:
-            # degenerate: Kh
+            # Degenerate: Kh
             return cls("Kh")
 
         def transformation(
             axis1: Vector, axis2: Optional[Vector] = None
         ) -> Union[Identity, Rotation]:
+            """
+            Return the transformation from the principal axes to axes `axis1`
+            and `axis2`.
+            """
             if axis2:
                 return axes_transform(_PRIMAX, _SECAX, axis1, axis2)
             else:
                 return axis_transform(_PRIMAX, axis1)
 
+        # If all points are collinear, the position vectors of the points (of
+        # the centered set) are linearly dependent (parallel or antiparallel).
         main_axis = _ORIGIN
         for i in range(n_points):
             pos = poses[i]
+            # Select the first non-zero position vector as a potential axis to
+            # test on collinearity.
             if not zero(pos, tol):
                 main_axis = pos
                 break
@@ -630,60 +638,97 @@ class PointGroup(Transformable):
             if not parallel(main_axis, poses[i], tol):
                 break
         else:
-            # linear: Coov,Dooh
+            # Linear: Coov,Dooh
             if _PRIMAX.dot(main_axis) < 0.0:
                 main_axis = -main_axis
             return cls(
                 "Dooh" if invertible else "Coov", transformation(main_axis)
             )
 
+        # The lists of checked unit vectors of axes of rotation and normals of
+        # reflection planes.
         axes: List[Vector] = []
         normals: List[Vector] = []
 
-        def new(arr: List[Vector], vec: Vector) -> bool:  # TODO remove
+        def new(arr: List[Vector], unitvec: Vector) -> bool:
+            """
+            Check whether a unit vector `unitvec` is linearly independent of
+            every unit vector in a list `arr` and add the vector to the list if
+            it is.
+            """
             for elem in arr:
-                if unitparallel(elem, vec, tol):
+                if unitparallel(elem, unitvec, tol):
                     return False
-            arr.append(vec)
+            arr.append(unitvec)
             return True
 
+        # Determine the type of rotor (top) based on the principal moments of
+        # inertia.
         eigvals, eigvecs = eigh(inertia(poses))
         oblate = eigvals[1] - eigvals[0] <= tol
         prolate = eigvals[2] - eigvals[1] <= tol
         if oblate and prolate:
-            # spherical: T,Td,Th,O,Oh,I,Ih
+            # Spherical: T,Td,Th,O,Oh,I,Ih
+            # The list of found rotation axes.
             rots: List[RotationAxis] = []
+            # The logical variable indicating the completion of the search for
+            # two rotation axes.
             complete = False
             for _, idxs in points._groups:
-                collinear_part = False
-                coplanar_part = False
+                # The logical variables indicating whether all points in the
+                # group are collinear or coplanar.
+                collinear_group = False
+                coplanar_group = False
                 for i1 in range(n_points - 2):
                     pos1 = poses[idxs[i1]]
                     for i2 in range(i1 + 1, n_points - 1):
                         pos2 = poses[idxs[i2]]
                         segment = pos1 - pos2
+                        # Assume the points in the group are collinear for the
+                        # first pair of points.
                         if i2 == 1:
-                            collinear_part = True
+                            collinear_group = True
                         for i3 in range(i2 + 1, n_points):
                             pos3 = poses[idxs[i3]]
+                            # Attempt to find a unique plane containing the
+                            # triplet of points.
                             normal = cross(segment, pos1 - pos3)
                             normal_norm = norm(normal)
                             if normal_norm <= tol:
                                 continue
+                            # The points in the group are not collinear since
+                            # a unique plane was found.
+                            collinear_group = False
+                            # The normal of the plane is a potential axis of
+                            # rotation.
                             axis = normal / normal_norm
-                            collinear_part = False
                             if new(axes, axis):
+                                # The distance from the origin to the plane.
                                 dist = pos1.dot(axis)
+                                # The number of points in the plane is the
+                                # highest possible order of a potential
+                                # rotation axis.  Three points are already
+                                # in the plane.
                                 max_order = 3
                                 for i4 in range(n_points):
                                     if i4 == i1 or i4 == i2 or i4 == i3:
                                         continue
                                     pos4 = poses[idxs[i4]]
+                                    # If the new point is in the plane,
+                                    # increase the highest possible order.
                                     if abs(pos4.dot(axis) - dist) <= tol:
                                         max_order += 1
+                                # If all points are in the plane, the points in
+                                # the group are coplanar.
                                 if i3 == 2 and max_order == n_points:
-                                    coplanar_part = True
+                                    coplanar_group = True
+                                # Try all valid orders starting from the
+                                # highest possible.
                                 for order in range(max_order, 1, -1):
+                                    # The order must be a divisor of the
+                                    # highest possible order or its predecessor
+                                    # (in the case that the axis contains one
+                                    # point) due to symmetry.
                                     if (
                                         max_order % order != 0
                                         and (max_order - 1) % order != 0
@@ -692,10 +737,14 @@ class PointGroup(Transformable):
                                     rot = RotationAxis(axis, order)
                                     if rot.symmetric(points, tol):
                                         rots.append(rot)
+                                        # The point group can be determined
+                                        # after finding only two rotation axes.
                                         if len(rots) == 2:
                                             complete = True
                                         break
-                        if collinear_part or coplanar_part or complete:
+                        # If the group is collinear or coplanar or the search
+                        # is complete, further iterations are unnecessary.
+                        if collinear_group or coplanar_group or complete:
                             break
                     else:
                         continue
@@ -709,11 +758,16 @@ class PointGroup(Transformable):
             vec2 = rot2.vec
             order1 = rot1.order
             order2 = rot2.order
+            # Sort the rotation axes in descending order of their orders.
             if order1 < order2:
                 vec1, vec2 = vec2, vec1
                 order1, order2 = order2, order1
+            # Ensure the angle between the vectors of the rotation axes is not
+            # obtuse.
             if vec1.dot(vec2) < 0.0:
                 vec2 = -vec2
+            # Construct an orthognal set of axes using the vectors of the
+            # rotation axes.
             original_axes = [
                 vec1,
                 normalize(orthogonalize(vec2, vec1)),
@@ -722,16 +776,22 @@ class PointGroup(Transformable):
                 normalize(cross(original_axes[0], original_axes[1]))
             )
             ang = angle(vec1, vec2)
+            # Find the closest possible variants of point groups using the
+            # orders of the rotation axes and the intersection angle between
+            # them.
             min_diff = INF
             for ref_ang, ref_variants in VARIANTS[(order1, order2)].items():
                 diff = abs(ang - ref_ang)
-                if min_diff > diff:
+                if diff < min_diff:
                     min_diff = diff
                     variants = ref_variants
+            # Tetrahedral, octahedral, and icosahedral point groups with an
+            # inversion center contain horizontal reflection planes.
             suffix = "h" if invertible else ""
             n_variants = len(variants)
             for i_variant in range(n_variants):
                 vecs_obj, axes_order = variants[i_variant]
+                # Adjust the order and signs of the orthogonal axes
                 permut_axes = tuple(
                     (
                         original_axes[i_axis]
@@ -740,6 +800,10 @@ class PointGroup(Transformable):
                     )
                     for i_axis in axes_order
                 )
+                # If the point group is tetrahedral without an inversion
+                # center, check whether the point group contains diagonal
+                # reflection planes by testing the system on symmetry with
+                # respect to a potential four-fold rotoreflection axis.
                 if suffix == "" and vecs_obj.symb == "T":
                     components = vecs_obj.vecs[1][0]
                     rotorefl = RotoreflectionAxis(
@@ -750,6 +814,8 @@ class PointGroup(Transformable):
                     )
                     if rotorefl.symmetric(points, tol):
                         suffix = "d"
+                # If it is not the last variant, test the system on symmetry
+                # with repect to its first symmetry element.
                 if i_variant < n_variants - 1:
                     generator = vecs_obj.symm_elems(
                         permut_axes[0],
@@ -765,37 +831,67 @@ class PointGroup(Transformable):
                 transformation(permut_axes[0], permut_axes[1]),
             )
         elif oblate or prolate:
-            # symmetric: C(n>2),C(n>2)v,C(n>2)h,S(2n),D(n>3),Dnd,D(n>3)h
+            # Symmetric: C(n>2),C(n>2)v,C(n>2)h,S(2n),D(n>3),Dnd,D(n>3)h
+            # The non-degenerate principal axis is the main axis of the point
+            # group.
             main_axis = eigvecs[:, 2] if oblate else eigvecs[:, 0]
             axes.append(main_axis)
+            # Assume all points are coplanar.
             coplanar = True
+            # The set of possible orders of the main rotation axis.
             orders = set()
             for _, idxs in points._groups:
+                # The dictionary containing information about the planes
+                # perpendicular to the main axis.  The keys are the distances
+                # from the origin to the planes, and the values are the numbers
+                # of points in the planes.
                 dists: Dict[float, int] = {}
                 n_points = len(idxs)
                 for i in range(n_points):
                     pos = poses[idxs[i]]
                     dist = pos.dot(main_axis)
+                    # If the distance from the origin to the plane is not zero,
+                    # the points (of the centered set) are not coplanar.
                     if coplanar and dist > tol:
                         coplanar = False
+                    # If the distance is already known, increase the number of
+                    # points in the corresponding plane, and if not, define
+                    # a new plane with this distance.
                     for ref_dist in dists:
                         if abs(dist - ref_dist) <= tol:
                             dists[ref_dist] += 1
                             break
                     else:
                         dists[dist] = 1
+                # Add the numbers of points in each plane to the set of
+                # possible orders.
                 for count in dists.values():
                     orders.add(count)
             ref_orders = sorted(orders, reverse=True)
+            # Try all valid orders starting from the highest possible.
             for order in range(ref_orders[0], 1, -1):
                 for ref_order in ref_orders:
+                    # The order must be a divisor of the highest possible
+                    # order or its predecessor (in the case that the axis
+                    # contains one point) for each set of coplanar points due
+                    # to symmetry.
                     if ref_order % order != 0 and (ref_order - 1) % order != 0:
                         break
                 else:
                     if RotationAxis(main_axis, order).symmetric(points, tol):
                         max_order = order
+                        # The factor between the order of the main
+                        # rotoreflection axis and the order of the main
+                        # rotation axis.  If the factor remains 0, no
+                        # rotoreflection axis was found.
                         rotorefl_factor = 0
+                        # If the points are coplanar, the order of the main
+                        # rotoreflection axis is the same as the order of the
+                        # main rotation axis.  Two-fold rotoreflection axes are
+                        # redundant.
                         if not coplanar:
+                            # Test the possible orders of the main
+                            # rotoreflection axis in descending order.
                             for factor in (2, 1):
                                 new_order = order * factor
                                 if new_order > 2:
@@ -816,16 +912,32 @@ class PointGroup(Transformable):
                         pos2 = poses[idxs[i2]]
                         segment = pos1 - pos2
                         midpoint = 0.5 * (pos1 + pos2)
+                        # The segment connecting two points is the normal of a
+                        # potential reflection plane and the distance vector
+                        # from the origin to the segment is the axis of a
+                        # potential two-fold rotation axis if the distance
+                        # vector splits the segment in two equal parts, i.e.
+                        # the position vector of the midpoint is perpendicular
+                        # to the segment.
                         if not perpendicular(segment, midpoint, tol):
                             continue
                         midpoint_norm = norm(midpoint)
                         nonzero = midpoint_norm > tol
+                        # If the midpoint is in the origin, the axis of the
+                        # potential two-fold rotation axis can be calculated
+                        # for the coplanar set of points.
                         if nonzero or coplanar:
+                            # For the zero position vector of the midpoint, the
+                            # axis is the vector product of the segment and the
+                            # normal of the plane containing the points (main
+                            # axis).
                             axis = (
                                 midpoint / midpoint_norm
                                 if nonzero
                                 else normalize(cross(segment, main_axis))
                             )
+                            # The axes of two-fold rotation axes in symmetric
+                            # tops are perpendicular to the main axis.
                             if (
                                 (perpendicular(axis, main_axis, tol))
                                 and new(axes, axis)
@@ -841,11 +953,21 @@ class PointGroup(Transformable):
                                 else:
                                     return cls(f"D{max_order}", transform)
                         normal = normalize(segment)
+                        # The normals of vertical and diagonal reflection
+                        # planes in symmetric tops are perpendicular to the
+                        # main axis.
                         if (
                             (perpendicular(normal, main_axis, tol))
                             and new(normals, normal)
                             and ReflectionPlane(normal).symmetric(points, tol)
                         ):
+                            # If the order of the main rotoreflection axis is
+                            # double the order of the main rotation axis, the
+                            # found reflection plane is diagonal to the
+                            # two-fold rotation axes, which define the
+                            # orientation of the point group.  Therefore, the
+                            # normal is rotated to determine the axis of
+                            # rotation.
                             transform = transformation(
                                 main_axis,
                                 (
@@ -862,6 +984,8 @@ class PointGroup(Transformable):
                                 return cls(f"D{max_order}h", transform)
                             else:
                                 return cls(f"C{max_order}v", transform)
+                # If no other symmetry elements were found, the orientation of
+                # the point group is determined only by the main axis.
                 transform = transformation(main_axis)
                 if rotorefl_factor == 2:
                     return cls(f"S{2*max_order}", transform)
@@ -870,24 +994,36 @@ class PointGroup(Transformable):
                 else:
                     return cls(f"C{max_order}", transform)
         else:
-            # asymmetric: C1,Cs,Ci,C2,C2v,C2h,D2,D2h
-            nums = 4 * [0]
+            # Asymmetric: C1,Cs,Ci,C2,C2v,C2h,D2,D2h
+            # The list recording the numbers of found sets of symmetry elements
+            # along each principal axis.  Each list indes corresponds to a
+            # two-figure binary number representing the presence of symmetry
+            # elements in the corresponding set.  From the right, the first
+            # figure indicates the presence of a reflection plane, and the
+            # second figure indicates the presence of a two-fold rotation axis.
+            nums = 4 * [0]  # 0b00: #(), 0b01: #(s), 0b10: #(C2), 0b11: #(C2,s)
             axes = []
             for i in range(3):
+                # Each principal axis is the axis of a potential two-fold
+                # rotation axis or the normal of a potential reflection plane.
                 vec = eigvecs[:, i]
                 found_rot = RotationAxis(vec, 2).symmetric(points, tol)
                 if invertible:
+                    # Each two-fold rotation axis has a perpendicular
+                    # reflection plane in a system with an inversion center.
                     found_refl = found_rot
                 else:
                     found_refl = ReflectionPlane(vec).symmetric(points, tol)
                 if found_rot or found_refl:
                     axes.append(vec)
-                idx = 0
+                idx = 0  # 0 == 0b00
                 if found_rot:
-                    idx += 2
+                    idx += 2  # 2 == 0b10
                 if found_refl:
-                    idx += 1
+                    idx += 1  # 1 == 0b01
                 nums[idx] += 1
+                # The point group can be determined after analyzing only two
+                # principal axes.
                 if i > 0:
                     if len(axes) == 2:
                         transform = transformation(axes[0], axes[1])
