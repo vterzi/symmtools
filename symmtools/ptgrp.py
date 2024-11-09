@@ -619,7 +619,7 @@ class PointGroup(Transformable):
             Return the transformation from the principal axes to axes `axis1`
             and `axis2`.
             """
-            if axis2:
+            if axis2 is not None:
                 return axes_transform(_PRIMAX, _SECAX, axis1, axis2)
             else:
                 return axis_transform(_PRIMAX, axis1)
@@ -739,9 +739,11 @@ class PointGroup(Transformable):
                                         rots.append(rot)
                                         # The point group can be determined
                                         # after finding only two rotation axes.
-                                        if len(rots) == 2:
+                                        if len(rots) >= 2:
                                             complete = True
                                         break
+                            if coplanar_group or complete:
+                                break
                         # If the group is collinear or coplanar or the search
                         # is complete, further iterations are unnecessary.
                         if collinear_group or coplanar_group or complete:
@@ -753,7 +755,8 @@ class PointGroup(Transformable):
                     break
             else:
                 raise ValueError("no two rotation axes found")
-            rot1, rot2 = rots
+            rot1 = rots[0]
+            rot2 = rots[1]
             vec1 = rot1.vec
             vec2 = rot2.vec
             order1 = rot1.order
@@ -913,7 +916,7 @@ class PointGroup(Transformable):
                         segment = pos1 - pos2
                         midpoint = 0.5 * (pos1 + pos2)
                         # The segment connecting two points is the normal of a
-                        # potential reflection plane and the distance vector
+                        # potential reflection plane, and the distance vector
                         # from the origin to the segment is the axis of a
                         # potential two-fold rotation axis if the distance
                         # vector splits the segment in two equal parts, i.e.
