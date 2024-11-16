@@ -17,6 +17,7 @@ __all__ = [
     "unitindep",
     "parallel",
     "unitparallel",
+    "orthvec",
     "perpendicular",
     "angle",
     "intersectangle",
@@ -31,7 +32,6 @@ __all__ = [
     "inertia",
     "signvar",
     "circshift",
-    "nonparallelvec",
 ]
 
 from math import sqrt, sin, cos, acos
@@ -206,6 +206,24 @@ def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
     tolerance `tol`.
     """
     return abs(float(vec1.dot(vec2))) <= tol
+
+
+def orthvec(unitvec: Vector) -> Vector:
+    """
+    Generate a unit vector that is orthogonal to a unit vector `unitvec` by
+    applying a circular shift to its components, negating the components with
+    odd indices, and orthogonalizing the result to `unitvec`.
+    """
+    n = len(unitvec)
+    vec = empty(n)
+    change = True
+    for i in range(n):
+        comp = unitvec[i - 1]
+        if change:
+            comp = -comp
+        vec[i] = comp
+        change = not change
+    return normalize(orthogonalize(vec, unitvec))
 
 
 def angle(vec1: Vector, vec2: Vector) -> float:
@@ -384,25 +402,25 @@ def signvar(
     arr = []
     excluded = []
     for n in range(2**nonzeros):
-        change = nonzeros * [False]
+        changes = nonzeros * [False]
         i = 0
         sign = 1
         while n > 0:
             if n % 2 == 1:
-                change[i] = True
+                changes[i] = True
                 sign = -sign
             i += 1
             n //= 2
         if sign * parity >= 0:
             if indep:
-                if change in excluded:
+                if changes in excluded:
                     continue
-                excluded.append([not ch for ch in change])
+                excluded.append([not change for change in changes])
             elem = []
             i = 0
             for comp in vec:
                 if comp != 0:
-                    if change[i]:
+                    if changes[i]:
                         comp = -comp
                     i += 1
                 elem.append(comp)
@@ -424,17 +442,3 @@ def circshift(vecs: RealVectors) -> List[List[Real]]:
                 elem.append(vec[i - ii])
             arr.append(elem)
     return arr
-
-
-def nonparallelvec(vec: RealVector) -> List[Real]:
-    """
-    Generate a vector that is non-parallel to a vector `vec` by applying a
-    circular shift to its components and changing the signs of components with
-    odd indices.
-    """
-    new = []
-    sign = -1
-    for i in range(len(vec)):
-        new.append(sign * vec[i - 1])
-        sign = -sign
-    return new
