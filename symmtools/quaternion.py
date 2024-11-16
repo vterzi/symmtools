@@ -7,7 +7,7 @@ from math import sqrt, sin, cos, atan2
 from numpy import eye
 
 from .const import INF
-from .utils import cross
+from .utils import sqnorm, cross
 from .transform import VectorTransformable, Rotation
 from .primitive import Point
 from .typehints import TypeVar, Any, Float, Matrix, RealVector
@@ -78,12 +78,10 @@ class Quaternion(VectorTransformable):
     def rotation(self) -> Rotation:
         """Return the rotation."""
         vec = self._vec
-        sq_vec_norm = vec.dot(vec)
-        if sq_vec_norm == 0.0:
+        length = sqnorm(vec)
+        if length == 0.0:
             raise ValueError("zero vector as the rotation axis")
-        return Rotation(
-            self._vec, 2.0 * atan2(sqrt(sq_vec_norm), self._scalar)
-        )
+        return Rotation(vec, 2.0 * atan2(sqrt(length), self._scalar))
 
     @classmethod
     def from_point(cls, point: Point) -> "Quaternion":

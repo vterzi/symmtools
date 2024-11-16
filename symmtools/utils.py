@@ -4,6 +4,7 @@ __all__ = [
     "clamp",
     "rational",
     "vector",
+    "sqnorm",
     "norm",
     "cross",
     "normalize",
@@ -93,10 +94,15 @@ def vector(vec: RealVector) -> Vector:
     return array(vec, dtype=float)
 
 
+def sqnorm(vec: Vector) -> float:
+    """Calculate the squared norm of a vector `vec`."""
+    return vec.dot(vec)
+
+
 def norm(vec: Vector) -> float:
     """Calculate the norm of a vector `vec`."""
     # `numpy.linalg.norm` is slower
-    return sqrt(vec.dot(vec))
+    return sqrt(sqnorm(vec))
 
 
 def cross(vec1: Vector, vec2: Vector) -> Vector:
@@ -206,9 +212,7 @@ def angle(vec1: Vector, vec2: Vector) -> float:
     """Calculate the angle between two vectors `vec1` and `vec2`."""
     # `acos(clamp(unitvec1.dot(unitvec2), -1.0, 1.0))` is less accurate
     return acos(
-        clamp(
-            vec1.dot(vec2) / sqrt(vec1.dot(vec1) * vec2.dot(vec2)), -1.0, 1.0
-        )
+        clamp(vec1.dot(vec2) / sqrt(sqnorm(vec1) * sqnorm(vec2)), -1.0, 1.0)
     )
 
 
@@ -256,8 +260,9 @@ def rotate(vec: Vector, axis: Vector, angle: Float) -> Vector:
 
 def vecrotate(vec: Vector, rotvec: Vector) -> Vector:
     """Rotate a 3D vector `vec` by a rotation vector `rotvec`."""
-    length = sqrt(rotvec.dot(rotvec))
+    length = sqnorm(rotvec)
     if length > 0.0:
+        length = sqrt(length)
         vec = rotate(vec, rotvec / length, length)
     return vec
 
