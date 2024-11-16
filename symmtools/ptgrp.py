@@ -820,11 +820,11 @@ class PointGroup(Transformable):
                 # reflection planes by testing the system on symmetry with
                 # respect to a potential four-fold rotoreflection axis.
                 if suffix == "" and vecs_obj.symb == "T":
-                    components = vecs_obj.vecs[1][0]
+                    comps = vecs_obj.vecs[1][0]
                     rotorefl = RotoreflectionAxis(
-                        components[0] * basis[0]
-                        + components[1] * basis[1]
-                        + components[2] * basis[2],
+                        comps[0] * basis[0]
+                        + comps[1] * basis[1]
+                        + comps[2] * basis[2],
                         4,
                     )
                     if rotorefl.symmetric(points, tol):
