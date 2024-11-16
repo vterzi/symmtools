@@ -7,7 +7,7 @@ from math import sqrt, sin, cos, atan2
 from numpy import eye
 
 from .const import INF
-from .vecop import cross
+from .utils import cross
 from .transform import VectorTransformable, Rotation
 from .primitive import Point
 from .typehints import TypeVar, Any, Float, Matrix, RealVector

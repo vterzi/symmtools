@@ -15,7 +15,7 @@ from .const import (
     LABEL_RE,
     FLOAT_RE,
 )
-from .vecop import (
+from .utils import (
     norm,
     cross,
     normalize,

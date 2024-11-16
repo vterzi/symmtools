@@ -15,7 +15,7 @@ from .const import (
     ROT_SYMBS,
     REFL_SYMBS,
 )
-from .vecop import (
+from .utils import (
     vector,
     norm,
     normalize,

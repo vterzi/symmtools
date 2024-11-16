@@ -25,7 +25,7 @@ from numpy import empty, eye
 from scipy.optimize import linear_sum_assignment  # type: ignore
 
 from .const import INF, PI, TAU
-from .vecop import (
+from .utils import (
     vector,
     norm,
     diff,

@@ -15,8 +15,7 @@ from .const import (
     SPECIAL_ANGLES,
     SPECIAL_COMPONENTS,
 )
-from .vecop import vector, intersectangle
-from .tools import signvar, circshift
+from .utils import vector, intersectangle, signvar, circshift
 from .symmelem import (
     SymmetryElement,
     InversionCenter,

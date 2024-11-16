@@ -24,8 +24,7 @@ __all__ = [
 from abc import abstractmethod
 
 from .const import PI, TAU, SYMB, SPECIAL_ANGLES
-from .vecop import intersectangle
-from .tools import rational
+from .utils import intersectangle, rational
 from .transform import (
     Transformable,
     Transformables,
