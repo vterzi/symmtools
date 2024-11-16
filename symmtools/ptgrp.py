@@ -17,6 +17,7 @@ from .const import (
 )
 from .utils import (
     vector,
+    sqnorm,
     norm,
     normalize,
     orthogonalize,
@@ -25,6 +26,7 @@ from .utils import (
     parallel,
     unitparallel,
     perpendicular,
+    orthvec,
     angle,
     inertia,
 )
@@ -74,36 +76,38 @@ _PRIMAX = vector(PRIMAX)
 _SECAX = vector(SECAX)
 
 
-def axis_transform(
-    from_axis: Vector, to_axis: Vector
+def vec_rot(
+    from_vec: Vector, to_vec: Vector, orth_axis: Optional[Vector] = None
 ) -> Union[Identity, Rotation]:
     """
-    Return the (proper) transformation from one axis `from_axis` to another
-    axis `to_axis`.  Antiparallel axis vectors are considered to be equivalent.
+    Return the proper transformation from one non-zero vector `from_vec` to
+    another non-zero vector `to_vec`.  If a vector `orth_axis` that is
+    orthogonal to vector `to_vec` is provided, it will be used to construct
+    the rotation in case the vectors are antiparallel.
     """
-    axis = cross(from_axis, to_axis)
-    return (
-        Rotation(axis, angle(from_axis, to_axis))
-        if axis.dot(axis) > 0.0
-        else Identity()
-    )
+    axis = cross(from_vec, to_vec)
+    if sqnorm(axis) > 0.0:
+        return Rotation(axis, angle(from_vec, to_vec))
+    else:
+        if from_vec.dot(to_vec) < 0.0:
+            if orth_axis is None:
+                orth_axis = orthvec(normalize(to_vec))
+            return Rotation(orth_axis, PI)
+        else:
+            return Identity()
 
 
-def axes_transform(
-    from_axis1: Vector, from_axis2: Vector, to_axis1: Vector, to_axis2: Vector
+def vecs_rot(
+    from_vec1: Vector, from_vec2: Vector, to_vec1: Vector, to_vec2: Vector
 ) -> Union[Identity, Rotation]:
     """
-    Return the (proper) transformation from one pair of axes `from_axis1` and
-    `from_axis2` to another pair of axes `to_axis1` and `to_axis2`.  The axes
-    in each pair are assumed to be orthogonal to each other.
+    Return the proper transformation from one pair of orthogonal vectors
+    `from_vec1` and `from_vec2` to another pair of orthogonal vectors `to_vec1`
+    and `to_vec2`.
     """
-    transform1 = axis_transform(from_axis1, to_axis1)
-    if isinstance(transform1, Identity) and from_axis1.dot(to_axis1) < 0.0:
-        transform1 = Rotation(to_axis2, PI)
-    from_axis2 = transform1.apply(from_axis2)
-    transform2 = axis_transform(from_axis2, to_axis2)
-    if isinstance(transform2, Identity) and from_axis2.dot(to_axis2) < 0.0:
-        transform2 = Rotation(to_axis1, PI)
+    transform1 = vec_rot(from_vec1, to_vec1, to_vec2)
+    from_vec2 = transform1.apply(from_vec2)
+    transform2 = vec_rot(from_vec2, to_vec2, to_vec1)
     if isinstance(transform2, Rotation):
         if isinstance(transform1, Rotation):
             return (
@@ -620,9 +624,9 @@ class PointGroup(Transformable):
             and `axis2`.
             """
             if axis2 is not None:
-                return axes_transform(_PRIMAX, _SECAX, axis1, axis2)
+                return vecs_rot(_PRIMAX, _SECAX, axis1, axis2)
             else:
-                return axis_transform(_PRIMAX, axis1)
+                return vec_rot(_PRIMAX, axis1)
 
         # If all points are collinear, the position vectors of the points (of
         # the centered set) are linearly dependent (parallel or antiparallel).
