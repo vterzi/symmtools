@@ -438,7 +438,7 @@ def circshift(vecs: RealVectors) -> List[List[Real]]:
         n = len(vec)
         for i in range(n):
             elem = []
-            for ii in range(n):
+            for ii in range(n, 0, -1):
                 elem.append(vec[i - ii])
             arr.append(elem)
     return arr
