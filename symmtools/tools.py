@@ -96,3 +96,16 @@ def circshift(vecs: RealVectors) -> List[List[Real]]:
             arr.append(elem)
     return arr
 
+
+def nonparallelvec(vec: RealVector) -> List[Real]:
+    """
+    Generate a vector that is non-parallel to a vector `vec` by applying a
+    circular shift to its components and changing the signs of components with
+    odd indices.
+    """
+    new = []
+    sign = -1
+    for i in range(len(vec)):
+        new.append(sign * vec[i - 1])
+        sign = -sign
+    return new
