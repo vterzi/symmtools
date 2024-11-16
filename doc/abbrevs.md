@@ -57,7 +57,6 @@
 | doc           | documentation                                               |
 | double        | double precision floating-point number                      |
 | elem          | element                                                     |
-| elif          | else if                                                     |
 | enum          | enumerate                                                   |
 | env           | environment                                                 |
 | eof           | end of file                                                 |
@@ -74,6 +73,7 @@
 | fun, func     | function                                                    |
 | ge            | greater than or equal                                       |
 | gpu           | graphics processing unit                                    |
+| grp           | group                                                       |
 | gt            | greater than                                                |
 | hex           | hexadecimal                                                 |
 | html          | Hypertext Markup Language                                   |
@@ -117,6 +117,7 @@
 | op            | operator                                                    |
 | opt           | option                                                      |
 | ord           | ordinal                                                     |
+| orth          | orthogonal                                                  |
 | os            | operating system                                            |
 | param         | parameter                                                   |
 | pos           | positive, position                                          |
@@ -124,6 +125,7 @@
 | pow           | power                                                       |
 | proc          | process, procedure                                          |
 | prod          | product                                                     |
+| pt            | point                                                       |
 | ptr           | pointer                                                     |
 | rad           | radian                                                      |
 | rand          | random                                                      |
@@ -170,6 +172,7 @@ Python:
 |---------------|-------------------------------------------------------------|
 | a...          | asynchronous                                                |
 | co...         | code object                                                 |
+| elif          | else if                                                     |
 | f...          | frame                                                       |
 | i...          | in-place                                                    |
 | mro           | method resolution order                                     |
