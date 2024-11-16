@@ -42,17 +42,17 @@ def signvar(
     vec: RealVector, parity: Int = 0, indep: Bool = False
 ) -> List[List[Real]]:
     """
-    Generate vectors with all possible sign changes of the coordinates of a
+    Generate vectors with all possible sign changes of the components of a
     vector `vec` that satisfy a parity `parity`.  If `parity` is
     positive/negative, only the vectors resulting from even/odd number of sign
     changes are returned.  If `parity` is zero, all vectors are returned.  If
     `indep` is `True`, only linearly independent vectors are returned.
     """
     nonzeros = 0
-    for coord in vec:
-        if coord != 0:
+    for comp in vec:
+        if comp != 0:
             nonzeros += 1
-    res = []
+    arr = []
     excluded = []
     for n in range(2**nonzeros):
         change = nonzeros * [False]
@@ -69,29 +69,30 @@ def signvar(
                 if change in excluded:
                     continue
                 excluded.append([not ch for ch in change])
-            new = []
+            elem = []
             i = 0
-            for coord in vec:
-                if coord != 0:
+            for comp in vec:
+                if comp != 0:
                     if change[i]:
-                        coord = -coord
+                        comp = -comp
                     i += 1
-                new.append(coord)
-            res.append(new)
-    return res
+                elem.append(comp)
+            arr.append(elem)
+    return arr
 
 
 def circshift(vecs: RealVectors) -> List[List[Real]]:
     """
     Generate all possible vectors by applying circular shifts on the
-    coordinates of vectors `vecs`.
+    components of vectors `vecs`.
     """
-    res = []
+    arr = []
     for vec in vecs:
         n = len(vec)
         for i in range(n):
-            new = []
+            elem = []
             for ii in range(n):
-                new.append(vec[(i + ii) % n])
-            res.append(new)
-    return res
+                elem.append(vec[i - ii])
+            arr.append(elem)
+    return arr
+

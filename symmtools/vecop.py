@@ -87,12 +87,12 @@ def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
 def canonicalize(vec: Vector) -> Vector:
     """
     Canonicalize an unsigned direction vector `vec` by making the first
-    non-zero coordinate positive.
+    non-zero component positive.
     """
-    for coord in vec:
-        if coord < 0.0:
+    for comp in vec:
+        if comp < 0.0:
             vec = -vec
-        if coord != 0.0:
+        if comp != 0.0:
             break
     return vec
 
