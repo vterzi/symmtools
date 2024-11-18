@@ -87,14 +87,14 @@ def vec_rot(
     """
     axis = cross(from_vec, to_vec)
     if sqnorm(axis) > 0.0:
-        return Rotation(axis, angle(from_vec, to_vec))
-    else:
-        if from_vec.dot(to_vec) < 0.0:
-            if orth_axis is None:
-                orth_axis = orthvec(normalize(to_vec))
-            return Rotation(orth_axis, PI)
-        else:
-            return Identity()
+        ang = angle(from_vec, to_vec)
+        if ang > 0.0:
+            return Rotation(axis, ang)
+    elif from_vec.dot(to_vec) < 0.0:
+        if orth_axis is None:
+            orth_axis = orthvec(normalize(to_vec))
+        return Rotation(orth_axis, PI)
+    return Identity()
 
 
 def vecs_rot(
