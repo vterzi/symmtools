@@ -28,6 +28,7 @@ from .utils import (
     perpendicular,
     orthvec,
     angle,
+    intersectangle,
     inertia,
 )
 from .transform import (
@@ -505,43 +506,48 @@ class PointGroup(Transformable):
         rot = ""
         order = ""
         refl = ""
-        rot_num = 0
-        high_rot_num = 0
-        max_rot_order = 1
-        refl_num = 0
+        transform: Union[Identity, Rotation] = Identity()
         invertible = False
         rotorefl_num = 0
+        axes: List[Tuple[int, Vector]] = []
+        normals: List[Vector] = []
+        pot_main_axis = _ORIGIN
         for symm_elem in symm_elems:
             if isinstance(symm_elem, RotationAxis):
                 rot_order = symm_elem.order
-                rot_num += 1
-                if rot_order > 2:
-                    high_rot_num += 1
-                if rot_order > max_rot_order:
-                    max_rot_order = rot_order
+                i = 0
+                n = len(axes)
+                while i < n and axes[i][0] > rot_order:
+                    i += 1
+                axes.insert(i, (rot_order, symm_elem.vec))
             elif isinstance(symm_elem, ReflectionPlane):
-                refl_num += 1
+                normals.append(symm_elem.vec)
             elif isinstance(symm_elem, InversionCenter):
                 invertible = True
             elif isinstance(symm_elem, RotoreflectionAxis):
                 rotorefl_num += 1
+                pot_main_axis = symm_elem.vec
             elif isinstance(symm_elem, InfRotationAxis):
                 order = SYMB.inf
+                axes.insert(0, (0, symm_elem.vec))
             elif isinstance(symm_elem, InfRotoreflectionAxis):
                 order = SYMB.inf
                 refl = "h"
                 if rot:
+                    transform = vec_rot(_PRIMAX, symm_elem.vec)
                     break
-                refl_num += 1
                 invertible = True
             elif isinstance(symm_elem, AxisRotationAxes):
                 rot = "D"
                 order = SYMB.inf
                 if refl:
+                    transform = vec_rot(_PRIMAX, symm_elem.vec)
                     break
             elif isinstance(symm_elem, AxisReflectionPlanes):
                 order = SYMB.inf
-                refl_num += 1
+                # Adding a reflection plane is necessary to differentiate
+                # "Coov" from "Coo".
+                normals.append(symm_elem.vec)
             elif isinstance(symm_elem, CenterRotationAxes):
                 rot = "K"
             elif isinstance(
@@ -551,12 +557,21 @@ class PointGroup(Transformable):
                 refl = "h"
                 break
         if not rot:
+            rot_num = len(axes)
+            max_rot_order = axes[0][0] if rot_num > 0 else 1
+            high_rot_num = 0
+            for i in range(rot_num):
+                if axes[i][0] < 3:
+                    break
+                high_rot_num += 1
+            refl_num = len(normals)
             if order == SYMB.inf:
                 rot = "C"
                 if invertible:
                     refl = "h"
                 elif refl_num > 0:
                     refl = "v"
+                transform = vec_rot(_PRIMAX, axes[0][1])
             elif high_rot_num > 1:
                 if max_rot_order == 5:
                     rot = "I"
@@ -568,6 +583,12 @@ class PointGroup(Transformable):
                         refl = "d"
                 if invertible:
                     refl = "h"
+                vec1 = axes[0][1]
+                vec2 = axes[1][1]
+                if vec1.dot(vec2) < 0.0:
+                    vec2 = -vec2
+                vec2 = normalize(orthogonalize(vec2, vec1))
+                transform = vecs_rot(_PRIMAX, _SECAX, vec1, vec2)
             elif rot_num > 1:
                 rot = "D"
                 order = str(max_rot_order)
@@ -575,9 +596,20 @@ class PointGroup(Transformable):
                     refl = "h"
                 elif refl_num == max_rot_order:
                     refl = "d"
+                    if max_rot_order == 2:
+                        min_ang = INF
+                        main_idx = 0
+                        for i in range(rot_num):
+                            ang = intersectangle(pot_main_axis, axes[i][1])
+                            if ang < min_ang:
+                                min_ang = ang
+                                main_idx = i
+                        axes.insert(0, axes.pop(main_idx))
+                transform = vecs_rot(_PRIMAX, _SECAX, axes[0][1], axes[1][1])
             elif rotorefl_num > 0 and refl_num == 0:
                 rot = "S"
                 order = str(2 * max_rot_order)
+                transform = vec_rot(_PRIMAX, pot_main_axis)
             else:
                 rot = "C"
                 if max_rot_order > 1:
@@ -586,14 +618,20 @@ class PointGroup(Transformable):
                         refl = "h"
                     elif refl_num > 1:
                         refl = "v"
+                    transform = (
+                        vecs_rot(_PRIMAX, _SECAX, axes[0][1], normals[0])
+                        if refl == "v"
+                        else vec_rot(_PRIMAX, axes[0][1])
+                    )
                 else:
                     if invertible:
                         refl = "i"
                     elif refl_num > 0:
                         refl = "s"
+                        transform = vec_rot(_PRIMAX, normals[0])
                     else:
                         order = "1"
-        return cls(rot + order + refl)
+        return cls(rot + order + refl, transform)
 
     @classmethod
     def from_points(cls, points: Points, tol: float) -> "PointGroup":
