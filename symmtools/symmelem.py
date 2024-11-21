@@ -98,7 +98,7 @@ class SymmetryElement(Transformable):
 
     def __call__(
         self, transformable: _Transformable
-    ) -> Sequence[_Transformable]:
+    ) -> Tuple[_Transformable, ...]:
         """Apply the transformations."""
         return (transformable,) + tuple(
             transform(transformable) for transform in self.transforms
@@ -353,12 +353,12 @@ class SymmetryElements:
         self._angles: Dict[FrozenSet[Tuple], Dict[float, int]] = {}
 
     @property
-    def included(self) -> Sequence[VectorSymmetryElement]:
+    def included(self) -> Tuple[VectorSymmetryElement, ...]:
         """Included symmetry elements containing a direction."""
         return tuple(self._included)
 
     @property
-    def excluded(self) -> Sequence[VectorSymmetryElement]:
+    def excluded(self) -> Tuple[VectorSymmetryElement, ...]:
         """Excluded symmetry elements containing a direction."""
         return tuple(self._excluded)
 
@@ -533,7 +533,7 @@ class SymmetryElements:
         return True
 
     @property
-    def symbs(self) -> Sequence[str]:
+    def symbs(self) -> Tuple[str, ...]:
         """Sorted symbols of symmetry elements."""
         res = {}
         for prop, num in self._types.items():

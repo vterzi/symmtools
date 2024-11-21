@@ -171,7 +171,7 @@ _Transformables = TypeVar("_Transformables", bound="Transformables")
 class Transformables(Transformable):
     """Set of transformables."""
 
-    _elems: Sequence[Transformable] = ()
+    _elems: Tuple[Transformable, ...] = ()
 
     def __init__(self, elems: Sequence[Transformable]) -> None:
         """Initialize the instance with a set of elements `elems`."""
@@ -187,12 +187,12 @@ class Transformables(Transformable):
         )
 
     @property
-    def elems(self) -> Sequence[Transformable]:
+    def elems(self) -> Tuple[Transformable, ...]:
         """Set of elements."""
         return self._elems
 
     @property
-    def groups(self) -> Sequence[Tuple[Tuple, Sequence[int]]]:
+    def groups(self) -> Tuple[Tuple[Tuple, Tuple[int, ...]], ...]:
         """Group indices of elements."""
         return self._groups
 

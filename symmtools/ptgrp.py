@@ -1205,7 +1205,7 @@ class PointGroup(Transformable):
 
 def _init(
     symbs: Sequence[str],
-) -> Sequence[Tuple[PointGroup, SymmetryElements]]:
+) -> Tuple[Tuple[PointGroup, SymmetryElements], ...]:
     res = []
     for symb in symbs:
         group = PointGroup(symb)
