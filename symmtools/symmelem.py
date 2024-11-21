@@ -518,24 +518,18 @@ class SymmetryElements:
         """
         Check whether another instance `other` is a subset of the instance.
         """
-        for key1, num in other._types.items():
-            if key1 in self._types:
-                ref_num = self._types[key1]
-            else:
-                ref_num = 0
-            zero = num == 0
-            ref_zero = ref_num == 0
-            if ref_num < num or zero != ref_zero:
+        for key1, other_num in other._types.items():
+            self_num = self._types[key1] if key1 in self._types else 0
+            if self_num < other_num or (self_num == 0) != (other_num == 0):
                 return False
         for key2, angles in other._angles.items():
-            for angle, num in angles.items():
-                if angle in self._angles[key2]:
-                    ref_num = self._angles[key2][angle]
-                else:
-                    ref_num = 0
-                zero = num == 0
-                ref_zero = ref_num == 0
-                if ref_num < num or zero != ref_zero:
+            for angle, other_num in angles.items():
+                self_num = (
+                    self._angles[key2][angle]
+                    if angle in self._angles[key2]
+                    else 0
+                )
+                if self_num < other_num or (self_num == 0) != (other_num == 0):
                     return False
         return True
 

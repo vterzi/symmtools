@@ -827,11 +827,11 @@ class PointGroup(Transformable):
             # orders of the rotation axes and the intersection angle between
             # them.
             min_diff = INF
-            for ref_ang, ref_variants in VARIANTS[key].items():
-                diff = abs(ang - ref_ang)
+            for pot_ang, pot_variants in VARIANTS[key].items():
+                diff = abs(ang - pot_ang)
                 if diff < min_diff:
                     min_diff = diff
-                    variants = ref_variants
+                    variants = pot_variants
             # Tetrahedral, octahedral, and icosahedral point groups with an
             # inversion center contain horizontal reflection planes.
             suffix = "h" if invertible else ""
@@ -911,9 +911,9 @@ class PointGroup(Transformable):
                     # If the distance is already known, increase the number of
                     # points in the corresponding plane, and, if not, define
                     # a new plane with this distance.
-                    for ref_dist in dists:
-                        if abs(dist - ref_dist) <= tol:
-                            dists[ref_dist] += 1
+                    for other_dist in dists:
+                        if abs(dist - other_dist) <= tol:
+                            dists[other_dist] += 1
                             break
                     else:
                         dists[dist] = 1
@@ -921,15 +921,15 @@ class PointGroup(Transformable):
                 # possible orders.
                 for count in dists.values():
                     orders.add(count)
-            ref_orders = sorted(orders, reverse=True)
+            pot_orders = sorted(orders, reverse=True)
             # Try all valid orders starting from the highest possible.
-            for order in range(ref_orders[0], 1, -1):
-                for ref_order in ref_orders:
+            for order in range(pot_orders[0], 1, -1):
+                for pot_order in pot_orders:
                     # The order must be a divisor of the highest possible
                     # order or its predecessor (in the case that the axis
                     # contains one point) for each set of coplanar points due
                     # to symmetry.
-                    if ref_order % order != 0 and (ref_order - 1) % order != 0:
+                    if pot_order % order != 0 and (pot_order - 1) % order != 0:
                         break
                 else:
                     if RotationAxis(main_axis, order).symmetric(points, tol):
@@ -1185,9 +1185,9 @@ class PointGroup(Transformable):
         for rot, order, refl in sorted(new_variants):
             symb = f"{ROT_SYMBS[rot]}{order}{REFL_SYMBS[refl]}".strip()
             group = cls(symb)
-            ref_info = SymmetryElements()
-            ref_info.include(tuple(group.symm_elems), TOL)
-            variants.append((group, ref_info))
+            pot_info = SymmetryElements()
+            pot_info.include(tuple(group.symm_elems), TOL)
+            variants.append((group, pot_info))
         variants.extend(_HIGH_POINT_GROUPS)
         remove = []
         for i, elem in enumerate(variants):

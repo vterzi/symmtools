@@ -218,18 +218,18 @@ class Points(Transformables):
                     dist = pos.dot(vec)
                     if coplanar and dist > tol:
                         coplanar = False
-                    for ref_dist in dists:
-                        if abs(dist - ref_dist) <= tol:
-                            dists[ref_dist] += 1
+                    for other_dist in dists:
+                        if abs(dist - other_dist) <= tol:
+                            dists[other_dist] += 1
                             break
                     else:
                         dists[dist] = 1
                 for count in dists.values():
                     orders.add(count)
-            ref_orders = sorted(orders, reverse=True)
-            for order in range(ref_orders[0], 1, -1):
-                for ref_order in ref_orders:
-                    if ref_order % order != 0 and (ref_order - 1) % order != 0:
+            pot_orders = sorted(orders, reverse=True)
+            for order in range(pot_orders[0], 1, -1):
+                for pot_order in pot_orders:
+                    if pot_order % order != 0 and (pot_order - 1) % order != 0:
                         break
                 else:
                     rot = RotationAxis(vec, order)
@@ -423,13 +423,13 @@ class Points(Transformables):
                     )
                     ang = angle(vec1, vec2)
                     min_diff = INF
-                    for ref_ang, ref_variants in VARIANTS[
+                    for pot_ang, pot_variants in VARIANTS[
                         (order1, order2)
                     ].items():
-                        diff = abs(ang - ref_ang)
+                        diff = abs(ang - pot_ang)
                         if diff < min_diff:
                             min_diff = diff
-                            variants = ref_variants
+                            variants = pot_variants
                     suffix = "h" if invertible else ""
                     n_variants = len(variants)
                     for i_variant in range(n_variants):
@@ -602,8 +602,8 @@ class Points(Transformables):
             for transform in transforms:
                 for i in range(fi, li):
                     point = transform(points[i])
-                    for ref_point in points:
-                        if point.same(ref_point, tol):
+                    for other_point in points:
+                        if point.same(other_point, tol):
                             break
                     else:
                         points.append(point)

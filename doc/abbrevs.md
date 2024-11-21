@@ -122,6 +122,7 @@
 | param         | parameter                                                   |
 | pos           | positive, position                                          |
 | posix         | Portable Operating System Interface                         |
+| pot           | potential                                                   |
 | pow           | power                                                       |
 | proc          | process, procedure                                          |
 | prod          | product                                                     |
