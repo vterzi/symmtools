@@ -157,7 +157,7 @@ class Points(Transformables):
     ) -> Iterator[SymmetryElement]:
         """
         Determine all symmetry elements of a set of points `points` within a
-        tolerance `tol`. Use the fast algorithm if `fast` is `True`.
+        tolerance `tol`. Use the fast algorithm if `fast` is enabled.
         """
         if not self.nondegen(tol):
             raise ValueError(

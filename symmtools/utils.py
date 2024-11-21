@@ -393,7 +393,7 @@ def signvar(
     vector `vec` that satisfy a parity `parity`.  If `parity` is
     positive/negative, only the vectors resulting from even/odd number of sign
     changes are returned.  If `parity` is zero, all vectors are returned.  If
-    `indep` is `True`, only linearly independent vectors are returned.
+    `indep` is enabled, only linearly independent vectors are returned.
     """
     nonzeros = 0
     for comp in vec:
