@@ -14,11 +14,9 @@ __all__ = [
     "TERTAX",
     "SPECIAL_ANGLES",
     "SPECIAL_COMPONENTS",
-    "ROT_SYMBS",
-    "REFL_SYMBS",
     "LABEL_RE",
     "FLOAT_RE",
-    "SYMB",
+    "Symb",
 ]
 
 from math import nan, inf, pi, sqrt, atan
@@ -136,8 +134,6 @@ SPECIAL_COMPONENTS = (
     sqrt(3.0 / 8.0) * PHI,
     1.0,
 )
-ROT_SYMBS = "CSDTOIK"
-REFL_SYMBS = " sivdh"
 LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
 FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
 
@@ -154,34 +150,44 @@ class _Symbols:
         self._unicode = True
 
     @property
-    def inf(self):
+    def INF(self):
         """Infinity symbol."""
         return "\u221e" if self._unicode else "oo"
 
     @property
-    def ident(self):
+    def IDENT(self):
         """Identity element symbol."""
         return "E"
 
     @property
-    def rot(self):
+    def ROT(self):
         """Rotation axis symbol."""
         return "C"
 
     @property
-    def refl(self):
+    def REFL(self):
         """Reflection plane symbol."""
         return "\u03c3" if self._unicode else "s"
 
     @property
-    def inv(self):
+    def INV(self):
         """Inversion center symbol."""
         return "i"
 
     @property
-    def rotorefl(self):
+    def ROTOREFL(self):
         """Rotoreflection axis symbol."""
         return "S"
 
+    @property
+    def PT_GRP_ROTS(self):
+        """Point group rotation symbols."""
+        return "CSDTOIK"
 
-SYMB = _Symbols()
+    @property
+    def PT_GRP_REFLS(self):
+        """Point group reflection symbols."""
+        return " sivdh"
+
+
+Symb = _Symbols()

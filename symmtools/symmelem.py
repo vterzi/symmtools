@@ -23,7 +23,7 @@ __all__ = [
 
 from abc import abstractmethod
 
-from .const import PI, TAU, SYMB, SPECIAL_ANGLES
+from .const import PI, TAU, Symb, SPECIAL_ANGLES
 from .utils import intersectangle, rational
 from .transform import (
     Transformable,
@@ -116,7 +116,7 @@ class InfSymmetryElement(SymmetryElement):
 class IdentityElement(InvariantTransformable, SymmetryElement):
     """Identity element in a real 3D space."""
 
-    _symb = "E"
+    _symb = Symb.IDENT
     _name = "identity element"
     _id = 1
 
@@ -128,7 +128,7 @@ class IdentityElement(InvariantTransformable, SymmetryElement):
 class InversionCenter(InvariantTransformable, SymmetryElement):
     """Inversion center in the origin in a real 3D space."""
 
-    _symb = "i"
+    _symb = Symb.INV
     _name = "inversion center"
     _id = -2
 
@@ -140,7 +140,7 @@ class InversionCenter(InvariantTransformable, SymmetryElement):
 class RotationAxis(OrderedTransformable, SymmetryElement):
     """Rotation axis containing the origin in a real 3D space."""
 
-    _symb = SYMB.rot
+    _symb = Symb.ROT
     _name = "rotation axis"
 
     def __init__(self, vec: RealVector, order: Int) -> None:
@@ -167,14 +167,14 @@ class RotationAxis(OrderedTransformable, SymmetryElement):
 class InfRotationAxis(InfFoldTransformable, InfSymmetryElement):
     """Infinite-fold rotation axis containing the origin in a real 3D space."""
 
-    _symb = SYMB.rot + SYMB.inf
+    _symb = Symb.ROT + Symb.INF
     _name = "infinite-fold rotation axis"
 
 
 class ReflectionPlane(DirectionTransformable, SymmetryElement):
     """Reflection plane containing the origin in a real 3D space."""
 
-    _symb = SYMB.refl
+    _symb = Symb.REFL
     _name = "reflection plane"
     _id = -1
 
@@ -186,7 +186,7 @@ class ReflectionPlane(DirectionTransformable, SymmetryElement):
 class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
     """Rotoreflection axis containing the origin in a real 3D space."""
 
-    _symb = SYMB.rotorefl
+    _symb = Symb.ROTOREFL
     _name = "rotoreflection axis"
 
     def __init__(self, vec: RealVector, order: Int) -> None:
@@ -231,7 +231,7 @@ class InfRotoreflectionAxis(InfFoldTransformable, InfSymmetryElement):
     Infinite-fold rotoreflaction axis containing the origin in a real 3D space.
     """
 
-    _symb = SYMB.rotorefl + SYMB.inf
+    _symb = Symb.ROTOREFL + Symb.INF
     _name = "infinite-fold rotoreflection axis"
 
 
@@ -241,7 +241,7 @@ class AxisRotationAxes(DirectionTransformable, InfSymmetryElement):
     containing the origin in a real 3D space.
     """
 
-    _symb = SYMB.inf + SYMB.rot + "2"
+    _symb = Symb.INF + Symb.ROT + "2"
     _name = "set of all two-fold rotation axes perpendicular to an axis"
     _id = 2
 
@@ -252,7 +252,7 @@ class CenterRotationAxes(InvariantTransformable, InfSymmetryElement):
     center in a real 3D space.
     """
 
-    _symb = SYMB.inf + SYMB.rot + SYMB.inf
+    _symb = Symb.INF + Symb.ROT + Symb.INF
     _name = "set of all infinite-fold rotation axes containing a center"
 
 
@@ -262,7 +262,7 @@ class AxisReflectionPlanes(DirectionTransformable, InfSymmetryElement):
     origin in a real 3D space.
     """
 
-    _symb = SYMB.inf + SYMB.refl + "v"
+    _symb = Symb.INF + Symb.REFL + "v"
     _name = "set of all reflection planes containing an axis"
     _id = -1
 
@@ -273,7 +273,7 @@ class CenterReflectionPlanes(InvariantTransformable, InfSymmetryElement):
     real 3D space.
     """
 
-    _symb = SYMB.inf + SYMB.refl
+    _symb = Symb.INF + Symb.REFL
     _name = "set of all reflection planes containing a center"
     _id = -1
 
@@ -284,7 +284,7 @@ class CenterRotoreflectionAxes(InvariantTransformable, InfSymmetryElement):
     center in a real 3D space.
     """
 
-    _symb = SYMB.inf + SYMB.rotorefl + SYMB.inf
+    _symb = Symb.INF + Symb.ROTOREFL + Symb.INF
     _name = "set of all infinite-fold rotoreflection axes containing a center"
 
 

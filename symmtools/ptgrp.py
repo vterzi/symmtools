@@ -11,9 +11,7 @@ from .const import (
     ORIGIN,
     PRIMAX,
     SECAX,
-    SYMB,
-    ROT_SYMBS,
-    REFL_SYMBS,
+    Symb,
 )
 from .utils import (
     vector,
@@ -235,9 +233,9 @@ class PointGroup(Transformable):
 
         rotation = symb[0]
         subscript = symb[1:]
-        if subscript.startswith(SYMB.inf):
-            i = len(SYMB.inf)
-            order = SYMB.inf
+        if subscript.startswith(Symb.INF):
+            i = len(Symb.INF)
+            order = Symb.INF
             n = 0
             inf = True
             reflection = subscript[i:]
@@ -528,10 +526,10 @@ class PointGroup(Transformable):
                 rotorefl_num += 1
                 pot_main_axis = symm_elem.vec
             elif isinstance(symm_elem, InfRotationAxis):
-                order = SYMB.inf
+                order = Symb.INF
                 axes.insert(0, (0, symm_elem.vec))
             elif isinstance(symm_elem, InfRotoreflectionAxis):
-                order = SYMB.inf
+                order = Symb.INF
                 refl = "h"
                 if rot:
                     transform = vec_rot(_PRIMAX, symm_elem.vec)
@@ -539,12 +537,12 @@ class PointGroup(Transformable):
                 invertible = True
             elif isinstance(symm_elem, AxisRotationAxes):
                 rot = "D"
-                order = SYMB.inf
+                order = Symb.INF
                 if refl:
                     transform = vec_rot(_PRIMAX, symm_elem.vec)
                     break
             elif isinstance(symm_elem, AxisReflectionPlanes):
-                order = SYMB.inf
+                order = Symb.INF
                 # Adding a reflection plane is necessary to differentiate
                 # "Coov" from "Coo".
                 normals.append(symm_elem.vec)
@@ -565,7 +563,7 @@ class PointGroup(Transformable):
                     break
                 high_rot_num += 1
             refl_num = len(normals)
-            if order == SYMB.inf:
+            if order == Symb.INF:
                 rot = "C"
                 if invertible:
                     refl = "h"
@@ -1140,7 +1138,11 @@ class PointGroup(Transformable):
 
         def add(rot: str, order: int, refl: str = "") -> None:
             new_variants.add(
-                (ROT_SYMBS.index(rot), order, REFL_SYMBS.index(refl))
+                (
+                    Symb.PT_GRP_ROTS.index(rot),
+                    order,
+                    Symb.PT_GRP_REFLS.index(refl),
+                )
             )
 
         if max_rot_order > 1:
@@ -1183,7 +1185,9 @@ class PointGroup(Transformable):
             add("D", n2, "h")
         # TODO analyze angles in `info` to suggest point groups
         for rot, order, refl in sorted(new_variants):
-            symb = f"{ROT_SYMBS[rot]}{order}{REFL_SYMBS[refl]}".strip()
+            symb = (
+                Symb.PT_GRP_ROTS[rot] + str(order) + Symb.PT_GRP_REFLS[refl]
+            ).strip()
             group = cls(symb)
             pot_info = SymmetryElements()
             pot_info.include(tuple(group.symm_elems), TOL)
@@ -1228,11 +1232,11 @@ _HIGH_POINT_GROUPS = _init(
         "Oh",
         "I",
         "Ih",
-        f"C{SYMB.inf}",
-        f"C{SYMB.inf}v",
-        f"C{SYMB.inf}h",
-        f"D{SYMB.inf}",
-        f"D{SYMB.inf}h",
+        f"C{Symb.INF}",
+        f"C{Symb.INF}v",
+        f"C{Symb.INF}h",
+        f"D{Symb.INF}",
+        f"D{Symb.INF}h",
         "K",
         "Kh",
     )
