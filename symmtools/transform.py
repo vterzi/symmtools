@@ -58,7 +58,7 @@ class Transformable(ABC):
 
     @property
     def args(self) -> str:
-        """Return the argument values used to create the instance."""
+        """Argument values used to create the instance."""
         return ""
 
     def __str__(self) -> str:
@@ -72,7 +72,7 @@ class Transformable(ABC):
 
     @property
     def props(self) -> Tuple:
-        """Return the immutable properties."""
+        """Immutable properties."""
         return (self.__class__,)
 
     def similar(self, obj: Any) -> bool:
@@ -188,12 +188,12 @@ class Transformables(Transformable):
 
     @property
     def elems(self) -> Sequence[Transformable]:
-        """Return the set of elements."""
+        """Set of elements."""
         return self._elems
 
     @property
     def groups(self) -> Sequence[Tuple[Tuple, Sequence[int]]]:
-        """Return the group indices of elements."""
+        """Group indices of elements."""
         return self._groups
 
     @property
@@ -341,7 +341,7 @@ class VectorTransformable(Transformable):
 
     @property
     def vec(self) -> Vector:
-        """Return the vector representing the instance."""
+        """Vector representing the instance."""
         return self._vec
 
     @property
@@ -434,7 +434,7 @@ class OrderedTransformable(DirectionTransformable):
 
     @property
     def order(self) -> int:
-        """Return the order."""
+        """Order."""
         return self._order
 
     @property
@@ -454,7 +454,7 @@ class InfFoldTransformable(DirectionTransformable):
 
     @property
     def order(self) -> float:
-        """Return the order."""
+        """Order."""
         return INF
 
 
@@ -473,7 +473,7 @@ class Transformation(Transformable):
 
     @property
     def mat(self) -> Matrix:
-        """Return the transformation matrix."""
+        """Transformation matrix."""
         res = eye(3)
         for i in range(len(res)):
             res[i] = self.apply(res[i])
@@ -545,17 +545,17 @@ class Rotation(DirectionTransformable, Transformation):
 
     @property
     def angle(self) -> float:
-        """Return the rotation angle."""
+        """Rotation angle."""
         return self._angle
 
     @property
     def cos(self) -> float:
-        """Return the cosine of the rotation angle."""
+        """Cosine of the rotation angle."""
         return self._cos
 
     @property
     def sin(self) -> float:
-        """Return the sine of the rotation angle."""
+        """Sine of the rotation angle."""
         return self._sin
 
     @property

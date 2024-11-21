@@ -424,31 +424,30 @@ class PointGroup(Transformable):
 
     @property
     def symb(self) -> str:
-        """Return the symbol."""
+        """Symbol."""
         return self._symb
 
     @property
     def symm_elems(self) -> Iterator[SymmetryElement]:
-        """Return the symmetry elements."""
+        """Symmetry elements."""
         for symm_elem in self._info.symm_elems:
             yield self._transform(symm_elem)
 
     @property
     def types(self) -> Dict[Tuple, int]:
-        """Return the types of symmetry elements and their numbers."""
+        """Types of symmetry elements and their numbers."""
         return self._info.types
 
     @property
     def angles(self) -> Dict[FrozenSet[Tuple], Dict[float, int]]:
         """
-        Return the angles between axes or normals of symmetry elements and
-        their numbers.
+        Angles between axes or normals of symmetry elements and their numbers.
         """
         return self._info.angles
 
     @property
     def transform(self) -> Union[Identity, Rotation]:
-        """Return the transformation describing the orientation in space."""
+        """Transformation describing the orientation in space."""
         return self._transform
 
     @property

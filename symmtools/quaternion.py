@@ -30,7 +30,7 @@ class Quaternion(VectorTransformable):
 
     @property
     def scalar(self) -> float:
-        """Return the scalar part."""
+        """Scalar part."""
         return self._scalar
 
     @property
@@ -68,7 +68,7 @@ class Quaternion(VectorTransformable):
 
     @property
     def mat(self) -> Matrix:
-        """Return the transformation matrix."""
+        """Transformation matrix."""
         res = eye(3)
         for i in range(3):
             res[i, :] = self(Point(res[i, :])).vec
@@ -76,7 +76,7 @@ class Quaternion(VectorTransformable):
 
     @property
     def rotation(self) -> Rotation:
-        """Return the rotation."""
+        """Rotation."""
         vec = self._vec
         length = sqnorm(vec)
         if length == 0.0:

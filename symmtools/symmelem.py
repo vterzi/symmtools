@@ -65,22 +65,22 @@ class SymmetryElement(Transformable):
     @property
     @abstractmethod
     def transforms(self) -> Iterator[Transformation]:
-        """Return the transformations."""
+        """Transformations."""
         pass
 
     @property
     def symb(self) -> str:
-        """Return the symbol."""
+        """Symbol."""
         return self._symb
 
     @property
     def name(self) -> str:
-        """Return the name."""
+        """Name."""
         return self._name
 
     @property
     def id(self) -> int:
-        """Return the ID."""
+        """Identifier."""
         return self._id
 
     def __iter__(self) -> Iterator[Transformation]:
@@ -354,17 +354,17 @@ class SymmetryElements:
 
     @property
     def included(self) -> Sequence[VectorSymmetryElement]:
-        """Return the included symmetry elements containing a direction."""
+        """Included symmetry elements containing a direction."""
         return tuple(self._included)
 
     @property
     def excluded(self) -> Sequence[VectorSymmetryElement]:
-        """Return the excluded symmetry elements containing a direction."""
+        """Excluded symmetry elements containing a direction."""
         return tuple(self._excluded)
 
     @property
     def types(self) -> Dict[Tuple, int]:
-        """Return the types of symmetry elements and their numbers."""
+        """Types of symmetry elements and their numbers."""
         return self._types.copy()
 
     @property
@@ -372,8 +372,7 @@ class SymmetryElements:
         self,
     ) -> Dict[FrozenSet[Tuple], Dict[float, int]]:
         """
-        Return the angles between axes or normals of symmetry elements and
-        their numbers.
+        Angles between axes or normals of symmetry elements and their numbers.
         """
         return {props: angles.copy() for props, angles in self._angles.items()}
 
@@ -535,7 +534,7 @@ class SymmetryElements:
 
     @property
     def symbs(self) -> Sequence[str]:
-        """Return the sorted symbols of the symmetry elements."""
+        """Sorted symbols of symmetry elements."""
         res = {}
         for prop, num in self._types.items():
             if num > 0:

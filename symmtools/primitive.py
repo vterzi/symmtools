@@ -77,7 +77,7 @@ class Point(VectorTransformable):
 
     @property
     def pos(self) -> Vector:
-        """Return the position."""
+        """Position."""
         return self._vec
 
 
@@ -93,7 +93,7 @@ class LabeledPoint(Point):
 
     @property
     def label(self) -> str:
-        """Return the label."""
+        """Label."""
         return self._label
 
     @property
@@ -120,12 +120,11 @@ class Points(Transformables):
 
     @property
     def elems(self) -> Tuple[Point, ...]:
-        """Return the set of elements."""
         return self._elems
 
     @property
     def pos(self) -> Vector:
-        """Return the centroid of the points."""
+        """Centroid of points."""
         centroid = zeros(3)
         n = 0
         for elem in self._elems:
@@ -148,7 +147,7 @@ class Points(Transformables):
 
     @property
     def inertia(self) -> Matrix:
-        """Return the inertia tensor of the points of unit mass."""
+        """Inertia tensor of the points of unit mass."""
         centroid = self.pos
         return inertia(tuple(elem.pos - centroid for elem in self._elems))
 
@@ -643,8 +642,8 @@ class Arrow(DirectionTransformable):
     @property
     def form(self) -> int:
         """
-        Return the form: `1` for two heads ('<->'), `-1` for two tails ('>-<'),
-        and `0` otherwise ('>->' or '<-<').
+        Arrow form: `1` for two heads ('<->'), `-1` for two tails ('>-<'), and
+        `0` otherwise ('>->' or '<-<').
         """
         return self._form
 
@@ -706,12 +705,12 @@ class StructPoint(Point):
 
     @property
     def coef(self) -> float:
-        """Return the coefficient."""
+        """Coefficient."""
         return self._coef
 
     @property
     def arrows(self) -> Transformables:
-        """Return the set of arrows."""
+        """Set of arrows."""
         return self._arrows
 
     @property
