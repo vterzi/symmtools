@@ -53,7 +53,7 @@
 | dim           | dimension                                                   |
 | dir           | directory                                                   |
 | dist          | distribution, distance                                      |
-| div           | divide                                                      |
+| div           | divide, divergence                                          |
 | doc           | documentation                                               |
 | double        | double precision floating-point number                      |
 | elem          | element                                                     |
@@ -73,6 +73,7 @@
 | fun, func     | function                                                    |
 | ge            | greater than or equal                                       |
 | gpu           | graphics processing unit                                    |
+| grad          | gradient                                                    |
 | grp           | group                                                       |
 | gt            | greater than                                                |
 | hex           | hexadecimal                                                 |
@@ -135,7 +136,8 @@
 | reg           | register                                                    |
 | repr          | represent                                                   |
 | res           | result                                                      |
-| rot           | rotate                                                      |
+| rot           | rotate, rotor                                               |
+| rotorefl      | rotoreflect                                                 |
 | rshift        | right shift                                                 |
 | rt            | root                                                        |
 | sh            | shell                                                       |
