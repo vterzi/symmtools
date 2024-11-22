@@ -71,6 +71,12 @@ class SymmetryElement(Transformable):
         pass
 
     @property
+    @abstractmethod
+    def subelems(self) -> Iterator["SymmetryElement"]:
+        """Subelements."""
+        pass
+
+    @property
     def symb(self) -> str:
         """Symbol."""
         return self._symb
@@ -114,6 +120,10 @@ class InfSymmetryElement(SymmetryElement):
     def transforms(self) -> Iterator[Transformation]:
         raise NotImplementedError("infinite number of transformations")
 
+    @property
+    def subelems(self) -> Iterator["SymmetryElement"]:
+        raise NotImplementedError("infinite number of subelements")
+
 
 class IdentityElement(InvariantTransformable, SymmetryElement):
     """Identity element in a real 3D space."""
@@ -124,6 +134,10 @@ class IdentityElement(InvariantTransformable, SymmetryElement):
 
     @property
     def transforms(self) -> Iterator[Transformation]:
+        return iter(())
+
+    @property
+    def subelems(self) -> Iterator["SymmetryElement"]:
         return iter(())
 
 
@@ -137,6 +151,10 @@ class InversionCenter(InvariantTransformable, SymmetryElement):
     @property
     def transforms(self) -> Iterator[Transformation]:
         yield Inversion()
+
+    @property
+    def subelems(self) -> Iterator["SymmetryElement"]:
+        return iter(())
 
 
 class RotationAxis(OrderedTransformable, SymmetryElement):
@@ -167,6 +185,14 @@ class RotationAxis(OrderedTransformable, SymmetryElement):
         for i in range(1, order):
             yield Rotation(vec, i / order * TAU)
 
+    @property
+    def subelems(self) -> Iterator["SymmetryElement"]:
+        vec = self._vec
+        order = self._order
+        for suborder in range(order // 2, 1, -1):
+            if order % suborder == 0:
+                yield RotationAxis(vec, suborder)
+
 
 class InfRotationAxis(InfFoldTransformable, InfSymmetryElement):
     """Infinite-fold rotation axis containing the origin in a real 3D space."""
@@ -185,6 +211,10 @@ class ReflectionPlane(DirectionTransformable, SymmetryElement):
     @property
     def transforms(self) -> Iterator[Transformation]:
         yield Reflection(self._vec)
+
+    @property
+    def subelems(self) -> Iterator["SymmetryElement"]:
+        return iter(())
 
 
 class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
@@ -230,6 +260,31 @@ class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
                         yield Inversion()
             else:
                 yield Reflection(vec)
+
+    @property
+    def subelems(self) -> Iterator["SymmetryElement"]:
+        vec = self._vec
+        order = self._order
+        if order % 2 == 0:
+            half_order = order // 2
+            yield RotationAxis(vec, half_order)
+            for suborder in range(order // 3, 2, -1):
+                if order % suborder == 0:
+                    if (order // suborder) % 2 == 0:
+                        yield RotationAxis(vec, suborder)
+                    else:
+                        yield RotoreflectionAxis(vec, suborder)
+            if half_order % 2 == 0:
+                yield RotationAxis(vec, 2)
+            else:
+                yield InversionCenter()
+        else:
+            yield RotationAxis(vec, order)
+            for suborder in range(order // 3, 2, -2):
+                if order % suborder == 0:
+                    yield RotoreflectionAxis(vec, suborder)
+                    yield RotationAxis(vec, suborder)
+            yield ReflectionPlane(vec)
 
 
 class InfRotoreflectionAxis(InfFoldTransformable, InfSymmetryElement):
