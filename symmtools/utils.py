@@ -74,16 +74,18 @@ def rational(num: float, tol: float) -> Tuple[int, int]:
     decimal number `num` within a tolerance `tol`.
     """
     negative = num < 0.0
-    num = abs(num)
+    if negative:
+        num = -num
     nom = 0
     denom = 1
-    diff = num - nom / denom
-    while abs(diff) > tol:
+    while True:
+        diff = num - nom / denom
+        if abs(diff) <= tol:
+            break
         if diff > 0.0:
             nom += 1
         else:
             denom += 1
-        diff = num - nom / denom
     if negative:
         nom = -nom
     return nom, denom
