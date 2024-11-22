@@ -23,10 +23,10 @@ __all__ = [
     "intersectangle",
     "translate",
     "invert",
-    "move2",
+    "trigrotate",
     "rotate",
-    "vecrotate",
     "reflect",
+    "trigrotmat",
     "rotmat",
     "reflmat",
     "inertia",
@@ -55,6 +55,7 @@ from .typehints import (
 # `max` is faster than `numpy.ndarray.max`
 # `float` is faster than `numpy.float64.item`
 # `sqrt`, `sin`, `cos`, `acos` from `math` are faster than from `numpy`
+# array unpacking is slower than indexing
 
 
 def clamp(val: Float, low: Float, high: Float) -> Float:
@@ -110,8 +111,12 @@ def norm(vec: Vector) -> float:
 def cross(vec1: Vector, vec2: Vector) -> Vector:
     """Calculate the cross product of two 3D vectors `vec1` and `vec2`."""
     # `numpy.cross` is slower
-    x1, y1, z1 = vec1
-    x2, y2, z2 = vec2
+    x1 = vec1[0]
+    y1 = vec1[1]
+    z1 = vec1[2]
+    x2 = vec2[0]
+    y2 = vec2[1]
+    z2 = vec2[2]
     vec = empty(3)
     vec[0] = y1 * z2 - z1 * y2
     vec[1] = z1 * x2 - x1 * z2
@@ -131,8 +136,8 @@ def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
 
 def canonicalize(vec: Vector) -> Vector:
     """
-    Canonicalize an unsigned direction vector `vec` by making the first
-    non-zero component positive.
+    Canonicalize a direction vector `vec` with an undefined sign by making the
+    first non-zero component positive.
     """
     for comp in vec:
         if comp < 0.0:
@@ -178,8 +183,12 @@ def unitindep(unitvec1: Vector, unitvec2: Vector) -> float:
     """
     # `abs(abs(unitvec1.dot(unitvec2)) - 1)` is faster but less accurate
     # `min(diff(unitvec1, unitvec2), diff(unitvec1, -unitvec2))` is slower
-    x1, y1, z1 = unitvec1
-    x2, y2, z2 = unitvec2
+    x1 = unitvec1[0]
+    y1 = unitvec1[1]
+    z1 = unitvec1[2]
+    x2 = unitvec2[0]
+    y2 = unitvec2[1]
+    z2 = unitvec2[2]
     return min(
         max(abs(x1 - x2), abs(y1 - y2), abs(z1 - z2)),
         max(abs(x1 + x2), abs(y1 + y2), abs(z1 + z2)),
@@ -257,34 +266,26 @@ def invert(vec: Vector) -> Vector:
     return -vec
 
 
-def move2(point: Vector, normal: Vector, coef1: Float, coef2: Float) -> Vector:
+def trigrotate(
+    point: Vector, normal: Vector, cos: Float, sin: Float
+) -> Vector:
     """
-    Move a 3D point `point` in a plane containing the point with a normalized
-    normal `normal` to the position represented by the linear combination of
-    the projection of the point position on the plane scaled by `coef1` and its
-    perpendicular in the plane scaled by `coef2`.
+    Rotate a 3D vector `vec` by an angle with cosine `cos` and sine `sin`
+    around an axis that contains the origin and is described by a unit vector
+    `axis`.
     """
     base = point.dot(normal) * normal
     projection = point - base
     perpendicular = cross(normal, projection)
-    return base + projection * coef1 + perpendicular * coef2
+    return base + projection * cos + perpendicular * sin
 
 
-def rotate(vec: Vector, axis: Vector, angle: Float) -> Vector:
+def rotate(point: Vector, normal: Vector, angle: Float) -> Vector:
     """
     Rotate a 3D vector `vec` by an angle `angle` around an axis that contains
     the origin and is described by a unit vector `axis`.
     """
-    return move2(vec, axis, cos(angle), sin(angle))
-
-
-def vecrotate(vec: Vector, rotvec: Vector) -> Vector:
-    """Rotate a 3D vector `vec` by a rotation vector `rotvec`."""
-    length = sqnorm(rotvec)
-    if length > 0.0:
-        length = sqrt(length)
-        vec = rotate(vec, rotvec / length, length)
-    return vec
+    return trigrotate(point, normal, cos(angle), sin(angle))
 
 
 def reflect(vec: Vector, normal: Vector) -> Vector:
@@ -295,35 +296,44 @@ def reflect(vec: Vector, normal: Vector) -> Vector:
     return vec - 2.0 * vec.dot(normal) * normal
 
 
+def trigrotmat(axis: Vector, cos: Float, sin: Float) -> Matrix:
+    """
+    Generate a 3D transformation matrix for a rotation by an angle with cosine
+    `cos` and sine `sin` around an axis that contains the origin and is
+    described by a unit vector `axis`.
+    """
+    x = axis[0]
+    y = axis[1]
+    z = axis[2]
+    xc = x * (1.0 - cos)
+    yc = y * (1.0 - cos)
+    zc = z * (1.0 - cos)
+    xs = x * sin
+    ys = y * sin
+    zs = z * sin
+    xyc = x * yc
+    yzc = y * zc
+    zxc = z * xc
+    mat = empty((3, 3))
+    mat[0, 0] = cos + x * xc
+    mat[0, 1] = xyc - zs
+    mat[0, 2] = zxc + ys
+    mat[1, 0] = xyc + zs
+    mat[1, 1] = cos + y * yc
+    mat[1, 2] = yzc - xs
+    mat[2, 0] = zxc - ys
+    mat[2, 1] = yzc + xs
+    mat[2, 2] = cos + z * zc
+    return mat
+
+
 def rotmat(axis: Vector, angle: Float) -> Matrix:
     """
     Generate a 3D transformation matrix for a rotation by an angle `angle`
     around an axis that contains the origin and is described by a unit vector
     `axis`.
     """
-    x, y, z = axis
-    c = cos(angle)
-    s = sin(angle)
-    xc = x * (1.0 - c)
-    yc = y * (1.0 - c)
-    zc = z * (1.0 - c)
-    xs = x * s
-    ys = y * s
-    zs = z * s
-    xyc = x * yc
-    yzc = y * zc
-    zxc = z * xc
-    mat = empty((3, 3))
-    mat[0, 0] = c + x * xc
-    mat[0, 1] = xyc - zs
-    mat[0, 2] = zxc + ys
-    mat[1, 0] = xyc + zs
-    mat[1, 1] = c + y * yc
-    mat[1, 2] = yzc - xs
-    mat[2, 0] = zxc - ys
-    mat[2, 1] = yzc + xs
-    mat[2, 2] = c + z * zc
-    return mat
+    return trigrotmat(axis, cos(angle), sin(angle))
 
 
 def reflmat(normal: Vector) -> Matrix:
@@ -332,7 +342,9 @@ def reflmat(normal: Vector) -> Matrix:
     contains the origin and whose normal is described by a unit vector
     `normal`.
     """
-    x, y, z = normal
+    x = normal[0]
+    y = normal[1]
+    z = normal[2]
     dx = x + x
     dy = y + y
     dz = z + z
@@ -354,7 +366,7 @@ def reflmat(normal: Vector) -> Matrix:
 
 def inertia(vecs: Sequence[Vector]) -> Matrix:
     """
-    Calculate the inertia tensor of the points of unit mass with positions
+    Calculate the inertia tensor of the points of unit mass with 3D positions
     `vecs`.
     """
     xx = 0.0
@@ -364,7 +376,9 @@ def inertia(vecs: Sequence[Vector]) -> Matrix:
     zx = 0.0
     yz = 0.0
     for vec in vecs:
-        x, y, z = vec
+        x = vec[0]
+        y = vec[1]
+        z = vec[2]
         xs = x * x
         ys = y * y
         zs = z * z

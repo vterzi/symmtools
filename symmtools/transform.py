@@ -32,8 +32,10 @@ from .utils import (
     unitindep,
     translate,
     invert,
-    move2,
+    trigrotate,
     reflect,
+    trigrotmat,
+    reflmat,
 )
 from .typehints import (
     TypeVar,
@@ -584,7 +586,11 @@ class Rotation(DirectionTransformable, Transformation):
         return res
 
     def apply(self, vec: Vector) -> Vector:
-        return move2(vec, self._vec, self._cos, self._sin)
+        return trigrotate(vec, self._vec, self._cos, self._sin)
+
+    @property
+    def mat(self) -> Matrix:
+        return trigrotmat(self._vec, self._cos, self._sin)
 
 
 class Reflection(DirectionTransformable, Transformation):
@@ -595,6 +601,10 @@ class Reflection(DirectionTransformable, Transformation):
 
     def apply(self, vec: Vector) -> Vector:
         return reflect(vec, self._vec)
+
+    @property
+    def mat(self) -> Matrix:
+        return reflmat(self._vec)
 
 
 class Rotoreflection(Rotation):
@@ -616,4 +626,10 @@ class Rotoreflection(Rotation):
         return obj.rotoreflect(self)
 
     def apply(self, vec: Vector) -> Vector:
-        return reflect(move2(vec, self._vec, self._cos, self._sin), self._vec)
+        return reflect(
+            trigrotate(vec, self._vec, self._cos, self._sin), self._vec
+        )
+
+    @property
+    def mat(self) -> Matrix:
+        return reflmat(self._vec) @ trigrotmat(self._vec, self._cos, self._sin)

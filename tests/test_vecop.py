@@ -30,7 +30,7 @@ from symmtools import (
     perpendicular,
     translate,
     invert,
-    move2,
+    trigrotate,
     rotate,
     reflect,
     rotmat,
@@ -145,7 +145,7 @@ class TestVecOp(TestCase):
         vec = randvec()
         self.assertListEqual(invert(vec).tolist(), (-vec).tolist())
 
-    def test_move2(self) -> None:
+    def test_trigrotate(self) -> None:
         vec = randvec()
         normal = randunitvec()
         coef1, coef2 = [normalvariate(0.0, 1.0) for _ in range(2)]
@@ -154,7 +154,7 @@ class TestVecOp(TestCase):
         perpendicular = cross(normal, projection)
         res = base + projection * coef1 + perpendicular * coef2
         self.assertListEqual(
-            move2(vec, normal, coef1, coef2).tolist(), res.tolist()
+            trigrotate(vec, normal, coef1, coef2).tolist(), res.tolist()
         )
 
     def test_rotate(self) -> None:
