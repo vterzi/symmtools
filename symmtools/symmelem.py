@@ -51,6 +51,8 @@ from .typehints import (
     RealVector,
 )
 
+# `i/n*pi` is numerically more stable than `pi*i/n`
+
 _Transformable = TypeVar("_Transformable", bound=Transformable)
 
 
@@ -160,8 +162,10 @@ class RotationAxis(OrderedTransformable, SymmetryElement):
 
     @property
     def transforms(self) -> Iterator[Transformation]:
-        for i in range(1, self._order):
-            yield Rotation(self._vec, i / self._order * TAU)
+        vec = self._vec
+        order = self._order
+        for i in range(1, order):
+            yield Rotation(vec, i / order * TAU)
 
 
 class InfRotationAxis(InfFoldTransformable, InfSymmetryElement):
@@ -212,18 +216,20 @@ class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
 
     @property
     def transforms(self) -> Iterator[Transformation]:
-        for i in range(1, self._order * (1 if self._order % 2 == 0 else 2)):
-            if i != self._order:
-                angle = (i % self._order) / self._order * TAU
+        vec = self._vec
+        order = self._order
+        for i in range(1, order * (1 if order % 2 == 0 else 2)):
+            if i != order:
+                angle = (i % order) / order * TAU
                 if i % 2 == 0:
-                    yield Rotation(self._vec, angle)
+                    yield Rotation(vec, angle)
                 else:
-                    if 2 * i != self._order:
-                        yield Rotoreflection(self._vec, angle)
+                    if 2 * i != order:
+                        yield Rotoreflection(vec, angle)
                     else:
                         yield Inversion()
             else:
-                yield Reflection(self._vec)
+                yield Reflection(vec)
 
 
 class InfRotoreflectionAxis(InfFoldTransformable, InfSymmetryElement):
@@ -403,7 +409,7 @@ class SymmetryElements:
                             break
                     else:
                         nom, denom = rational(angle / PI, tol)
-                        angle = nom * PI / denom
+                        angle = nom / denom * PI
                     if angle == 0.0 and symm_elem.similar(vec_symm_elem):
                         raise ValueError(
                             f"a parallel {symm_elem.name} already included"
