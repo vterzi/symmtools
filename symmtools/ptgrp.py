@@ -615,11 +615,12 @@ class PointGroup(Transformable):
                         refl = "h"
                     elif refl_num > 1:
                         refl = "v"
-                    transform = (
-                        vecs_rot(_PRIMAX, _SECAX, axes[0][1], normals[0])
-                        if refl == "v"
-                        else vec_rot(_PRIMAX, axes[0][1])
-                    )
+                    if refl == "v":
+                        transform = vecs_rot(
+                            _PRIMAX, _SECAX, axes[0][1], normals[0]
+                        )
+                    else:
+                        transform = vec_rot(_PRIMAX, axes[0][1])
                 else:
                     if invertible:
                         refl = "i"
@@ -982,11 +983,10 @@ class PointGroup(Transformable):
                             # axis is the vector product of the segment and the
                             # normal of the plane containing the points (main
                             # axis).
-                            axis = (
-                                midpoint / midpoint_norm
-                                if nonzero
-                                else normalize(cross(segment, main_axis))
-                            )
+                            if nonzero:
+                                axis = midpoint / midpoint_norm
+                            else:
+                                axis = normalize(cross(segment, main_axis))
                             # The axes of two-fold rotation axes in symmetric
                             # tops are perpendicular to the main axis.
                             if (

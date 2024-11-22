@@ -374,11 +374,10 @@ class Points(Transformables):
                     midpoint_norm = norm(midpoint)
                     nonzero = midpoint_norm > tol
                     if nonzero or coplanar:
-                        axis = (
-                            midpoint / midpoint_norm
-                            if nonzero
-                            else normalize(cross(segment, normals[0]))
-                        )
+                        if nonzero:
+                            axis = midpoint / midpoint_norm
+                        else:
+                            axis = normalize(cross(segment, normals[0]))
                         if (
                             cubic or perpendicular(axis, axes[0], tol)
                         ) and new(axes, axis):
