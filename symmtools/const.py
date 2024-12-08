@@ -15,6 +15,7 @@ __all__ = [
     "SPECIAL_ANGLES",
     "SPECIAL_COMPONENTS",
     "LABEL_RE",
+    "UINT_RE",
     "FLOAT_RE",
     "Symb",
 ]
@@ -135,6 +136,7 @@ SPECIAL_COMPONENTS = (
     1.0,
 )
 LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
+UINT_RE = r"(?:\d+)"
 FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
 
 
