@@ -3,7 +3,7 @@
 __all__ = ["Point", "Points", "LabeledPoint", "Arrow", "StructPoint"]
 
 from math import sin, cos
-from re import findall
+from re import split, fullmatch
 
 from numpy import zeros
 from numpy.linalg import eigh
@@ -13,9 +13,15 @@ from .const import (
     PI,
     TOL,
     LABEL_RE,
+    UINT_RE,
     FLOAT_RE,
+    ORIGIN,
+    PRIMAX,
+    SECAX,
+    TERTAX,
 )
 from .utils import (
+    vector,
     norm,
     cross,
     normalize,
@@ -70,6 +76,11 @@ from .typehints import (
     RealVector,
     RealVectors,
 )
+
+_ORIGIN = vector(ORIGIN)
+_PRIMAX = vector(PRIMAX)
+_SECAX = vector(SECAX)
+_TERTAX = vector(TERTAX)
 
 
 class Point(VectorTransformable):
@@ -534,21 +545,146 @@ class Points(Transformables):
         return cls(tuple(Point(vec) for vec in vecs))
 
     @classmethod
-    def from_str(cls, string: str) -> "Points":
+    def from_str(
+        cls,
+        string: str,
+        record_delim: str = "\n",
+        field_delim: str = r"\s+",
+    ) -> "Points":
         """
-        Construct an instance from a string `string`.  Each three consecutive
-        floating-point numbers are parsed as a `Point` instance.  If they are
-        preceded by a label satisfying the rules of variable names, a
+        Construct an instance from a string `string` where records are
+        separated by `record_delim`, and fields within each record are
+        separated by `field_delim`.  If the fields within a record are three
+        floating-point numbers, they are parsed as a `Point` instance.  If they
+        are preceded by a label satisfying the rules of variable names, a
         `LabeledPoint` instance is created instead.
         """
         points = []
-        for match in findall(
-            r"(?:({0})\s+)?({1})\s+({1})\s+({1})".format(LABEL_RE, FLOAT_RE),
-            string,
-        ):
-            label = match[0]
-            vec = tuple(map(float, match[1:]))
+        for record in split(string.strip(), record_delim):
+            fields = tuple(
+                field.strip() for field in split(record, field_delim)
+            )
+            n_fields = len(fields)
+            if n_fields == 3:
+                label = ""
+                floats = fields
+            elif n_fields == 4:
+                label = fields[0]
+                if not fullmatch(LABEL_RE, label):
+                    raise ValueError(f"invalid label: {label}")
+                floats = fields[1:]
+            else:
+                raise ValueError(
+                    f"invalid number of fields in record: {record}"
+                )
+            for field in floats:
+                if not fullmatch(FLOAT_RE, field):
+                    raise ValueError(f"invalid floating-point number: {field}")
+            vec = tuple(map(float, floats))
             points.append(LabeledPoint(vec, label) if label else Point(vec))
+        return cls(points)
+
+    @classmethod
+    def from_zmat(
+        cls,
+        string: str,
+        deg: bool = True,
+        record_delim: str = "\n",
+        field_delim: str = r"\s+",
+    ) -> "Points":
+        """
+        Construct an instance from a string `string` representing a Z-matrix
+        where records are separated by `record_delim`, and fields within each
+        record are separated by `field_delim`.  Each record is parsed as a
+        `LabeledPoint` instance.  If `deg` is enabled, angles are interpreted
+        as degrees.
+        """
+        points: List[LabeledPoint] = []
+        for i_record, record in enumerate(split(string.strip(), record_delim)):
+            fields = tuple(
+                field.strip() for field in split(record, field_delim)
+            )
+            n_fields = len(fields)
+            if n_fields != min(2 * i_record + 1, 7):
+                raise ValueError(
+                    f"invalid number of fields in record: {record}"
+                )
+            label = fields[0]
+            if not fullmatch(LABEL_RE, label):
+                raise ValueError(f"invalid label: {label}")
+            idxs: List[int] = []
+            floats: List[float] = []
+            for i_field, field in enumerate(fields[1:]):
+                if i_field % 2 == 0:
+                    if fullmatch(UINT_RE, field):
+                        i = int(field)
+                        n_points = len(points)
+                        if not 1 <= i <= n_points:
+                            raise ValueError(
+                                f"index out of bounds [1, {n_points}]: {field}"
+                            )
+                        idxs.append(i - 1)
+                    elif fullmatch(LABEL_RE, field):
+                        candidates = []
+                        for i, point in enumerate(points):
+                            if point.label == field:
+                                candidates.append(i)
+                        n_candidates = len(candidates)
+                        if n_candidates == 0:
+                            raise ValueError(f"unknown label: {field}")
+                        elif n_candidates > 1:
+                            raise ValueError(f"ambiguous label: {field}")
+                        idxs.append(candidates[0])
+                    else:
+                        raise ValueError(f"invalid index or label: {field}")
+                else:
+                    if not fullmatch(FLOAT_RE, field):
+                        raise ValueError(
+                            f"invalid floating-point number: {field}"
+                        )
+                    num = float(field)
+                    if i_field > 1 and deg:
+                        num *= PI / 180.0
+                    floats.append(num)
+            n_idxs = len(idxs)
+            if len(set(idxs)) != n_idxs:
+                raise ValueError(f"duplicate indices in record: {record}")
+            if n_idxs > 2:
+                dist = floats[0]
+                angle = floats[1]
+                torsion = floats[2]
+                vec = points[idxs[0]].pos
+                vec2 = points[idxs[1]].pos
+                vec1 = vec2 - vec
+                vec_norm = norm(vec1)
+                vec1 = vec1 / vec_norm if vec_norm > 0.0 else _PRIMAX
+                vec2 = orthogonalize(points[idxs[2]].pos - vec2, vec1)
+                vec_norm = norm(vec2)
+                vec2 = vec2 / vec_norm if vec_norm > 0.0 else _SECAX
+                if norm(orthogonalize(vec2, vec1)) == 0.0:
+                    vec2 = _TERTAX
+                vec3 = cross(vec1, vec2)
+                vec3 = normalize(vec3)
+                factor = dist * sin(angle)
+                vec += (
+                    dist * cos(angle) * vec1
+                    + factor * cos(torsion) * vec2
+                    + factor * sin(torsion) * vec3
+                )
+            elif n_idxs == 2:
+                i = idxs[0]
+                dist = floats[0]
+                angle = floats[1]
+                comp1 = dist * cos(angle)
+                comp2 = dist * sin(angle)
+                if i == 0:
+                    comp1 = -comp1
+                vec = points[i].pos + _PRIMAX * comp1 + _SECAX * comp2
+            elif n_idxs == 1:
+                vec = points[idxs[0]].pos + _PRIMAX * floats[0]
+            elif n_idxs == 0:
+                vec = _ORIGIN
+            points.append(LabeledPoint(vec, label))
         return cls(points)
 
     @classmethod
