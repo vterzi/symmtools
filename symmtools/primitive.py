@@ -562,7 +562,7 @@ class Points(Transformables):
         points = []
         for record in split(record_delim, string.strip()):
             fields = tuple(
-                field.strip() for field in split(field_delim, record)
+                field.strip() for field in split(field_delim, record.strip())
             )
             n_fields = len(fields)
             if n_fields == 3:
@@ -602,7 +602,7 @@ class Points(Transformables):
         points: List[LabeledPoint] = []
         for i_record, record in enumerate(split(record_delim, string.strip())):
             fields = tuple(
-                field.strip() for field in split(field_delim, record)
+                field.strip() for field in split(field_delim, record.strip())
             )
             n_fields = len(fields)
             if n_fields != min(2 * i_record + 1, 7):
