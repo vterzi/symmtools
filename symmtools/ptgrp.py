@@ -1035,15 +1035,15 @@ class PointGroup(Transformable):
                                 return cls(f"D{max_order}h", transform)
                             else:
                                 return cls(f"C{max_order}v", transform)
-                # If no other symmetry elements were found, the orientation of
-                # the point group is determined only by the main axis.
-                transform = transformation(main_axis)
-                if rotorefl_factor == 2:
-                    return cls(f"S{2*max_order}", transform)
-                elif rotorefl_factor == 1:
-                    return cls(f"C{max_order}h", transform)
-                else:
-                    return cls(f"C{max_order}", transform)
+            # If no other symmetry elements were found, the orientation of
+            # the point group is determined only by the main axis.
+            transform = transformation(main_axis)
+            if rotorefl_factor == 2:
+                return cls(f"S{2*max_order}", transform)
+            elif rotorefl_factor == 1:
+                return cls(f"C{max_order}h", transform)
+            else:
+                return cls(f"C{max_order}", transform)
         else:
             # Asymmetric: C1,Cs,Ci,C2,C2v,C2h,D2,D2h
             # Define the list recording the numbers of found sets of symmetry
