@@ -836,10 +836,12 @@ class StructPoint(Point):
         super().__init__(vec)
         if coef == 0.0:
             raise ValueError("zero coefficient")
-        self._arrows = Transformables(arrows)
-        if coef < 0.0:
-            self._arrows = self._arrows.negate()
-        self._coef = abs(coef)
+        obj = Transformables(arrows)
+        if coef < 0.0 and len(arrows) > 0:
+            coef = -coef
+            obj = obj.negate()
+        self._coef = coef
+        self._arrows = obj
 
     @property
     def coef(self) -> float:
@@ -869,7 +871,10 @@ class StructPoint(Point):
 
     def negate(self: _StructPoint) -> _StructPoint:
         res = super().negate()
-        res._arrows = self._arrows.negate()
+        if len(self._arrows) > 0:
+            res._arrows = self._arrows.negate()
+        else:
+            res._coef = -self._coef
         return res
 
     def invert(self: _StructPoint) -> _StructPoint:
