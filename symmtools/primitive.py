@@ -560,9 +560,9 @@ class Points(Transformables):
         `LabeledPoint` instance is created instead.
         """
         points = []
-        for record in split(string.strip(), record_delim):
+        for record in split(record_delim, string.strip()):
             fields = tuple(
-                field.strip() for field in split(record, field_delim)
+                field.strip() for field in split(field_delim, record)
             )
             n_fields = len(fields)
             if n_fields == 3:
@@ -600,9 +600,9 @@ class Points(Transformables):
         as degrees.
         """
         points: List[LabeledPoint] = []
-        for i_record, record in enumerate(split(string.strip(), record_delim)):
+        for i_record, record in enumerate(split(record_delim, string.strip())):
             fields = tuple(
-                field.strip() for field in split(record, field_delim)
+                field.strip() for field in split(field_delim, record)
             )
             n_fields = len(fields)
             if n_fields != min(2 * i_record + 1, 7):
@@ -669,7 +669,7 @@ class Points(Transformables):
                     vec_norm = norm(vec3)
                 vec3 = vec3 / vec_norm
                 factor = dist * sin(angle)
-                vec += (
+                vec = vec + (
                     dist * cos(angle) * vec1
                     + factor * cos(torsion) * vec2
                     + factor * sin(torsion) * vec3
