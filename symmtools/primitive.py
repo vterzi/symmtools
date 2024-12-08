@@ -661,10 +661,13 @@ class Points(Transformables):
                 vec2 = orthogonalize(points[idxs[2]].pos - vec2, vec1)
                 vec_norm = norm(vec2)
                 vec2 = vec2 / vec_norm if vec_norm > 0.0 else _SECAX
-                if norm(orthogonalize(vec2, vec1)) == 0.0:
-                    vec2 = _TERTAX
                 vec3 = cross(vec1, vec2)
-                vec3 = normalize(vec3)
+                vec_norm = norm(vec3)
+                if vec_norm == 0.0:
+                    vec2 = _TERTAX
+                    vec3 = cross(vec1, vec2)
+                    vec_norm = norm(vec3)
+                vec3 = vec3 / vec_norm
                 factor = dist * sin(angle)
                 vec += (
                     dist * cos(angle) * vec1
