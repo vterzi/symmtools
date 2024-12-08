@@ -680,7 +680,7 @@ class Points(Transformables):
                 angle = floats[1]
                 comp1 = dist * cos(angle)
                 comp2 = dist * sin(angle)
-                if i == 0:
+                if i == 1:
                     comp1 = -comp1
                 vec = points[i].pos + _PRIMAX * comp1 + _SECAX * comp2
             elif n_idxs == 1:
