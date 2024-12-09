@@ -7,10 +7,9 @@ from .init import (
     ndarray,
     float64,
     randsign,
+    randangle,
     randvec,
-    randne0vec,
     randunitvec,
-    randne0angle,
     perturb,
     orthperturb,
 )
@@ -75,11 +74,11 @@ class TestIdentity(TestCase):
         self.assertEqual(transform_(transform), transform)
         transform_ = Inversion()
         self.assertEqual(transform_(transform), transform)
-        transform_ = Rotation(randunitvec(), randne0angle())
+        transform_ = Rotation(randunitvec(), randangle(True))
         self.assertEqual(transform_(transform), transform)
         transform_ = Reflection(randunitvec())
         self.assertEqual(transform_(transform), transform)
-        transform_ = Rotoreflection(randunitvec(), randne0angle())
+        transform_ = Rotoreflection(randunitvec(), randangle(True))
         self.assertEqual(transform_(transform), transform)
 
 
@@ -145,7 +144,7 @@ class TestTranslation(TestCase):
         transform_ = Inversion()
         self.assertEqual(transform_(transform), Translation(invert(vec)))
         vec_ = randunitvec()
-        angle_ = randne0angle()
+        angle_ = randangle(True)
         transform_ = Rotation(vec_, angle_)
         self.assertTrue(
             transform_(transform).same(
@@ -158,7 +157,7 @@ class TestTranslation(TestCase):
             transform_(transform).same(Translation(reflect(vec, vec_)), TOL)
         )
         vec_ = randunitvec()
-        angle_ = randne0angle()
+        angle_ = randangle(True)
         transform_ = Rotoreflection(vec_, angle_)
         self.assertTrue(
             transform_(transform).same(
@@ -205,18 +204,18 @@ class TestInversion(TestCase):
         self.assertEqual(transform_(transform), transform)
         transform_ = Inversion()
         self.assertEqual(transform_(transform), transform)
-        transform_ = Rotation(randunitvec(), randne0angle())
+        transform_ = Rotation(randunitvec(), randangle(True))
         self.assertEqual(transform_(transform), transform)
         transform_ = Reflection(randunitvec())
         self.assertEqual(transform_(transform), transform)
-        transform_ = Rotoreflection(randunitvec(), randne0angle())
+        transform_ = Rotoreflection(randunitvec(), randangle(True))
         self.assertEqual(transform_(transform), transform)
 
 
 class TestRotation(TestCase):
     def test_init(self) -> None:
-        vec = randne0vec().tolist()
-        angle = randne0angle()
+        vec = randvec(True).tolist()
+        angle = randangle(True)
         transform = Rotation(vec, angle)
         self.assertIsInstance(transform.vec, ndarray)
         self.assertEqual(transform.vec.dtype, float64)
@@ -236,7 +235,7 @@ class TestRotation(TestCase):
 
     def test_call(self) -> None:
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotation(vec, angle)
         pos = randvec()
         point = Point(pos)
@@ -245,7 +244,7 @@ class TestRotation(TestCase):
 
     def test_representation(self) -> None:
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotation(vec, angle)
         string = f"Rotation({normalize(vec).tolist()},{angle})"
         string = string.replace(" ", "")
@@ -254,7 +253,7 @@ class TestRotation(TestCase):
 
     def test_comparison(self) -> None:
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotation(vec, angle)
         point = Point(randvec())
         self.assertEqual(transform.diff(transform), 0.0)
@@ -281,7 +280,7 @@ class TestRotation(TestCase):
 
     def test_mat(self) -> None:
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotation(vec, angle)
         mat = rotmat(vec, angle)
         self.assertLessEqual(abs(transform.mat - mat).max(), TOL)
@@ -289,7 +288,7 @@ class TestRotation(TestCase):
     def test_transformation(self) -> None:
         transform_: Transformation
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotation(vec, angle)
         self.assertEqual(transform.copy(), transform)
         transform_ = Identity()
@@ -300,7 +299,7 @@ class TestRotation(TestCase):
         transform_ = Inversion()
         self.assertEqual(transform_(transform), Rotation(invert(vec), angle))
         vec_ = randunitvec()
-        angle_ = randne0angle()
+        angle_ = randangle(True)
         transform_ = Rotation(vec_, angle_)
         self.assertTrue(
             transform_(transform).same(
@@ -315,7 +314,7 @@ class TestRotation(TestCase):
             )
         )
         vec_ = randunitvec()
-        angle_ = randne0angle()
+        angle_ = randangle(True)
         transform_ = Rotoreflection(vec_, angle_)
         self.assertTrue(
             transform_(transform).same(
@@ -326,7 +325,7 @@ class TestRotation(TestCase):
 
 class TestReflection(TestCase):
     def test_init(self) -> None:
-        vec = randne0vec().tolist()
+        vec = randvec(True).tolist()
         transform = Reflection(vec)
         self.assertIsInstance(transform.vec, ndarray)
         self.assertEqual(transform.vec.dtype, float64)
@@ -388,7 +387,7 @@ class TestReflection(TestCase):
         transform_ = Inversion()
         self.assertEqual(transform_(transform), transform)
         vec_ = randunitvec()
-        angle_ = randne0angle()
+        angle_ = randangle(True)
         transform_ = Rotation(vec_, angle_)
         self.assertTrue(
             transform_(transform).same(
@@ -401,7 +400,7 @@ class TestReflection(TestCase):
             transform_(transform).same(Reflection(reflect(vec, vec_)), TOL)
         )
         vec_ = randunitvec()
-        angle_ = randne0angle()
+        angle_ = randangle(True)
         transform_ = Rotoreflection(vec_, angle_)
         self.assertTrue(
             transform_(transform).same(
@@ -412,8 +411,8 @@ class TestReflection(TestCase):
 
 class TestRotoreflection(TestCase):
     def test_init(self) -> None:
-        vec = randne0vec().tolist()
-        angle = randne0angle()
+        vec = randvec(True).tolist()
+        angle = randangle(True)
         transform = Rotoreflection(vec, angle)
         self.assertIsInstance(transform.vec, ndarray)
         self.assertEqual(transform.vec.dtype, float64)
@@ -433,7 +432,7 @@ class TestRotoreflection(TestCase):
 
     def test_call(self) -> None:
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotoreflection(vec, angle)
         pos = randvec()
         point = Point(pos)
@@ -442,7 +441,7 @@ class TestRotoreflection(TestCase):
 
     def test_representation(self) -> None:
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotoreflection(vec, angle)
         string = f"Rotoreflection({normalize(vec).tolist()},{angle})"
         string = string.replace(" ", "")
@@ -451,7 +450,7 @@ class TestRotoreflection(TestCase):
 
     def test_comparison(self) -> None:
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotoreflection(vec, angle)
         point = Point(randvec())
         self.assertEqual(transform.diff(transform), 0.0)
@@ -482,7 +481,7 @@ class TestRotoreflection(TestCase):
 
     def test_mat(self) -> None:
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotoreflection(vec, angle)
         mat = reflmat(vec) @ rotmat(vec, angle)
         self.assertLessEqual(abs(transform.mat - mat).max(), TOL)
@@ -490,7 +489,7 @@ class TestRotoreflection(TestCase):
     def test_transformation(self) -> None:
         transform_: Transformation
         vec = randunitvec()
-        angle = randne0angle()
+        angle = randangle(True)
         transform = Rotoreflection(vec, angle)
         self.assertEqual(transform.copy(), transform)
         transform_ = Identity()
@@ -503,7 +502,7 @@ class TestRotoreflection(TestCase):
             transform_(transform), Rotoreflection(invert(vec), angle)
         )
         vec_ = randunitvec()
-        angle_ = randne0angle()
+        angle_ = randangle(True)
         transform_ = Rotation(vec_, angle_)
         self.assertTrue(
             transform_(transform).same(
@@ -518,7 +517,7 @@ class TestRotoreflection(TestCase):
             )
         )
         vec_ = randunitvec()
-        angle_ = randne0angle()
+        angle_ = randangle(True)
         transform_ = Rotoreflection(vec_, angle_)
         self.assertTrue(
             transform_(transform).same(
