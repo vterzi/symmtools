@@ -4,6 +4,9 @@
 | acos          | arccosine                                                   |
 | acosh         | inverse hyperbolic cosine                                   |
 | alloc         | allocate                                                    |
+| alg           | algebra                                                     |
+| algo          | algorithm                                                   |
+| alt           | alternate                                                   |
 | ang           | angle                                                       |
 | app           | application                                                 |
 | approx        | approximate                                                 |
@@ -38,6 +41,7 @@
 | cosh          | hyperbolic cosine                                           |
 | cpu           | central processing unit                                     |
 | csv           | comma-separated values                                      |
+| ctrl          | control                                                     |
 | cwd           | current working directory                                   |
 | dec           | decrement                                                   |
 | def           | define                                                      |
@@ -97,6 +101,8 @@
 | le            | less than or equal                                          |
 | len           | length                                                      |
 | lib           | library                                                     |
+| lim           | limit                                                       |
+| lin           | linear                                                      |
 | loc           | location                                                    |
 | log           | logarithm                                                   |
 | lshift        | left shift                                                  |
@@ -113,6 +119,7 @@
 | nan           | not a number                                                |
 | ne            | not equal                                                   |
 | neg           | negative                                                    |
+| nom           | nominator                                                   |
 | obj           | object                                                      |
 | oct           | octal                                                       |
 | op            | operator                                                    |
