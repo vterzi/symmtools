@@ -266,26 +266,24 @@ def invert(vec: Vector) -> Vector:
     return -vec
 
 
-def trigrotate(
-    point: Vector, normal: Vector, cos: Float, sin: Float
-) -> Vector:
+def trigrotate(vec: Vector, normal: Vector, cos: Float, sin: Float) -> Vector:
     """
     Rotate a 3D vector `vec` by an angle with cosine `cos` and sine `sin`
     around an axis that contains the origin and is described by a unit vector
     `axis`.
     """
-    base = point.dot(normal) * normal
-    projection = point - base
+    base = vec.dot(normal) * normal
+    projection = vec - base
     perpendicular = cross(normal, projection)
     return base + projection * cos + perpendicular * sin
 
 
-def rotate(point: Vector, normal: Vector, angle: Float) -> Vector:
+def rotate(vec: Vector, normal: Vector, angle: Float) -> Vector:
     """
     Rotate a 3D vector `vec` by an angle `angle` around an axis that contains
     the origin and is described by a unit vector `axis`.
     """
-    return trigrotate(point, normal, cos(angle), sin(angle))
+    return trigrotate(vec, normal, cos(angle), sin(angle))
 
 
 def reflect(vec: Vector, normal: Vector) -> Vector:
