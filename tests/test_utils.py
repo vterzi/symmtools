@@ -56,7 +56,7 @@ from symmtools import (
 )
 
 
-class TestVecOp(TestCase):
+class TestUtils(TestCase):
     def test_clamp(self) -> None:
         low = normalvariate(0.0, 1.0)
         high = normalvariate(0.0, 1.0)
