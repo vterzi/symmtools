@@ -1,12 +1,11 @@
-from .init import TestCase, main, Union, Sequence, Tuple, pi, roots
+from .init import TestCase, main, Union, Sequence, Tuple, pi, roots, TOL
 
-from symmtools import (
-    signvar,
-    circshift,
-    Translation,
-    Inversion,
-    Rotation,
-    Points,
+from symmtools.const import PHI
+from symmtools.linalg3d import vector
+from symmtools.utils import signvar, circshift
+from symmtools.transform import Translation, Inversion, Rotation
+from symmtools.primitive import Points
+from symmtools.symmelem import (
     SymmetryElement,
     InversionCenter,
     RotationAxis,
@@ -16,11 +15,9 @@ from symmtools import (
     InfRotoreflectionAxis,
     AxisRotationAxes,
     CenterRotationAxes,
-    PointGroup,
     SymmetryElements,
-    PHI,
-    TOL,
 )
+from symmtools.ptgrp import PointGroup
 
 origin = (0, 0, 0)
 primax = (0, 0, 1)
@@ -43,10 +40,12 @@ rotorefl12 = RotoreflectionAxis(primax, 12)
 point = Points.from_arr((origin,))
 two_points = point + pos_transl(point)
 three_collinear_points = two_points + neg_transl(neg_transl(point))
-asymmetric_triangle = Points.from_arr([[0, 0, 0], [0, 2, 0], [3, 0, 0]])
+asymmetric_triangle = Points.from_arr(
+    ((0.0, 0.0, 0.0), (0.0, 2.0, 0.0), (3.0, 0.0, 0.0))
+)
 
 shifted_point = orth_transl(point)
-rectangle = Points.from_arr(signvar([3, 2, 0]))
+rectangle = Points.from_arr(tuple(map(vector, signvar((3.0, 2.0, 0.0)))))
 triangle = Points.from_symm(shifted_point, rot3)
 square = Points.from_symm(shifted_point, rot4)
 pentagon = Points.from_symm(shifted_point, rot5)
@@ -104,24 +103,47 @@ quadrangular_prism = pos_transl(square) + neg_transl(square)
 pentangular_prism = pos_transl(pentagon) + neg_transl(pentagon)
 hexangular_prism = pos_transl(hexagon) + neg_transl(hexagon)
 
-tetrahedral = Points.from_arr(circshift(signvar([3, 2, 1], 1)))
-pyritohedron = Points.from_arr(circshift(signvar([2, 1, 0])))
-octahedral = Points.from_arr(
-    circshift(signvar([3, 2, 1], 1)) + circshift(signvar([2, 3, 1], -1))
+tetrahedral = Points.from_arr(
+    tuple(map(vector, circshift(signvar((3.0, 2.0, 1.0), 1))))
 )
-XI = abs(roots([1, -2, 0, PHI**2])[2])
+pyritohedron = Points.from_arr(
+    tuple(map(vector, circshift(signvar((2.0, 1.0, 0.0)))))
+)
+octahedral = Points.from_arr(
+    tuple(
+        map(
+            vector,
+            circshift(signvar((3.0, 2.0, 1.0), 1))
+            + circshift(signvar((2.0, 3.0, 1.0), -1)),
+        )
+    )
+)
+XI = abs(roots((1, -2, 0, PHI**2))[2])
 icosahedral = Points.from_transform(
-    [[PHI**2 * (1 - XI), PHI * (XI * (1 + XI) - PHI**2), XI]],
-    [Rotation([0, 1, PHI], 2 * pi / 5), Rotation([1, 1, 1], 2 * pi / 3)],
+    ((PHI**2 * (1 - XI), PHI * (XI * (1 + XI) - PHI**2), XI),),
+    [
+        Rotation((0.0, 1.0, PHI), 2 * pi / 5),
+        Rotation((1.0, 1.0, 1.0), 2 * pi / 3),
+    ],
     TOL,
 )
 
-tetrahedron = Points.from_arr(signvar([1, 1, 1], 1))
-cube = Points.from_arr(signvar([1, 1, 1]))
-octahedron = Points.from_arr(circshift(signvar([1, 0, 0])))
-icosahedron = Points.from_arr(circshift(signvar([PHI, 1, 0])))
+tetrahedron = Points.from_arr(tuple(map(vector, signvar((1.0, 1.0, 1.0), 1))))
+cube = Points.from_arr(tuple(map(vector, signvar((1.0, 1.0, 1.0)))))
+octahedron = Points.from_arr(
+    tuple(map(vector, circshift(signvar((1.0, 0.0, 0.0)))))
+)
+icosahedron = Points.from_arr(
+    tuple(map(vector, circshift(signvar((PHI, 1.0, 0.0)))))
+)
 dodecahedron = Points.from_arr(
-    signvar([PHI, PHI, PHI]) + circshift(signvar([PHI + 1, 1, 0]))
+    tuple(
+        map(
+            vector,
+            signvar((PHI, PHI, PHI))
+            + circshift(signvar((PHI + 1.0, 1.0, 0.0))),
+        )
+    )
 )
 
 

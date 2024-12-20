@@ -4,8 +4,17 @@ __all__ = ["Point", "Points", "LabeledPoint", "Arrow", "StructPoint"]
 
 from math import sin, cos
 from re import split, fullmatch
+from typing import (
+    TypeVar,
+    Union,
+    Any,
+    Sequence,
+    Tuple,
+    List,
+    Dict,
+    Iterator,
+)
 
-from numpy import zeros
 from numpy.linalg import eigh
 
 from .const import (
@@ -20,8 +29,17 @@ from .const import (
     SECAX,
     TERTAX,
 )
-from .utils import (
+from .linalg3d import (
+    Vector,
+    Matrix,
     vector,
+    neg,
+    add,
+    sub,
+    mul,
+    lincomb2,
+    lincomb3,
+    dot,
     norm,
     cross,
     normalize,
@@ -61,26 +79,6 @@ from .symmelem import (
     CenterRotoreflectionAxes,
 )
 from .ptgrpinfo import VARIANTS
-from .typehints import (
-    TypeVar,
-    Union,
-    Any,
-    Sequence,
-    Tuple,
-    List,
-    Dict,
-    Iterator,
-    Bool,
-    Vector,
-    Matrix,
-    RealVector,
-    RealVectors,
-)
-
-_ORIGIN = vector(ORIGIN)
-_PRIMAX = vector(PRIMAX)
-_SECAX = vector(SECAX)
-_TERTAX = vector(TERTAX)
 
 
 class Point(VectorTransformable):
@@ -95,7 +93,7 @@ class Point(VectorTransformable):
 class LabeledPoint(Point):
     """Labeled point in a real 3D space."""
 
-    def __init__(self, vec: RealVector, label: str) -> None:
+    def __init__(self, vec: Vector, label: str) -> None:
         """
         Initialize the instance with a 3D vector `vec` and a label `label`.
         """
@@ -136,14 +134,22 @@ class Points(Transformables):
     @property
     def pos(self) -> Vector:
         """Centroid of points."""
-        centroid = zeros(3)
+        centroid_x = 0.0
+        centroid_y = 0.0
+        centroid_z = 0.0
         n = 0
         for elem in self._elems:
-            centroid += elem.pos
+            pos = elem.pos
+            centroid_x += pos[0]
+            centroid_y += pos[1]
+            centroid_z += pos[2]
             n += 1
         if n > 0:
-            centroid /= n
-        return centroid
+            scalar = 1.0 / n
+            centroid_x *= scalar
+            centroid_y *= scalar
+            centroid_z *= scalar
+        return (centroid_x, centroid_y, centroid_z)
 
     def __getitem__(self, item: int) -> Point:
         return self._elems[item]
@@ -154,13 +160,13 @@ class Points(Transformables):
 
     def center(self: _Points) -> _Points:
         """Center the points at the origin."""
-        return self.translate(Translation(-self.pos))
+        return self.translate(Translation(neg(self.pos)))
 
     @property
     def inertia(self) -> Matrix:
         """Inertia tensor of the points of unit mass."""
         centroid = self.pos
-        return inertia(tuple(elem.pos - centroid for elem in self._elems))
+        return inertia(tuple(sub(elem.pos, centroid) for elem in self._elems))
 
     def symm_elems(
         self, tol: float = TOL, fast: bool = True
@@ -216,7 +222,7 @@ class Points(Transformables):
         if oblate and prolate:
             cubic = True
         elif oblate or prolate:
-            vec = eigvecs[:, 2] if oblate else eigvecs[:, 0]
+            vec = vector(eigvecs[:, 2] if oblate else eigvecs[:, 0])
             axes.append(vec)
             coplanar = True
             orders = set()
@@ -225,7 +231,7 @@ class Points(Transformables):
                 n_points = len(idxs)
                 for i in range(n_points):
                     pos = poses[idxs[i]]
-                    dist = pos.dot(vec)
+                    dist = dot(pos, vec)
                     if coplanar and dist > tol:
                         coplanar = False
                     for other_dist in dists:
@@ -271,7 +277,7 @@ class Points(Transformables):
                 prev_refl = curr_refl
                 curr_rot = False
                 curr_refl = False
-                vec = eigvecs[:, i]
+                vec = vector(eigvecs[:, i])
                 rot = RotationAxis(vec, 2)
                 if rot.symmetric(points, tol):
                     yield rot
@@ -281,7 +287,7 @@ class Points(Transformables):
                     yield refl
                     curr_refl = True
                 if i == 1:
-                    vec = eigvecs[:, 2]
+                    vec = vector(eigvecs[:, 2])
                     if prev_rot and prev_refl:
                         if curr_rot and curr_refl:
                             yield RotationAxis(vec, 2)
@@ -318,25 +324,25 @@ class Points(Transformables):
                 pos1 = poses[idxs[i1]]
                 for i2 in range(i1 + 1, n_points - 1):
                     pos2 = poses[idxs[i2]]
-                    segment = pos1 - pos2
+                    segment = sub(pos1, pos2)
                     if i2 == 1:
                         collinear_part = True
                     for i3 in range(i2 + 1, n_points):
                         pos3 = poses[idxs[i3]]
-                        normal = cross(segment, pos1 - pos3)
+                        normal = cross(segment, sub(pos1, pos3))
                         normal_norm = norm(normal)
                         if normal_norm <= tol:
                             continue
-                        axis = normal / normal_norm
+                        axis = mul(normal, 1.0 / normal_norm)
                         collinear_part = False
                         if new(axes, axis):
-                            dist = pos1.dot(axis)
+                            dist = dot(pos1, axis)
                             max_order = 3
                             for i4 in range(n_points):
                                 if i4 == i1 or i4 == i2 or i4 == i3:
                                     continue
                                 pos4 = poses[idxs[i4]]
-                                if abs(pos4.dot(axis) - dist) <= tol:
+                                if abs(dot(pos4, axis) - dist) <= tol:
                                     max_order += 1
                             if i3 == 2 and max_order == n_points:
                                 coplanar_part = True
@@ -378,15 +384,15 @@ class Points(Transformables):
                 pos1 = poses[idxs[i1]]
                 for i2 in range(i1 + 1, n_points):
                     pos2 = poses[idxs[i2]]
-                    segment = pos1 - pos2
-                    midpoint = 0.5 * (pos1 + pos2)
+                    segment = sub(pos1, pos2)
+                    midpoint = mul(add(pos1, pos2), 0.5)
                     if not perpendicular(segment, midpoint, tol):
                         continue
                     midpoint_norm = norm(midpoint)
                     nonzero = midpoint_norm > tol
                     if nonzero or coplanar:
                         if nonzero:
-                            axis = midpoint / midpoint_norm
+                            axis = mul(midpoint, 1.0 / midpoint_norm)
                         else:
                             axis = normalize(cross(segment, normals[0]))
                         if (
@@ -421,8 +427,8 @@ class Points(Transformables):
                     if order1 < order2:
                         vec1, vec2 = vec2, vec1
                         order1, order2 = order2, order1
-                    if vec1.dot(vec2) < 0.0:
-                        vec2 = -vec2
+                    if dot(vec1, vec2) < 0.0:
+                        vec2 = neg(vec2)
                     original_axes = [
                         vec1,
                         normalize(orthogonalize(vec2, vec1)),
@@ -447,16 +453,21 @@ class Points(Transformables):
                             (
                                 original_axes[i_axis]
                                 if i_axis >= 0
-                                else -original_axes[-i_axis]
+                                else neg(original_axes[-i_axis])
                             )
                             for i_axis in axes_order
                         )
                         if suffix == "" and vecs_obj.symb == "T":
                             vec = vecs_obj.vecs[1][0]
                             rotorefl = RotoreflectionAxis(
-                                vec[0] * permut_axes[0]
-                                + vec[1] * permut_axes[1]
-                                + vec[2] * permut_axes[2],
+                                lincomb3(
+                                    permut_axes[0],
+                                    vec[0],
+                                    permut_axes[1],
+                                    vec[1],
+                                    permut_axes[2],
+                                    vec[2],
+                                ),
                                 4,
                             )
                             if rotorefl.symmetric(points, tol):
@@ -492,21 +503,25 @@ class Points(Transformables):
                         else:
                             half_step = 0.5 * step
                             refl = ReflectionPlane(
-                                vec1 * cos(half_step) + vec2 * sin(half_step)
+                                lincomb2(
+                                    vec1, cos(half_step), vec2, sin(half_step)
+                                )
                             )
                             diag = refl.symmetric(points, tol)
                             if diag:
                                 yield refl
                         for factor in range(1, max_order):
                             ang += step
-                            new_vec = vec1 * cos(ang) + vec2 * sin(ang)
+                            new_vec = lincomb2(vec1, cos(ang), vec2, sin(ang))
                             yield RotationAxis(new_vec, 2)
                             if vert:
                                 yield ReflectionPlane(new_vec)
                             elif diag:
                                 new_ang = ang + half_step
                                 yield ReflectionPlane(
-                                    vec1 * cos(new_ang) + vec2 * sin(new_ang)
+                                    lincomb2(
+                                        vec1, cos(new_ang), vec2, sin(new_ang)
+                                    )
                                 )
                     elif isinstance(symm_elem, ReflectionPlane):
                         rot = RotationAxis(vec1, 2)
@@ -516,7 +531,9 @@ class Points(Transformables):
                         else:
                             half_step = 0.5 * step
                             rot = RotationAxis(
-                                vec1 * cos(half_step) + vec2 * sin(half_step),
+                                lincomb2(
+                                    vec1, cos(half_step), vec2, sin(half_step)
+                                ),
                                 2,
                             )
                             diag = rot.symmetric(points, tol)
@@ -524,14 +541,16 @@ class Points(Transformables):
                                 yield rot
                         for factor in range(1, max_order):
                             ang += step
-                            new_vec = vec1 * cos(ang) + vec2 * sin(ang)
+                            new_vec = lincomb2(vec1, cos(ang), vec2, sin(ang))
                             yield ReflectionPlane(new_vec)
                             if vert:
                                 yield RotationAxis(new_vec, 2)
                             elif diag:
                                 new_ang = ang + half_step
                                 yield RotationAxis(
-                                    vec1 * cos(new_ang) + vec2 * sin(new_ang),
+                                    lincomb2(
+                                        vec1, cos(new_ang), vec2, sin(new_ang)
+                                    ),
                                     2,
                                 )
             else:
@@ -540,7 +559,7 @@ class Points(Transformables):
                 yield from low_symm_elems(idxs)
 
     @classmethod
-    def from_arr(cls, vecs: RealVectors) -> "Points":
+    def from_arr(cls, vecs: Sequence[Vector]) -> "Points":
         """Construct an instance from an array of 3D vectors `vecs`."""
         return cls(tuple(Point(vec) for vec in vecs))
 
@@ -580,7 +599,7 @@ class Points(Transformables):
             for field in floats:
                 if not fullmatch(FLOAT_RE, field):
                     raise ValueError(f"invalid floating-point number: {field}")
-            vec = tuple(map(float, floats))
+            vec = (float(floats[0]), float(floats[1]), float(floats[2]))
             points.append(LabeledPoint(vec, label) if label else Point(vec))
         return cls(points)
 
@@ -655,24 +674,30 @@ class Points(Transformables):
                 torsion = floats[2]
                 vec = points[idxs[0]].pos
                 vec2 = points[idxs[1]].pos
-                vec1 = vec2 - vec
+                vec1 = sub(vec2, vec)
                 vec_norm = norm(vec1)
-                vec1 = vec1 / vec_norm if vec_norm > 0.0 else _PRIMAX
-                vec2 = orthogonalize(points[idxs[2]].pos - vec2, vec1)
+                vec1 = mul(vec1, 1.0 / vec_norm) if vec_norm > 0.0 else PRIMAX
+                vec2 = orthogonalize(sub(points[idxs[2]].pos, vec2), vec1)
                 vec_norm = norm(vec2)
-                vec2 = vec2 / vec_norm if vec_norm > 0.0 else _SECAX
+                vec2 = mul(vec2, 1.0 / vec_norm) if vec_norm > 0.0 else SECAX
                 vec3 = cross(vec1, vec2)
                 vec_norm = norm(vec3)
                 if vec_norm == 0.0:
-                    vec2 = _TERTAX
+                    vec2 = TERTAX
                     vec3 = cross(vec1, vec2)
                     vec_norm = norm(vec3)
-                vec3 = vec3 / vec_norm
+                vec3 = mul(vec3, 1.0 / vec_norm)
                 factor = dist * sin(angle)
-                vec = vec + (
-                    dist * cos(angle) * vec1
-                    + factor * cos(torsion) * vec2
-                    + factor * sin(torsion) * vec3
+                vec = add(
+                    vec,
+                    lincomb3(
+                        vec1,
+                        dist * cos(angle),
+                        vec2,
+                        factor * cos(torsion),
+                        vec3,
+                        factor * sin(torsion),
+                    ),
                 )
             elif n_idxs == 2:
                 i = idxs[0]
@@ -682,18 +707,18 @@ class Points(Transformables):
                 comp2 = dist * sin(angle)
                 if i == 1:
                     comp1 = -comp1
-                vec = points[i].pos + _PRIMAX * comp1 + _SECAX * comp2
+                vec = add(points[i].pos, lincomb2(PRIMAX, comp1, SECAX, comp2))
             elif n_idxs == 1:
-                vec = points[idxs[0]].pos + _PRIMAX * floats[0]
+                vec = add(points[idxs[0]].pos, mul(PRIMAX, floats[0]))
             elif n_idxs == 0:
-                vec = _ORIGIN
+                vec = ORIGIN
             points.append(LabeledPoint(vec, label))
         return cls(points)
 
     @classmethod
     def from_symm(
         cls,
-        base: Union[RealVectors, "Points"],
+        base: Union[Sequence[Vector], "Points"],
         symm_elems: Union[SymmetryElement, Sequence[SymmetryElement]],
     ) -> "Points":
         """
@@ -717,7 +742,7 @@ class Points(Transformables):
     @classmethod
     def from_transform(
         cls,
-        base: Union[RealVectors, "Points"],
+        base: Union[Sequence[Vector], "Points"],
         transforms: Union[Transformation, Sequence[Transformation]],
         tol: float,
     ) -> "Points":
@@ -755,7 +780,7 @@ _Arrow = TypeVar("_Arrow", bound="Arrow")
 class Arrow(DirectionTransformable):
     """Arrow in a real 3D space."""
 
-    def __init__(self, vec: RealVector, fore: Bool, back: Bool) -> None:
+    def __init__(self, vec: Vector, fore: bool, back: bool) -> None:
         """
         Initialize the instance with a 3D non-zero vector `vec` and two
         arguments, `fore` and `back`, describing the types of its ends: `True`
@@ -775,7 +800,7 @@ class Arrow(DirectionTransformable):
         else:
             self._form = 0
             if back:
-                self._vec = -self._vec
+                self._vec = neg(self._vec)
 
     @property
     def form(self) -> int:
@@ -814,7 +839,7 @@ class Arrow(DirectionTransformable):
     def negate(self: _Arrow) -> _Arrow:
         res = self.copy()
         if self._form == 0:
-            res._vec = -self._vec
+            res._vec = neg(self._vec)
         else:
             res._form = -self._form
         return res
@@ -827,7 +852,7 @@ class StructPoint(Point):
     """Point with a coefficient and a set of arrows."""
 
     def __init__(
-        self, vec: RealVector, coef: float = 1.0, arrows: Sequence[Arrow] = ()
+        self, vec: Vector, coef: float = 1.0, arrows: Sequence[Arrow] = ()
     ) -> None:
         """
         Initialize the instance with a 3D position vector `vec`, a non-zero

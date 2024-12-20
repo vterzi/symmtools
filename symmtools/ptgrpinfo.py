@@ -4,6 +4,15 @@ __all__ = ["PointGroupInfo", "PointGroupInfos", "VARIANTS"]
 
 from abc import ABC, abstractmethod
 from math import sin, cos
+from typing import (
+    Sequence,
+    Iterable,
+    Iterator,
+    FrozenSet,
+    Tuple,
+    List,
+    Dict,
+)
 
 from .const import (
     INF,
@@ -15,7 +24,8 @@ from .const import (
     SPECIAL_ANGLES,
     SPECIAL_COMPONENTS,
 )
-from .utils import vector, intersectangle, signvar, circshift
+from .linalg3d import Vector, vector, lincomb3, intersectangle
+from .utils import signvar, circshift
 from .symmelem import (
     SymmetryElement,
     InversionCenter,
@@ -33,19 +43,7 @@ from .symmelem import (
     VEC_SYMM_ELEMS,
     labeled_symm_elem,
 )
-from .typehints import (
-    Sequence,
-    Iterable,
-    Iterator,
-    FrozenSet,
-    Tuple,
-    List,
-    Vector,
-    Dict,
-)
 
-_PRIMAX = vector(PRIMAX)
-_SECAX = vector(SECAX)
 _T_ROT3_VECS = signvar((1.0, 1.0, 1.0), 1)
 _T_ROT2_VECS = circshift(((1.0, 0.0, 0.0),))
 _TD_REFL_VECS = circshift(signvar((1.0, 1.0, 0.0), 0, True))
@@ -111,12 +109,12 @@ class _VecsT(_Vecs):
         diag = suffix == "d"
         horiz = suffix == "h"
         for vec in self.vecs[0]:
-            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
             yield RotationAxis(vec, 3)
             if horiz:
                 yield RotoreflectionAxis(vec, 6)
         for vec in self.vecs[1]:
-            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
             yield RotationAxis(vec, 2)
             if diag:
                 yield RotoreflectionAxis(vec, 4)
@@ -124,7 +122,7 @@ class _VecsT(_Vecs):
                 yield ReflectionPlane(vec)
         if diag:
             for vec in self.vecs[2]:
-                vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+                vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
                 yield ReflectionPlane(vec)
 
 
@@ -136,18 +134,18 @@ class _VecsO(_Vecs):
     ) -> Iterator[SymmetryElement]:
         horiz = suffix == "h"
         for vec in self.vecs[0]:
-            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
             yield RotationAxis(vec, 4)
             if horiz:
                 yield RotoreflectionAxis(vec, 4)
                 yield ReflectionPlane(vec)
         for vec in self.vecs[1]:
-            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
             yield RotationAxis(vec, 3)
             if horiz:
                 yield RotoreflectionAxis(vec, 6)
         for vec in self.vecs[2]:
-            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
             yield RotationAxis(vec, 2)
             if horiz:
                 yield ReflectionPlane(vec)
@@ -161,17 +159,17 @@ class _VecsI(_Vecs):
     ) -> Iterator[SymmetryElement]:
         horiz = suffix == "h"
         for vec in self.vecs[0]:
-            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
             yield RotationAxis(vec, 5)
             if horiz:
                 yield RotoreflectionAxis(vec, 10)
         for vec in self.vecs[1]:
-            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
             yield RotationAxis(vec, 3)
             if horiz:
                 yield RotoreflectionAxis(vec, 6)
         for vec in self.vecs[2]:
-            vec = vec[0] * ax1 + vec[1] * ax2 + vec[2] * ax3
+            vec = lincomb3(ax1, vec[0], ax2, vec[1], ax3, vec[2])
             yield RotationAxis(vec, 2)
             if horiz:
                 yield ReflectionPlane(vec)
@@ -503,7 +501,7 @@ class SpecialPointGroupInfo(PointGroupInfo):
 
 class PointGroupInfos:
     C1 = SpecialPointGroupInfo(())
-    Cs = SpecialPointGroupInfo((ReflectionPlane(_PRIMAX),))
+    Cs = SpecialPointGroupInfo((ReflectionPlane(PRIMAX),))
     Ci = SpecialPointGroupInfo((InversionCenter(),))
 
     class Cn(PointGroupInfo):
@@ -514,7 +512,7 @@ class PointGroupInfos:
 
         @property
         def symm_elems(self) -> Iterable[SymmetryElement]:
-            yield RotationAxis(_PRIMAX, self._order)
+            yield RotationAxis(PRIMAX, self._order)
 
         @property
         def types(self) -> Dict[Tuple, int]:
@@ -529,29 +527,28 @@ class PointGroupInfos:
         def symm_elems(self) -> Iterable[SymmetryElement]:
             yield from super().symm_elems
             order = self._order
-            vec = _SECAX.copy()
             step = PI / order
-            yield labeled_symm_elem(ReflectionPlane(vec), "v")
+            yield labeled_symm_elem(ReflectionPlane(SECAX), "v")
             if order % 2 == 1:
                 ang = step
                 for _ in range(1, order):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(ReflectionPlane(vec), "v")
+                    yield labeled_symm_elem(
+                        ReflectionPlane((cos(ang), sin(ang), 0.0)), "v"
+                    )
                     ang += step
             else:
                 ang = step
                 step += step
                 for _ in range(1, order, 2):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(ReflectionPlane(vec), "d")
+                    yield labeled_symm_elem(
+                        ReflectionPlane((cos(ang), sin(ang), 0.0)), "d"
+                    )
                     ang += step
                 ang = step
                 for _ in range(2, order, 2):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(ReflectionPlane(vec), "v")
+                    yield labeled_symm_elem(
+                        ReflectionPlane((cos(ang), sin(ang), 0.0)), "v"
+                    )
                     ang += step
 
         @property
@@ -582,11 +579,11 @@ class PointGroupInfos:
         def symm_elems(self) -> Iterable[SymmetryElement]:
             yield from super().symm_elems
             order = self._order
-            yield labeled_symm_elem(ReflectionPlane(_PRIMAX), "h")
+            yield labeled_symm_elem(ReflectionPlane(PRIMAX), "h")
             if order % 2 == 0:
                 yield InversionCenter()
             if order > 2:
-                yield RotoreflectionAxis(_PRIMAX, order)
+                yield RotoreflectionAxis(PRIMAX, order)
 
         @property
         def types(self) -> Dict[Tuple, int]:
@@ -619,7 +616,7 @@ class PointGroupInfos:
             order = self._order
             if order % 2 == 1:
                 yield InversionCenter()
-            yield RotoreflectionAxis(_PRIMAX, 2 * order)
+            yield RotoreflectionAxis(PRIMAX, 2 * order)
 
         @property
         def types(self) -> Dict[Tuple, int]:
@@ -646,29 +643,28 @@ class PointGroupInfos:
         def symm_elems(self) -> Iterable[SymmetryElement]:
             yield from super().symm_elems
             order = self._order
-            vec = _SECAX.copy()
             step = PI / order
-            yield labeled_symm_elem(RotationAxis(vec, 2), "'")
+            yield labeled_symm_elem(RotationAxis(SECAX, 2), "'")
             if order % 2 == 1:
                 ang = step
                 for _ in range(1, order):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(RotationAxis(vec, 2), "'")
+                    yield labeled_symm_elem(
+                        RotationAxis((cos(ang), sin(ang), 0.0), 2), "'"
+                    )
                     ang += step
             else:
                 ang = step
                 step += step
                 for _ in range(1, order, 2):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(RotationAxis(vec, 2), "''")
+                    yield labeled_symm_elem(
+                        RotationAxis((cos(ang), sin(ang), 0.0), 2), "''"
+                    )
                     ang += step
                 ang = step
                 for _ in range(2, order, 2):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(RotationAxis(vec, 2), "'")
+                    yield labeled_symm_elem(
+                        RotationAxis((cos(ang), sin(ang), 0.0), 2), "'"
+                    )
                     ang += step
 
         @property
@@ -703,17 +699,16 @@ class PointGroupInfos:
         def symm_elems(self) -> Iterable[SymmetryElement]:
             yield from super().symm_elems
             order = self._order
-            vec = _SECAX.copy()
             step = PI / order
             ang = 0.5 * step
             for _ in range(order):
-                vec[0] = cos(ang)
-                vec[1] = sin(ang)
-                yield labeled_symm_elem(ReflectionPlane(vec), "d")
+                yield labeled_symm_elem(
+                    ReflectionPlane((cos(ang), sin(ang), 0.0)), "d"
+                )
                 ang += step
             if order % 2 == 1:
                 yield InversionCenter()
-            yield RotoreflectionAxis(_PRIMAX, 2 * order)
+            yield RotoreflectionAxis(PRIMAX, 2 * order)
 
         @property
         def types(self) -> Dict[Tuple, int]:
@@ -767,34 +762,33 @@ class PointGroupInfos:
         def symm_elems(self) -> Iterable[SymmetryElement]:
             yield from super().symm_elems
             order = self._order
-            yield labeled_symm_elem(ReflectionPlane(_PRIMAX), "h")
-            vec = _SECAX.copy()
+            yield labeled_symm_elem(ReflectionPlane(PRIMAX), "h")
             step = PI / order
-            yield labeled_symm_elem(ReflectionPlane(vec), "v")
+            yield labeled_symm_elem(ReflectionPlane(SECAX), "v")
             if order % 2 == 1:
                 ang = step
                 for _ in range(1, order):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(ReflectionPlane(vec), "v")
+                    yield labeled_symm_elem(
+                        ReflectionPlane((cos(ang), sin(ang), 0.0)), "v"
+                    )
                     ang += step
             else:
                 ang = step
                 step += step
                 for _ in range(1, order, 2):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(ReflectionPlane(vec), "d")
+                    yield labeled_symm_elem(
+                        ReflectionPlane((cos(ang), sin(ang), 0.0)), "d"
+                    )
                     ang += step
                 ang = step
                 for _ in range(2, order, 2):
-                    vec[0] = cos(ang)
-                    vec[1] = sin(ang)
-                    yield labeled_symm_elem(ReflectionPlane(vec), "v")
+                    yield labeled_symm_elem(
+                        ReflectionPlane((cos(ang), sin(ang), 0.0)), "v"
+                    )
                     ang += step
                 yield InversionCenter()
             if order > 2:
-                yield RotoreflectionAxis(_PRIMAX, order)
+                yield RotoreflectionAxis(PRIMAX, order)
 
         @property
         def types(self) -> Dict[Tuple, int]:
@@ -843,36 +837,42 @@ class PointGroupInfos:
             return res
 
     T = SpecialPointGroupInfo(
-        tuple(RotationAxis(vec, 3) for vec in _T_ROT3_VECS)
-        + tuple(RotationAxis(vec, 2) for vec in _T_ROT2_VECS)
+        tuple(RotationAxis(vector(vec), 3) for vec in _T_ROT3_VECS)
+        + tuple(RotationAxis(vector(vec), 2) for vec in _T_ROT2_VECS)
     )
     Td = SpecialPointGroupInfo(
         (
             T._symm_elems
             + tuple(
-                labeled_symm_elem(ReflectionPlane(vec), "d")
+                labeled_symm_elem(ReflectionPlane(vector(vec)), "d")
                 for vec in _TD_REFL_VECS
             )
-            + tuple(RotoreflectionAxis(vec, 4) for vec in _TD_ROTOREFL4_VECS)
+            + tuple(
+                RotoreflectionAxis(vector(vec), 4)
+                for vec in _TD_ROTOREFL4_VECS
+            )
         )
     )
     Th = SpecialPointGroupInfo(
         (
             T._symm_elems
             + tuple(
-                labeled_symm_elem(ReflectionPlane(vec), "h")
+                labeled_symm_elem(ReflectionPlane(vector(vec)), "h")
                 for vec in _TH_REFL_VECS
             )
             + (InversionCenter(),)
-            + tuple(RotoreflectionAxis(vec, 6) for vec in _TH_ROTOREFL6_VECS)
+            + tuple(
+                RotoreflectionAxis(vector(vec), 6)
+                for vec in _TH_ROTOREFL6_VECS
+            )
         )
     )
     O = SpecialPointGroupInfo(  # noqa: E741
         (
-            tuple(RotationAxis(vec, 4) for vec in _O_ROT4_VECS)
-            + tuple(RotationAxis(vec, 3) for vec in _O_ROT3_VECS)
+            tuple(RotationAxis(vector(vec), 4) for vec in _O_ROT4_VECS)
+            + tuple(RotationAxis(vector(vec), 3) for vec in _O_ROT3_VECS)
             + tuple(
-                labeled_symm_elem(RotationAxis(vec, 2), "'")
+                labeled_symm_elem(RotationAxis(vector(vec), 2), "'")
                 for vec in _O_ROT2_VECS
             )
         )
@@ -881,59 +881,71 @@ class PointGroupInfos:
         (
             O._symm_elems
             + tuple(
-                labeled_symm_elem(ReflectionPlane(vec), "h")
+                labeled_symm_elem(ReflectionPlane(vector(vec)), "h")
                 for vec in _OH_REFL_H_VECS
             )
             + tuple(
-                labeled_symm_elem(ReflectionPlane(vec), "d")
+                labeled_symm_elem(ReflectionPlane(vector(vec)), "d")
                 for vec in _OH_REFL_D_VECS
             )
             + (InversionCenter(),)
-            + tuple(RotoreflectionAxis(vec, 6) for vec in _OH_ROTOREFL6_VECS)
-            + tuple(RotoreflectionAxis(vec, 4) for vec in _OH_ROTOREFL4_VECS)
+            + tuple(
+                RotoreflectionAxis(vector(vec), 6)
+                for vec in _OH_ROTOREFL6_VECS
+            )
+            + tuple(
+                RotoreflectionAxis(vector(vec), 4)
+                for vec in _OH_ROTOREFL4_VECS
+            )
         )
     )
     I = SpecialPointGroupInfo(  # noqa: E741
         (
-            tuple(RotationAxis(vec, 5) for vec in _I_ROT5_VECS)
-            + tuple(RotationAxis(vec, 3) for vec in _I_ROT3_VECS)
-            + tuple(RotationAxis(vec, 2) for vec in _I_ROT2_VECS)
+            tuple(RotationAxis(vector(vec), 5) for vec in _I_ROT5_VECS)
+            + tuple(RotationAxis(vector(vec), 3) for vec in _I_ROT3_VECS)
+            + tuple(RotationAxis(vector(vec), 2) for vec in _I_ROT2_VECS)
         )
     )
     Ih = SpecialPointGroupInfo(
         (
             I._symm_elems
-            + tuple(ReflectionPlane(vec) for vec in _IH_REFL_VECS)
+            + tuple(ReflectionPlane(vector(vec)) for vec in _IH_REFL_VECS)
             + (InversionCenter(),)
-            + tuple(RotoreflectionAxis(vec, 10) for vec in _IH_ROTOREFL10_VECS)
-            + tuple(RotoreflectionAxis(vec, 6) for vec in _IH_ROTOREFL6_VECS)
+            + tuple(
+                RotoreflectionAxis(vector(vec), 10)
+                for vec in _IH_ROTOREFL10_VECS
+            )
+            + tuple(
+                RotoreflectionAxis(vector(vec), 6)
+                for vec in _IH_ROTOREFL6_VECS
+            )
         )
     )
-    Coo = SpecialPointGroupInfo((InfRotationAxis(_PRIMAX),))
+    Coo = SpecialPointGroupInfo((InfRotationAxis(PRIMAX),))
     Coov = SpecialPointGroupInfo(
-        Coo._symm_elems + (AxisReflectionPlanes(_PRIMAX),)
+        Coo._symm_elems + (AxisReflectionPlanes(PRIMAX),)
     )
     Cooh = SpecialPointGroupInfo(
         Coo._symm_elems
         + (
-            ReflectionPlane(_PRIMAX),
+            ReflectionPlane(PRIMAX),
             InversionCenter(),
-            InfRotoreflectionAxis(_PRIMAX),
+            InfRotoreflectionAxis(PRIMAX),
         )
     )
     Doo = SpecialPointGroupInfo(
         (
-            InfRotationAxis(_PRIMAX),
-            AxisRotationAxes(_PRIMAX),
+            InfRotationAxis(PRIMAX),
+            AxisRotationAxes(PRIMAX),
         )
     )
     Dooh = SpecialPointGroupInfo(
         Doo._symm_elems
         + (
-            AxisReflectionPlanes(_PRIMAX),
-            ReflectionPlane(_PRIMAX),
+            AxisReflectionPlanes(PRIMAX),
+            ReflectionPlane(PRIMAX),
             InversionCenter(),
-            InfRotoreflectionAxis(_PRIMAX),
+            InfRotoreflectionAxis(PRIMAX),
         )
     )
     K = SpecialPointGroupInfo((CenterRotationAxes(),))

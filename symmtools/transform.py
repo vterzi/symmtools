@@ -20,24 +20,7 @@ __all__ = [
 from abc import ABC, abstractmethod
 from copy import copy
 from math import sin, cos
-
-from numpy import empty, eye
-from scipy.optimize import linear_sum_assignment  # type: ignore
-
-from .const import INF, PI, TAU
-from .utils import (
-    vector,
-    norm,
-    diff,
-    unitindep,
-    translate,
-    invert,
-    trigrotate,
-    reflect,
-    trigrotmat,
-    reflmat,
-)
-from .typehints import (
+from typing import (
     TypeVar,
     Any,
     Sequence,
@@ -45,11 +28,26 @@ from .typehints import (
     List,
     Dict,
     Iterator,
-    Int,
-    Float,
+)
+
+from numpy import empty
+from scipy.optimize import linear_sum_assignment  # type: ignore
+
+from .const import INF, PI, TAU
+from .linalg3d import (
     Vector,
     Matrix,
-    RealVector,
+    neg,
+    add,
+    mul,
+    matprod,
+    norm,
+    diff,
+    unitindep,
+    trigrotate,
+    reflect,
+    trigrotmat,
+    reflmat,
 )
 
 _Transformable = TypeVar("_Transformable", bound="Transformable")
@@ -335,11 +333,9 @@ _VectorTransformable = TypeVar(
 class VectorTransformable(Transformable):
     """Transformable object represented by a real 3D vector."""
 
-    def __init__(self, vec: RealVector) -> None:
-        """Initialize the instance with a 3D vector `vec`."""
-        self._vec = vector(vec)
-        if self._vec.shape != (3,):
-            raise ValueError("invalid vector shape")
+    def __init__(self, vec: Vector) -> None:
+        """Initialize the instance with a vector `vec`."""
+        self._vec = vec
 
     @property
     def vec(self) -> Vector:
@@ -348,7 +344,7 @@ class VectorTransformable(Transformable):
 
     @property
     def args(self) -> str:
-        return str(self._vec.tolist()).replace(" ", "")
+        return str(self._vec).replace(" ", "")
 
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
@@ -398,13 +394,12 @@ _DirectionTransformable = TypeVar(
 class DirectionTransformable(VectorTransformable):
     """Transformable object represented by a real 3D direction vector."""
 
-    def __init__(self, vec: RealVector) -> None:
-        """Initialize the instance with a 3D non-zero vector `vec`."""
-        super().__init__(vec)
-        vec_norm = norm(self._vec)
+    def __init__(self, vec: Vector) -> None:
+        """Initialize the instance with a non-zero vector `vec`."""
+        vec_norm = norm(vec)
         if vec_norm == 0.0:
             raise ValueError("zero vector")
-        self._vec /= vec_norm
+        super().__init__(mul(vec, 1.0 / vec_norm))
 
     def diff(self, obj: Any) -> float:
         res = Transformable.diff(self, obj)
@@ -424,9 +419,9 @@ class OrderedTransformable(DirectionTransformable):
     order.
     """
 
-    def __init__(self, vec: RealVector, order: Int) -> None:
+    def __init__(self, vec: Vector, order: int) -> None:
         """
-        Initialize the instance with a 3D non-zero vector `vec` and a positive
+        Initialize the instance with a non-zero vector `vec` and a positive
         order `order`.
         """
         super().__init__(vec)
@@ -476,10 +471,14 @@ class Transformation(Transformable):
     @property
     def mat(self) -> Matrix:
         """Transformation matrix."""
-        res = eye(3)
-        for i in range(len(res)):
-            res[i] = self.apply(res[i])
-        return res.T
+        vec1 = self.apply((1.0, 0.0, 0.0))
+        vec2 = self.apply((0.0, 1.0, 0.0))
+        vec3 = self.apply((0.0, 0.0, 1.0))
+        return (
+            (vec1[0], vec2[0], vec3[0]),
+            (vec1[1], vec2[1], vec3[1]),
+            (vec1[2], vec2[2], vec3[2]),
+        )
 
 
 class Identity(InvariantTransformable, Transformation):
@@ -490,11 +489,11 @@ class Identity(InvariantTransformable, Transformation):
 
     @classmethod
     def apply(cls, vec: Vector) -> Vector:
-        return vec.copy()
+        return vec
 
     @property
     def mat(self) -> Matrix:
-        return eye(3)
+        return ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
 
 
 class Translation(VectorTransformable, Transformation):
@@ -504,13 +503,11 @@ class Translation(VectorTransformable, Transformation):
         return obj.translate(self)
 
     def apply(self, vec: Vector) -> Vector:
-        return translate(vec, self._vec)
+        return add(vec, self._vec)
 
     @property
     def mat(self) -> Matrix:
-        res = eye(4)
-        res[:3, 3] = self._vec
-        return res
+        raise NotImplementedError("affine transformation")
 
 
 class Inversion(InvariantTransformable, Transformation):
@@ -521,19 +518,19 @@ class Inversion(InvariantTransformable, Transformation):
 
     @classmethod
     def apply(cls, vec: Vector) -> Vector:
-        return invert(vec)
+        return neg(vec)
 
     @property
     def mat(self) -> Matrix:
-        return -eye(3)
+        return ((-1.0, 0.0, 0.0), (0.0, -1.0, 0.0), (0.0, 0.0, -1.0))
 
 
 class Rotation(DirectionTransformable, Transformation):
     """Rotation around an axis containing the origin in a real 3D space."""
 
-    def __init__(self, vec: RealVector, angle: Float) -> None:
+    def __init__(self, vec: Vector, angle: float) -> None:
         """
-        Initialize the instance with a 3D non-zero vector `vec` and a non-zero
+        Initialize the instance with a non-zero vector `vec` and a non-zero
         angle `angle`.
         """
         super().__init__(vec)
@@ -571,7 +568,7 @@ class Rotation(DirectionTransformable, Transformation):
         res = Transformable.diff(self, obj)
         if res < INF:
             diff1 = diff(self._vec, obj.vec)
-            diff2 = diff(self._vec, -obj.vec)
+            diff2 = diff(self._vec, neg(obj.vec))
             if diff1 < diff2:
                 vec_diff = diff1
                 explementary = False
@@ -613,9 +610,9 @@ class Rotoreflection(Rotation):
     perpendicular plane containing the origin in a real 3D space.
     """
 
-    def __init__(self, vec: RealVector, angle: Float) -> None:
+    def __init__(self, vec: Vector, angle: float) -> None:
         """
-        Initialize the instance with a 3D non-zero vector `vec` and a non-zero
+        Initialize the instance with a non-zero vector `vec` and a non-zero
         angle `angle` that is not equal to a half-turn.
         """
         super().__init__(vec, angle)
@@ -632,4 +629,6 @@ class Rotoreflection(Rotation):
 
     @property
     def mat(self) -> Matrix:
-        return reflmat(self._vec) @ trigrotmat(self._vec, self._cos, self._sin)
+        return matprod(
+            reflmat(self._vec), trigrotmat(self._vec, self._cos, self._sin)
+        )

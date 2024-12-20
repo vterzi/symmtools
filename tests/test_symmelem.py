@@ -4,12 +4,13 @@ from .init import (
     randvec,
     randunitvec,
     List,
+    TOL,
 )
 
-from symmtools import (
-    TAU,
-    TOL,
-    Symb,
+from symmtools.const import TAU, Symb
+from symmtools.linalg3d import normalize
+from symmtools.primitive import Point, Points
+from symmtools.symmelem import (
     IdentityElement,
     InversionCenter,
     RotationAxis,
@@ -19,9 +20,6 @@ from symmtools import (
     Rotation,
     Reflection,
     Rotoreflection,
-    Point,
-    Points,
-    normalize,
 )
 
 

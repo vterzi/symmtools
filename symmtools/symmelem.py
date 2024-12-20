@@ -22,9 +22,20 @@ __all__ = [
 ]
 
 from abc import abstractmethod
+from typing import (
+    Union,
+    TypeVar,
+    Sequence,
+    FrozenSet,
+    Tuple,
+    List,
+    Dict,
+    Iterator,
+)
 
 from .const import PI, TAU, Symb, SPECIAL_ANGLES
-from .utils import intersectangle, rational
+from .linalg3d import Vector, intersectangle
+from .utils import rational
 from .transform import (
     Transformable,
     Transformables,
@@ -37,18 +48,6 @@ from .transform import (
     Rotation,
     Reflection,
     Rotoreflection,
-)
-from .typehints import (
-    Union,
-    TypeVar,
-    Sequence,
-    FrozenSet,
-    Tuple,
-    List,
-    Dict,
-    Iterator,
-    Int,
-    RealVector,
 )
 
 # `i/n*pi` is numerically more stable than `pi*i/n`
@@ -163,7 +162,7 @@ class RotationAxis(OrderedTransformable, SymmetryElement):
     _symb = Symb.ROT
     _name = "rotation axis"
 
-    def __init__(self, vec: RealVector, order: Int) -> None:
+    def __init__(self, vec: Vector, order: int) -> None:
         """
         Initialize the instance with a 3D non-zero vector `vec` and a positive
         order `order` greater than 1.
@@ -223,7 +222,7 @@ class RotoreflectionAxis(OrderedTransformable, SymmetryElement):
     _symb = Symb.ROTOREFL
     _name = "rotoreflection axis"
 
-    def __init__(self, vec: RealVector, order: Int) -> None:
+    def __init__(self, vec: Vector, order: int) -> None:
         """
         Initialize the instance with a 3D non-zero vector `vec` and a positive
         order `order` greater than 2.

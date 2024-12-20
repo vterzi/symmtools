@@ -2,6 +2,20 @@
 
 __all__ = ["PointGroup"]
 
+from typing import (
+    TypeVar,
+    Union,
+    Optional,
+    Any,
+    Sequence,
+    Iterator,
+    Set,
+    FrozenSet,
+    Tuple,
+    List,
+    Dict,
+)
+
 from numpy.linalg import eigh
 
 from .const import (
@@ -13,8 +27,15 @@ from .const import (
     SECAX,
     Symb,
 )
-from .utils import (
+from .linalg3d import (
+    Vector,
     vector,
+    neg,
+    add,
+    sub,
+    mul,
+    lincomb3,
+    dot,
     sqnorm,
     norm,
     normalize,
@@ -55,24 +76,6 @@ from .symmelem import (
 from .quaternion import Quaternion
 from .ptgrpinfo import PointGroupInfo, PointGroupInfos, VARIANTS
 from .primitive import Points
-from .typehints import (
-    TypeVar,
-    Union,
-    Optional,
-    Any,
-    Sequence,
-    Iterator,
-    Set,
-    FrozenSet,
-    Tuple,
-    List,
-    Vector,
-    Dict,
-)
-
-_ORIGIN = vector(ORIGIN)
-_PRIMAX = vector(PRIMAX)
-_SECAX = vector(SECAX)
 
 
 def vec_rot(
@@ -89,7 +92,7 @@ def vec_rot(
         ang = angle(from_vec, to_vec)
         if ang > 0.0:
             return Rotation(axis, ang)
-    elif from_vec.dot(to_vec) < 0.0:
+    elif dot(from_vec, to_vec) < 0.0:
         if orth_axis is None:
             orth_axis = orthvec(normalize(to_vec))
         return Rotation(orth_axis, PI)
@@ -508,7 +511,7 @@ class PointGroup(Transformable):
         rotorefl_num = 0
         axes: List[Tuple[int, Vector]] = []
         normals: List[Vector] = []
-        pot_main_axis = _ORIGIN
+        pot_main_axis = ORIGIN
         for symm_elem in symm_elems:
             if isinstance(symm_elem, RotationAxis):
                 rot_order = symm_elem.order
@@ -531,14 +534,14 @@ class PointGroup(Transformable):
                 order = Symb.INF
                 refl = "h"
                 if rot:
-                    transform = vec_rot(_PRIMAX, symm_elem.vec)
+                    transform = vec_rot(PRIMAX, symm_elem.vec)
                     break
                 invertible = True
             elif isinstance(symm_elem, AxisRotationAxes):
                 rot = "D"
                 order = Symb.INF
                 if refl:
-                    transform = vec_rot(_PRIMAX, symm_elem.vec)
+                    transform = vec_rot(PRIMAX, symm_elem.vec)
                     break
             elif isinstance(symm_elem, AxisReflectionPlanes):
                 order = Symb.INF
@@ -568,7 +571,7 @@ class PointGroup(Transformable):
                     refl = "h"
                 elif refl_num > 0:
                     refl = "v"
-                transform = vec_rot(_PRIMAX, axes[0][1])
+                transform = vec_rot(PRIMAX, axes[0][1])
             elif high_rot_num > 1:
                 if max_rot_order == 5:
                     rot = "I"
@@ -582,10 +585,10 @@ class PointGroup(Transformable):
                     refl = "h"
                 vec1 = axes[0][1]
                 vec2 = axes[1][1]
-                if vec1.dot(vec2) < 0.0:
-                    vec2 = -vec2
+                if dot(vec1, vec2) < 0.0:
+                    vec2 = neg(vec2)
                 vec2 = normalize(orthogonalize(vec2, vec1))
-                transform = vecs_rot(_PRIMAX, _SECAX, vec1, vec2)
+                transform = vecs_rot(PRIMAX, SECAX, vec1, vec2)
             elif rot_num > 1:
                 rot = "D"
                 order = str(max_rot_order)
@@ -602,11 +605,11 @@ class PointGroup(Transformable):
                                 min_ang = ang
                                 main_idx = i
                         axes.insert(0, axes.pop(main_idx))
-                transform = vecs_rot(_PRIMAX, _SECAX, axes[0][1], axes[1][1])
+                transform = vecs_rot(PRIMAX, SECAX, axes[0][1], axes[1][1])
             elif rotorefl_num > 0 and refl_num == 0:
                 rot = "S"
                 order = str(2 * max_rot_order)
-                transform = vec_rot(_PRIMAX, pot_main_axis)
+                transform = vec_rot(PRIMAX, pot_main_axis)
             else:
                 rot = "C"
                 if max_rot_order > 1:
@@ -617,16 +620,16 @@ class PointGroup(Transformable):
                         refl = "v"
                     if refl == "v":
                         transform = vecs_rot(
-                            _PRIMAX, _SECAX, axes[0][1], normals[0]
+                            PRIMAX, SECAX, axes[0][1], normals[0]
                         )
                     else:
-                        transform = vec_rot(_PRIMAX, axes[0][1])
+                        transform = vec_rot(PRIMAX, axes[0][1])
                 else:
                     if invertible:
                         refl = "i"
                     elif refl_num > 0:
                         refl = "s"
-                        transform = vec_rot(_PRIMAX, normals[0])
+                        transform = vec_rot(PRIMAX, normals[0])
                     else:
                         order = "1"
         return cls(rot + order + refl, transform)
@@ -660,13 +663,13 @@ class PointGroup(Transformable):
             and `axis2`.
             """
             if axis2 is not None:
-                return vecs_rot(_PRIMAX, _SECAX, axis1, axis2)
+                return vecs_rot(PRIMAX, SECAX, axis1, axis2)
             else:
-                return vec_rot(_PRIMAX, axis1)
+                return vec_rot(PRIMAX, axis1)
 
         # If all points are collinear, the position vectors of the points (of
         # the centered set) are linearly dependent (parallel or antiparallel).
-        main_axis = _ORIGIN
+        main_axis = ORIGIN
         for i in range(n_points):
             pos = poses[i]
             # Select the first non-zero position vector as a potential axis to
@@ -679,8 +682,8 @@ class PointGroup(Transformable):
                 break
         else:
             # Linear: Coov,Dooh
-            if _PRIMAX.dot(main_axis) < 0.0:
-                main_axis = -main_axis
+            if dot(PRIMAX, main_axis) < 0.0:
+                main_axis = neg(main_axis)
             return cls(
                 "Dooh" if invertible else "Coov", transformation(main_axis)
             )
@@ -724,7 +727,7 @@ class PointGroup(Transformable):
                     pos1 = poses[idxs[i1]]
                     for i2 in range(i1 + 1, n_points - 1):
                         pos2 = poses[idxs[i2]]
-                        segment = pos1 - pos2
+                        segment = sub(pos1, pos2)
                         # Assume the points in the group are collinear for the
                         # first pair of points.
                         if i2 == 1:
@@ -733,7 +736,7 @@ class PointGroup(Transformable):
                             pos3 = poses[idxs[i3]]
                             # Attempt to find a unique plane containing the
                             # triplet of points.
-                            normal = cross(segment, pos1 - pos3)
+                            normal = cross(segment, sub(pos1, pos3))
                             normal_norm = norm(normal)
                             if normal_norm <= tol:
                                 continue
@@ -742,11 +745,11 @@ class PointGroup(Transformable):
                             collinear_group = False
                             # The normal of the plane is a potential axis of
                             # rotation.
-                            axis = normal / normal_norm
+                            axis = mul(normal, 1.0 / normal_norm)
                             if new(axes, axis):
                                 # Calculate the distance from the origin to the
                                 # plane.
-                                dist = pos1.dot(axis)
+                                dist = dot(pos1, axis)
                                 # The number of points in the plane is the
                                 # highest possible order of a potential
                                 # rotation axis.  Three points are already
@@ -760,7 +763,7 @@ class PointGroup(Transformable):
                                         pos4 = poses[idxs[i4]]
                                         # If the new point is in the plane,
                                         # increment the highest possible order.
-                                        if abs(pos4.dot(axis) - dist) <= tol:
+                                        if abs(dot(pos4, axis) - dist) <= tol:
                                             max_order += 1
                                 # If all points are in the plane, the points in
                                 # the group are coplanar.
@@ -818,8 +821,8 @@ class PointGroup(Transformable):
                 )
             # Ensure that the angle between the vectors of the rotation axes is
             # not obtuse.
-            if vec1.dot(vec2) < 0.0:
-                vec2 = -vec2
+            if dot(vec1, vec2) < 0.0:
+                vec2 = neg(vec2)
             ang = angle(vec1, vec2)
             # Find the closest possible variants of point groups using the
             # orders of the rotation axes and the intersection angle between
@@ -851,7 +854,7 @@ class PointGroup(Transformable):
                     (
                         orthonorm_vecs[i_axis]
                         if i_axis >= 0
-                        else -orthonorm_vecs[-i_axis]
+                        else neg(orthonorm_vecs[-i_axis])
                     )
                     for i_axis in axes_order
                 )
@@ -862,9 +865,14 @@ class PointGroup(Transformable):
                 if suffix == "" and vecs_obj.symb == "T":
                     comps = vecs_obj.vecs[1][0]
                     rotorefl = RotoreflectionAxis(
-                        comps[0] * basis[0]
-                        + comps[1] * basis[1]
-                        + comps[2] * basis[2],
+                        lincomb3(
+                            basis[0],
+                            comps[0],
+                            basis[1],
+                            comps[1],
+                            basis[2],
+                            comps[2],
+                        ),
                         4,
                     )
                     if rotorefl.symmetric(points, tol):
@@ -886,7 +894,7 @@ class PointGroup(Transformable):
             # Symmetric: C(n>2),C(n>2)v,C(n>2)h,S(2n),D(n>3),Dnd,D(n>3)h
             # The non-degenerate principal axis is the main axis of the point
             # group.
-            main_axis = eigvecs[:, 2] if oblate else eigvecs[:, 0]
+            main_axis = vector(eigvecs[:, 2] if oblate else eigvecs[:, 0])
             axes.append(main_axis)
             # Assume all points are coplanar.
             coplanar = True
@@ -901,7 +909,7 @@ class PointGroup(Transformable):
                 n_points = len(idxs)
                 for i in range(n_points):
                     pos = poses[idxs[i]]
-                    dist = pos.dot(main_axis)
+                    dist = dot(pos, main_axis)
                     # If the distance from the origin to the plane is not zero,
                     # the points (of the centered set) are not coplanar.
                     if coplanar and dist > tol:
@@ -962,8 +970,8 @@ class PointGroup(Transformable):
                     pos1 = poses[idxs[i1]]
                     for i2 in range(i1 + 1, n_points):
                         pos2 = poses[idxs[i2]]
-                        segment = pos1 - pos2
-                        midpoint = 0.5 * (pos1 + pos2)
+                        segment = sub(pos1, pos2)
+                        midpoint = mul(add(pos1, pos2), 0.5)
                         # The segment connecting two points is the normal of a
                         # potential reflection plane, and the distance vector
                         # from the origin to the segment is the axis of a
@@ -984,7 +992,7 @@ class PointGroup(Transformable):
                             # normal of the plane containing the points (main
                             # axis).
                             if nonzero:
-                                axis = midpoint / midpoint_norm
+                                axis = mul(midpoint, 1.0 / midpoint_norm)
                             else:
                                 axis = normalize(cross(segment, main_axis))
                             # The axes of two-fold rotation axes in symmetric
@@ -1058,7 +1066,7 @@ class PointGroup(Transformable):
             for i in range(3):
                 # Each principal axis is the axis of a potential two-fold
                 # rotation axis or the normal of a potential reflection plane.
-                vec = eigvecs[:, i]
+                vec = vector(eigvecs[:, i])
                 found_rot = RotationAxis(vec, 2).symmetric(points, tol)
                 if invertible:
                     # Each two-fold rotation axis has a perpendicular

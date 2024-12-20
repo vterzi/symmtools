@@ -3,8 +3,8 @@ __all__ = [
     "main",
     "random",
     "choice",
-    "randrange",
     "randint",
+    "randrange",
     "normalvariate",
     "Union",
     "Sequence",
@@ -17,6 +17,7 @@ __all__ = [
     "acos",
     "clip",
     "array",
+    "empty",
     "zeros",
     "eye",
     "cross",
@@ -24,24 +25,25 @@ __all__ = [
     "norm",
     "ndarray",
     "float64",
-    "NDArray",
     "randsign",
+    "randfloat",
     "randangle",
     "randvec",
     "randunitvec",
+    "randmat",
     "perturb",
     "orthperturb",
 ]
 
 from unittest import TestCase, main
 from math import pi, sqrt, sin, cos, acos
-from random import random, choice, randrange, randint, normalvariate
+from random import random, choice, randint, randrange, normalvariate
 from typing import Union, Sequence, Tuple, List
 
 from numpy import (
     clip,
-    empty,
     array,
+    empty,
     zeros,
     eye,
     cross,
@@ -52,11 +54,19 @@ from numpy import (
 from numpy.linalg import norm
 from numpy.typing import NDArray
 
-from symmtools import TOL
+from symmtools.const import TOL
+
+
+def vec3D(vec: NDArray[float64]) -> Tuple[float, float, float]:
+    return (float(vec[0]), float(vec[1]), float(vec[2]))
 
 
 def randsign() -> int:
     return choice((-1, 1))
+
+
+def randfloat() -> float:
+    return normalvariate(0.0, 1.0)
 
 
 def randangle(nonzero: bool = False) -> float:
@@ -68,39 +78,58 @@ def randangle(nonzero: bool = False) -> float:
     return angle
 
 
-def randvec(nonzero: bool = False) -> NDArray[float64]:
-    vec = empty(3)
+def randvec(nonzero: bool = False) -> Tuple[float, float, float]:
     vec_sq_norm = 0.0
     while vec_sq_norm == 0.0:
-        for i in range(3):
-            vec[i] = normalvariate(0.0, 1.0)
+        x = randfloat()
+        y = randfloat()
+        z = randfloat()
         if not nonzero:
             break
-        vec_sq_norm = vec.dot(vec)
-    return vec
+        vec_sq_norm = x * x + y * y + z * z
+    return (x, y, z)
 
 
-def randunitvec() -> NDArray[float64]:
-    vec = empty(3)
+def randunitvec() -> Tuple[float, float, float]:
     vec_sq_norm = 0.0
     while vec_sq_norm == 0.0:
-        for i in range(3):
-            vec[i] = normalvariate(0.0, 1.0)
-        vec_sq_norm = vec.dot(vec)
-    return vec / sqrt(vec_sq_norm)
+        x = randfloat()
+        y = randfloat()
+        z = randfloat()
+        vec_sq_norm = x * x + y * y + z * z
+    scalar = 1.0 / sqrt(vec_sq_norm)
+    return (x * scalar, y * scalar, z * scalar)
 
 
-def perturb() -> NDArray[float64]:
-    vec = zeros(3)
+def randmat() -> Tuple[
+    Tuple[float, float, float],
+    Tuple[float, float, float],
+    Tuple[float, float, float],
+]:
+    return (randvec(), randvec(), randvec())
+
+
+def perturb() -> Tuple[float, float, float]:
+    vec = [0.0, 0.0, 0.0]
     vec[randrange(3)] = randsign() * TOL
-    return vec
+    return (vec[0], vec[1], vec[2])
 
 
-def orthperturb(unitvec: NDArray[float64]) -> NDArray[float64]:
-    vec = empty(3)
+def orthperturb(
+    unitvec: Tuple[float, float, float]
+) -> Tuple[float, float, float]:
+    unitvec_x = unitvec[0]
+    unitvec_y = unitvec[1]
+    unitvec_z = unitvec[2]
     vec_sq_norm = 0.0
     while vec_sq_norm == 0.0:
-        vec = randvec()
-        vec -= vec.dot(unitvec) * unitvec
-        vec_sq_norm = vec.dot(vec)
-    return vec * TOL / sqrt(vec_sq_norm)
+        vec_x = randfloat()
+        vec_y = randfloat()
+        vec_z = randfloat()
+        prod = vec_x * unitvec_x + vec_y * unitvec_y + vec_z * unitvec_z
+        vec_x -= prod * unitvec_x
+        vec_y -= prod * unitvec_y
+        vec_z -= prod * unitvec_z
+        vec_sq_norm = vec_x * vec_x + vec_y * vec_y + vec_z * vec_z
+    scalar = TOL / sqrt(vec_sq_norm)
+    return (vec_x * scalar, vec_y * scalar, vec_z * scalar)

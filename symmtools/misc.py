@@ -1,18 +1,17 @@
 """Miscellaneous tools."""
 
-from random import choice
+__all__ = ["Plot"]
 
-from numpy import empty
+from random import choice
+from typing import Optional, Sequence, Tuple, List
+
 from matplotlib.pyplot import figure  # type: ignore
 
 from .const import EPS, PRIMAX, SECAX
-from .utils import vector, norm, normalize, cross
+from .linalg3d import Vector, neg, add, sub, mul, norm, normalize, cross
 from .primitive import Point, LabeledPoint
-from .typehints import Optional, Sequence, RealVector
 
 _TOL = 2**6 * EPS
-_PRIMAX = vector(PRIMAX)
-_SECAX = vector(SECAX)
 ELEM_SYMBS = (
     "X",
     "H",
@@ -395,12 +394,10 @@ class Plot:
 
     def point(
         self,
-        pos: RealVector,
+        pos: Vector,
         color: Optional[str] = None,
         size: float = 20.0,
     ) -> None:
-        if len(pos) != 3:
-            raise ValueError("non-3D point")
         if size < 0:
             raise ValueError("negative size")
         self._ax.scatter(pos[0], pos[1], pos[2], color=color, s=size)
@@ -413,59 +410,68 @@ class Plot:
     ) -> None:
         if size < 0:
             raise ValueError("negative size")
-        poses = empty((len(arr), 3))
-        for i, elem in enumerate(arr):
-            poses[i, :] = elem.pos
-        self._ax.scatter(
-            poses[:, 0], poses[:, 1], poses[:, 2], color=color, s=size
-        )
+        xs = []
+        ys = []
+        zs = []
+        for elem in arr:
+            pos = elem.pos
+            xs.append(pos[0])
+            ys.append(pos[1])
+            zs.append(pos[2])
+        self._ax.scatter(xs, ys, zs, color=color, s=size)
 
     def line(
-        self, pos1: RealVector, pos2: RealVector, color: Optional[str] = None
+        self, pos1: Vector, pos2: Vector, color: Optional[str] = None
     ) -> None:
-        if len(pos1) != 3 or len(pos2) != 3:
-            raise ValueError("non-3D points")
         self._ax.plot(
-            [pos1[0], pos2[0]],
-            [pos1[1], pos2[1]],
-            [pos1[2], pos2[2]],
+            (pos1[0], pos2[0]),
+            (pos1[1], pos2[1]),
+            (pos1[2], pos2[2]),
             color=color,
         )
 
-    def axis(self, direction: RealVector, color: Optional[str] = None) -> None:
-        direction = self._size * normalize(vector(direction))
-        self.line(direction, -direction, color=color)
+    def axis(self, direction: Vector, color: Optional[str] = None) -> None:
+        direction = mul(normalize(direction), self._size)
+        self.line(direction, neg(direction), color=color)
 
     def plane(
         self,
-        normal: RealVector,
+        normal: Vector,
         color: Optional[str] = None,
         opacity: float = 0.5,
     ) -> None:
-        normal = normalize(vector(normal))
+        normal = normalize(normal)
         # `matplotlib` is unable to draw polygons parallel to the z-axis
         if abs(normal[2]) < _TOL:
-            normal[2] = choice((1, -1)) * _TOL
-            normal = normalize(normal)
-        vec1 = cross(normal, _PRIMAX)
+            normal = normalize((normal[0], normal[1], choice((1, -1)) * _TOL))
+        vec1 = cross(normal, PRIMAX)
         vec_norm = norm(vec1)
         if vec_norm == 0.0:
-            vec1 = cross(normal, _SECAX)
+            vec1 = cross(normal, SECAX)
             vec_norm = norm(vec1)
-        vec1 = vec1 / vec_norm
+        vec1 = mul(vec1, 1.0 / vec_norm)
         vec2 = normalize(cross(normal, vec1))
-        comps = ((1, 1), (1, -1), (-1, -1), (-1, 1))
-        n = len(comps)
-        vertices = empty((n, 3))
-        for i, (comp1, comp2) in enumerate(comps):
-            vertices[i] = comp1 * vec1 + comp2 * vec2
-        vertices *= self._size
-        fragments = empty((3 * n, 3))
-        for i in range(n):
-            fragments[3 * i, :] = 0
-            fragments[3 * i + 1, :] = vertices[i]
-            fragments[3 * i + 2, :] = vertices[(i + 1) % n]
-        self._ax.plot_trisurf(*fragments.T, color=color, alpha=opacity)
+        size = self._size
+        comps = ((size, size), (size, -size), (-size, -size), (-size, size))
+        vertices = []
+        for comp1, comp2 in comps:
+            vertices.append(mul(vec1, comp1) + mul(vec2, comp2))
+        fragments: Tuple[List[float], List[float], List[float]] = ([], [], [])
+        for idx in range(len(vertices)):
+            for i, (comp1, comp2) in enumerate(
+                zip(vertices[idx - 1], vertices[idx])
+            ):
+                fragment = fragments[i]
+                fragment.append(0)
+                fragment.append(comp1)
+                fragment.append(comp2)
+        self._ax.plot_trisurf(
+            fragments[0],
+            fragments[1],
+            fragments[2],
+            color=color,
+            alpha=opacity,
+        )
 
     def molecule(
         self,
@@ -492,7 +498,7 @@ class Plot:
             for i2 in range(i1 + 1, n_elems):
                 pos2 = arr[i2].pos
                 radius2 = radii[i2]
-                if norm(pos1 - pos2) < bond_tol * (radius1 + radius2):
-                    center = (pos1 + pos2) / 2
+                if norm(sub(pos1, pos2)) < bond_tol * (radius1 + radius2):
+                    center = mul(add(pos1, pos2), 0.5)
                     self.line(pos1, center, colors[i1])
                     self.line(pos2, center, colors[i2])
