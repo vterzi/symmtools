@@ -4,6 +4,7 @@ __all__ = [
     "Vector",
     "Matrix",
     "vector",
+    "matrix",
     "pos",
     "neg",
     "add",
@@ -57,6 +58,11 @@ Matrix = Tuple[Vector, Vector, Vector]
 def vector(arr: Sequence[float]) -> Vector:
     """Create a vector from an array `arr`."""
     return (arr[0], arr[1], arr[2])
+
+
+def matrix(arr: Sequence[Sequence[float]]) -> Matrix:
+    """Create a matrix from an array `arr`."""
+    return (vector(arr[0]), vector(arr[1]), vector(arr[2]))
 
 
 def pos(vec: Vector) -> Vector:

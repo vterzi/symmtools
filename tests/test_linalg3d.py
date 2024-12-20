@@ -23,6 +23,7 @@ from .init import (
 
 from symmtools.linalg3d import (
     vector,
+    matrix,
     pos,
     neg,
     add,
@@ -67,6 +68,12 @@ class TestLinAlg3D(TestCase):
         vec = vector(arr)
         self.assertTupleEqual(vec, vec3D(arr))
         self.assertRaises(IndexError, vector, arr[:2])
+
+    def test_matrix(self) -> None:
+        arr = array(randmat()).tolist()
+        mat = matrix(arr)
+        self.assertLessEqual(abs(mat - array(arr)).max(), TOL)
+        self.assertRaises(IndexError, matrix, arr[:2])
 
     def test_pos(self) -> None:
         vec = randvec()
