@@ -32,6 +32,7 @@
 | cnt           | count                                                       |
 | coef          | coefficient                                                 |
 | col           | column                                                      |
+| comb          | combination                                                 |
 | comp          | component                                                   |
 | config        | configuration                                               |
 | conj          | conjugate                                                   |
@@ -58,6 +59,7 @@
 | dir           | directory                                                   |
 | dist          | distribution, distance                                      |
 | div           | divide, divergence                                          |
+| dn            | down                                                        |
 | doc           | documentation                                               |
 | double        | double precision floating-point number                      |
 | elem          | element                                                     |
@@ -106,7 +108,7 @@
 | loc           | location                                                    |
 | log           | logarithm                                                   |
 | lshift        | left shift                                                  |
-| lt            | less than                                                   |
+| lt            | less than, left                                             |
 | mat           | matrix                                                      |
 | max           | maximal                                                     |
 | mem           | memory                                                      |
@@ -146,7 +148,7 @@
 | rot           | rotate, rotor                                               |
 | rotorefl      | rotoreflect                                                 |
 | rshift        | right shift                                                 |
-| rt            | root                                                        |
+| rt            | root, right                                                 |
 | sh            | shell                                                       |
 | sin           | sine                                                        |
 | sinh          | hyperbolic sine                                             |
