@@ -1,6 +1,7 @@
 """Constants."""
 
 __all__ = [
+    "NAN",
     "INF",
     "PI",
     "TAU",
@@ -20,16 +21,13 @@ __all__ = [
     "Symb",
 ]
 
-from math import nan, inf, pi, sqrt, atan
+from math import nan as NAN, inf as INF, pi as PI, sqrt, atan
 
-NAN = nan
-INF = inf
-PI = pi
-TAU = 2.0 * pi
-PI_2 = 0.5 * pi
+TAU = 2.0 * PI
+PI_2 = 0.5 * PI
 EPS = 7.0 / 3.0 - 4.0 / 3.0 - 1.0
 TOL = 2**10 * EPS
-PHI = 0.5 * (1.0 + 5.0**0.5)
+PHI = 0.5 * (1.0 + sqrt(5.0))
 ORIGIN = (0.0, 0.0, 0.0)
 PRIMAX = (0.0, 0.0, 1.0)
 SECAX = (1.0, 0.0, 0.0)
