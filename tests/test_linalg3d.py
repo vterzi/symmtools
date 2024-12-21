@@ -29,11 +29,8 @@ from symmtools.linalg3d import (
     add,
     sub,
     mul,
-    matmul,
-    rmatmul,
     lincomb2,
     lincomb3,
-    matprod,
     dot,
     sqnorm,
     norm,
@@ -51,6 +48,10 @@ from symmtools.linalg3d import (
     perpendicular,
     orthvec,
     angle,
+    transpose,
+    matmul,
+    rmatmul,
+    matprod,
     intersectangle,
     trigrotate,
     rotate,
@@ -98,18 +99,6 @@ class TestLinAlg3D(TestCase):
         scalar = randfloat()
         self.assertTupleEqual(mul(vec, scalar), vec3D(array(vec) * scalar))
 
-    def test_matmul(self) -> None:
-        mat = randmat()
-        vec = randvec()
-        self.assertTupleEqual(matmul(mat, vec), vec3D(array(mat) @ vec))
-
-    def test_rmatmul(self) -> None:
-        vec = randvec()
-        mat = randmat()
-        self.assertLessEqual(
-            abs(rmatmul(vec, mat) - array(vec) @ mat).max(), TOL
-        )
-
     def test_lincomb2(self) -> None:
         vec1 = randvec()
         vec2 = randvec()
@@ -134,13 +123,6 @@ class TestLinAlg3D(TestCase):
                 + array(vec2) * scalar2
                 + array(vec3) * scalar3
             ),
-        )
-
-    def test_matprod(self) -> None:
-        mat1 = randmat()
-        mat2 = randmat()
-        self.assertLessEqual(
-            abs(matprod(mat1, mat2) - array(mat1) @ mat2).max(), TOL
         )
 
     def test_dot(self) -> None:
@@ -309,6 +291,29 @@ class TestLinAlg3D(TestCase):
         )
         self.assertAlmostEqual(
             intersectangle(vec3D(-arr1), vec3D(-arr2)), ang, delta=TOL
+        )
+
+    def test_transpose(self) -> None:
+        mat = randmat()
+        self.assertLessEqual(abs(transpose(mat) - array(mat).T).max(), TOL)
+
+    def test_matmul(self) -> None:
+        mat = randmat()
+        vec = randvec()
+        self.assertTupleEqual(matmul(mat, vec), vec3D(array(mat) @ vec))
+
+    def test_rmatmul(self) -> None:
+        vec = randvec()
+        mat = randmat()
+        self.assertLessEqual(
+            abs(rmatmul(vec, mat) - array(vec) @ mat).max(), TOL
+        )
+
+    def test_matprod(self) -> None:
+        mat1 = randmat()
+        mat2 = randmat()
+        self.assertLessEqual(
+            abs(matprod(mat1, mat2) - array(mat1) @ mat2).max(), TOL
         )
 
     def test_trigrotate(self) -> None:

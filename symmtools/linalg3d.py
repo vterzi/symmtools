@@ -10,11 +10,8 @@ __all__ = [
     "add",
     "sub",
     "mul",
-    "matmul",
-    "rmatmul",
     "lincomb2",
     "lincomb3",
-    "matprod",
     "dot",
     "sqnorm",
     "norm",
@@ -33,6 +30,10 @@ __all__ = [
     "orthvec",
     "angle",
     "intersectangle",
+    "transpose",
+    "matmul",
+    "rmatmul",
+    "matprod",
     "trigrotate",
     "rotate",
     "reflect",
@@ -90,36 +91,6 @@ def mul(vec: Vector, scalar: float) -> Vector:
     return (vec[0] * scalar, vec[1] * scalar, vec[2] * scalar)
 
 
-def matmul(mat: Matrix, vec: Vector) -> Vector:
-    """Multiply a matrix `mat` by a vector `vec`."""
-    r0 = mat[0]
-    r1 = mat[1]
-    r2 = mat[2]
-    x = vec[0]
-    y = vec[1]
-    z = vec[2]
-    return (
-        r0[0] * x + r0[1] * y + r0[2] * z,
-        r1[0] * x + r1[1] * y + r1[2] * z,
-        r2[0] * x + r2[1] * y + r2[2] * z,
-    )
-
-
-def rmatmul(vec: Vector, mat: Matrix) -> Vector:
-    """Multiply a vector `vec` by a matrix `mat`."""
-    x = vec[0]
-    y = vec[1]
-    z = vec[2]
-    r0 = mat[0]
-    r1 = mat[1]
-    r2 = mat[2]
-    return (
-        x * r0[0] + y * r1[0] + z * r2[0],
-        x * r0[1] + y * r1[1] + z * r2[1],
-        x * r0[2] + y * r1[2] + z * r2[2],
-    )
-
-
 def lincomb2(
     vec1: Vector, scalar1: float, vec2: Vector, scalar2: float
 ) -> Vector:
@@ -150,51 +121,6 @@ def lincomb3(
         vec1[0] * scalar1 + vec2[0] * scalar2 + vec3[0] * scalar3,
         vec1[1] * scalar1 + vec2[1] * scalar2 + vec3[1] * scalar3,
         vec1[2] * scalar1 + vec2[2] * scalar2 + vec3[2] * scalar3,
-    )
-
-
-def matprod(mat1: Matrix, mat2: Matrix) -> Matrix:
-    """Multiply two matrices `mat1` and `mat2`."""
-    lt0 = mat1[0]
-    lt1 = mat1[1]
-    lt2 = mat1[2]
-    rt0 = mat2[0]
-    rt1 = mat2[1]
-    rt2 = mat2[2]
-    xx1 = lt0[0]
-    xy1 = lt0[1]
-    xz1 = lt0[2]
-    yx1 = lt1[0]
-    yy1 = lt1[1]
-    yz1 = lt1[2]
-    zx1 = lt2[0]
-    zy1 = lt2[1]
-    zz1 = lt2[2]
-    xx2 = rt0[0]
-    xy2 = rt0[1]
-    xz2 = rt0[2]
-    yx2 = rt1[0]
-    yy2 = rt1[1]
-    yz2 = rt1[2]
-    zx2 = rt2[0]
-    zy2 = rt2[1]
-    zz2 = rt2[2]
-    return (
-        (
-            xx1 * xx2 + xy1 * yx2 + xz1 * zx2,
-            xx1 * xy2 + xy1 * yy2 + xz1 * zy2,
-            xx1 * xz2 + xy1 * yz2 + xz1 * zz2,
-        ),
-        (
-            yx1 * xx2 + yy1 * yx2 + yz1 * zx2,
-            yx1 * xy2 + yy1 * yy2 + yz1 * zy2,
-            yx1 * xz2 + yy1 * yz2 + yz1 * zz2,
-        ),
-        (
-            zx1 * xx2 + zy1 * yx2 + zz1 * zx2,
-            zx1 * xy2 + zy1 * yy2 + zz1 * zy2,
-            zx1 * xz2 + zy1 * yz2 + zz1 * zz2,
-        ),
     )
 
 
@@ -394,6 +320,93 @@ def intersectangle(vec1: Vector, vec2: Vector) -> float:
     if ang > PI_2:
         ang = PI - ang
     return ang
+
+
+def transpose(mat: Matrix) -> Matrix:
+    """Transpose a matrix `mat`."""
+    r0 = mat[0]
+    r1 = mat[1]
+    r2 = mat[2]
+    return (
+        (r0[0], r1[0], r2[0]),
+        (r0[1], r1[1], r2[1]),
+        (r0[2], r1[2], r2[2]),
+    )
+
+
+def matmul(mat: Matrix, vec: Vector) -> Vector:
+    """Multiply a matrix `mat` by a vector `vec`."""
+    r0 = mat[0]
+    r1 = mat[1]
+    r2 = mat[2]
+    x = vec[0]
+    y = vec[1]
+    z = vec[2]
+    return (
+        r0[0] * x + r0[1] * y + r0[2] * z,
+        r1[0] * x + r1[1] * y + r1[2] * z,
+        r2[0] * x + r2[1] * y + r2[2] * z,
+    )
+
+
+def rmatmul(vec: Vector, mat: Matrix) -> Vector:
+    """Multiply a vector `vec` by a matrix `mat`."""
+    x = vec[0]
+    y = vec[1]
+    z = vec[2]
+    r0 = mat[0]
+    r1 = mat[1]
+    r2 = mat[2]
+    return (
+        x * r0[0] + y * r1[0] + z * r2[0],
+        x * r0[1] + y * r1[1] + z * r2[1],
+        x * r0[2] + y * r1[2] + z * r2[2],
+    )
+
+
+def matprod(mat1: Matrix, mat2: Matrix) -> Matrix:
+    """Multiply two matrices `mat1` and `mat2`."""
+    lt0 = mat1[0]
+    lt1 = mat1[1]
+    lt2 = mat1[2]
+    rt0 = mat2[0]
+    rt1 = mat2[1]
+    rt2 = mat2[2]
+    xx1 = lt0[0]
+    xy1 = lt0[1]
+    xz1 = lt0[2]
+    yx1 = lt1[0]
+    yy1 = lt1[1]
+    yz1 = lt1[2]
+    zx1 = lt2[0]
+    zy1 = lt2[1]
+    zz1 = lt2[2]
+    xx2 = rt0[0]
+    xy2 = rt0[1]
+    xz2 = rt0[2]
+    yx2 = rt1[0]
+    yy2 = rt1[1]
+    yz2 = rt1[2]
+    zx2 = rt2[0]
+    zy2 = rt2[1]
+    zz2 = rt2[2]
+    return (
+        (
+            xx1 * xx2 + xy1 * yx2 + xz1 * zx2,
+            xx1 * xy2 + xy1 * yy2 + xz1 * zy2,
+            xx1 * xz2 + xy1 * yz2 + xz1 * zz2,
+        ),
+        (
+            yx1 * xx2 + yy1 * yx2 + yz1 * zx2,
+            yx1 * xy2 + yy1 * yy2 + yz1 * zy2,
+            yx1 * xz2 + yy1 * yz2 + yz1 * zz2,
+        ),
+        (
+            zx1 * xx2 + zy1 * yx2 + zz1 * zx2,
+            zx1 * xy2 + zy1 * yy2 + zz1 * zy2,
+            zx1 * xz2 + zy1 * yz2 + zz1 * zz2,
+        ),
+    )
 
 
 def trigrotate(vec: Vector, normal: Vector, cos: float, sin: float) -> Vector:
