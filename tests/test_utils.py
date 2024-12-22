@@ -4,6 +4,7 @@ from .init import (
     normalvariate,
     clip,
     zeros,
+    linear_sum_assignment,
     randint,
     randvec,
     TOL,
@@ -14,6 +15,7 @@ from symmtools.utils import (
     rational,
     signvar,
     circshift,
+    linassign,
 )
 
 
@@ -100,6 +102,19 @@ class TestUtils(TestCase):
                 (y2, z2, x2),
                 (z2, x2, y2),
             },
+        )
+
+    def test_linassign(self) -> None:
+        n = 8
+        mat = tuple(
+            tuple(normalvariate(0.0, 1.0) for _ in range(n)) for _ in range(n)
+        )
+        self.assertTupleEqual(
+            linassign(mat, fast=False), tuple(linear_sum_assignment(mat)[1])
+        )
+        self.assertTupleEqual(
+            linassign(mat, True, fast=False),
+            tuple(linear_sum_assignment(mat, True)[1]),
         )
 
 

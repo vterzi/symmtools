@@ -22,9 +22,11 @@ __all__ = [
     "eye",
     "cross",
     "roots",
-    "norm",
     "ndarray",
     "float64",
+    "norm",
+    "linear_sum_assignment",
+    "TOL",
     "randsign",
     "randfloat",
     "randangle",
@@ -53,6 +55,7 @@ from numpy import (
 )
 from numpy.linalg import norm
 from numpy.typing import NDArray
+from scipy.optimize import linear_sum_assignment  # type: ignore
 
 from symmtools.const import TOL
 
