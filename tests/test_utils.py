@@ -106,16 +106,17 @@ class TestUtils(TestCase):
 
     def test_linassign(self) -> None:
         n = 8
-        mat = tuple(
-            tuple(normalvariate(0.0, 1.0) for _ in range(n)) for _ in range(n)
-        )
-        self.assertTupleEqual(
-            linassign(mat, fast=False), tuple(linear_sum_assignment(mat)[1])
-        )
-        self.assertTupleEqual(
-            linassign(mat, True, fast=False),
-            tuple(linear_sum_assignment(mat, True)[1]),
-        )
+        mat = tuple(tuple(randint(-n, n) for _ in range(n)) for _ in range(n))
+        assignment1 = linassign(mat, fast=False)
+        cost1 = sum(mat[i][assignment1[i]] for i in range(n))
+        assignment2 = linear_sum_assignment(mat)[1]
+        cost2 = sum(mat[i][assignment2[i]] for i in range(n))
+        self.assertEqual(cost1, cost2)
+        assignment1 = linassign(mat, True, fast=False)
+        cost1 = sum(mat[i][assignment1[i]] for i in range(n))
+        assignment2 = linear_sum_assignment(mat, True)[1]
+        cost2 = sum(mat[i][assignment2[i]] for i in range(n))
+        self.assertEqual(cost1, cost2)
 
 
 if __name__ == "__main__":
