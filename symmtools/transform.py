@@ -30,9 +30,6 @@ from typing import (
     Iterator,
 )
 
-from numpy import empty
-from scipy.optimize import linear_sum_assignment  # type: ignore
-
 from .const import INF, PI, TAU
 from .linalg3d import (
     Vector,
@@ -49,6 +46,7 @@ from .linalg3d import (
     trigrotmat,
     reflmat,
 )
+from .utils import linassign
 
 _Transformable = TypeVar("_Transformable", bound="Transformable")
 
@@ -233,14 +231,16 @@ class Transformables(Transformable):
             try:
                 for (_, idxs1), (_, idxs2) in zip(self._groups, obj.groups):
                     n = max(len(idxs1), len(idxs2))
-                    diffs = empty((n, n))
-                    for i1, idx1 in enumerate(idxs1):
+                    diffs = []
+                    for idx1 in idxs1:
                         elem = self._elems[idx1]
-                        for i2, idx2 in enumerate(idxs2):
-                            diffs[i1, i2] = elem.diff(obj[idx2])
-                    order = linear_sum_assignment(diffs)[1]
+                        row = []
+                        for idx2 in idxs2:
+                            row.append(elem.diff(obj[idx2]))
+                        diffs.append(row)
+                    order = linassign(diffs)
                     for i in range(n):
-                        res = max(res, diffs[i, order[i]])
+                        res = max(res, diffs[i][order[i]])
             except ValueError:
                 res = INF
         return res
