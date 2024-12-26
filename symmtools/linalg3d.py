@@ -145,7 +145,7 @@ def sqnorm(vec: Vector) -> float:
 
 def norm(vec: Vector) -> float:
     """Calculate the norm of a vector `vec`."""
-    return sqrt(sqnorm(vec))
+    return hypot(vec[0], vec[1], vec[2])
 
 
 def cross(vec1: Vector, vec2: Vector) -> Vector:
@@ -290,7 +290,7 @@ def orthvec(unitvec: Vector) -> Vector:
     x1 -= prod * x2
     y1 -= prod * y2
     z1 -= prod * z2
-    scalar = 1.0 / sqrt(x1 * x1 + y1 * y1 + z1 * z1)
+    scalar = 1.0 / hypot(x1, y1, z1)
     return (x1 * scalar, y1 * scalar, z1 * scalar)
 
 
