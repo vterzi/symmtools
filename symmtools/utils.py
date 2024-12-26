@@ -119,7 +119,7 @@ def linassign(
     Solve the linear balanced assignment problem for a square matrix `mat` and
     return the column indices of the optimal assignment for each row.  If
     `maximize` is enabled, the maximum assignment is sought instead of the
-    minimum.  If `fast` is enabled, the faster algorithm is used.
+    minimum.  If `fast` is enabled, a faster algorithm is used.
     """
     if linear_sum_assignment is not None and fast:
         return tuple(linear_sum_assignment(mat, maximize)[1])
