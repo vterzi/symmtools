@@ -16,8 +16,6 @@ from typing import (
     Dict,
 )
 
-from numpy.linalg import eigh
-
 from .const import (
     INF,
     PI,
@@ -29,7 +27,6 @@ from .const import (
 )
 from .linalg3d import (
     Vector,
-    vector,
     neg,
     add,
     sub,
@@ -49,6 +46,7 @@ from .linalg3d import (
     angle,
     intersectangle,
     inertia,
+    symmeig,
 )
 from .transform import (
     Transformable,
@@ -707,7 +705,7 @@ class PointGroup(Transformable):
 
         # Determine the type of rotor (top) based on the principal moments of
         # inertia.
-        eigvals, eigvecs = eigh(inertia(poses))
+        eigvals, eigvecs = symmeig(inertia(poses))
         oblate = eigvals[1] - eigvals[0] <= tol
         prolate = eigvals[2] - eigvals[1] <= tol
         if oblate and prolate:
@@ -894,7 +892,7 @@ class PointGroup(Transformable):
             # Symmetric: C(n>2),C(n>2)v,C(n>2)h,S(2n),D(n>3),Dnd,D(n>3)h
             # The non-degenerate principal axis is the main axis of the point
             # group.
-            main_axis = vector(eigvecs[:, 2] if oblate else eigvecs[:, 0])
+            main_axis = eigvecs[2] if oblate else eigvecs[0]
             axes.append(main_axis)
             # Assume all points are coplanar.
             coplanar = True
@@ -1066,7 +1064,7 @@ class PointGroup(Transformable):
             for i in range(3):
                 # Each principal axis is the axis of a potential two-fold
                 # rotation axis or the normal of a potential reflection plane.
-                vec = vector(eigvecs[:, i])
+                vec = eigvecs[i]
                 found_rot = RotationAxis(vec, 2).symmetric(points, tol)
                 if invertible:
                     # Each two-fold rotation axis has a perpendicular

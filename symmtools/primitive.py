@@ -15,8 +15,6 @@ from typing import (
     Iterator,
 )
 
-from numpy.linalg import eigh
-
 from .const import (
     INF,
     PI,
@@ -32,7 +30,6 @@ from .const import (
 from .linalg3d import (
     Vector,
     Matrix,
-    vector,
     neg,
     add,
     sub,
@@ -52,6 +49,7 @@ from .linalg3d import (
     perpendicular,
     angle,
     inertia,
+    symmeig,
 )
 from .transform import (
     Transformable,
@@ -214,7 +212,7 @@ class Points(Transformables):
 
         axes: List[Vector] = []
         normals: List[Vector] = []
-        eigvals, eigvecs = eigh(inertia(poses))
+        eigvals, eigvecs = symmeig(inertia(poses))
         oblate = eigvals[1] - eigvals[0] <= tol
         prolate = eigvals[2] - eigvals[1] <= tol
         coplanar = False
@@ -222,7 +220,7 @@ class Points(Transformables):
         if oblate and prolate:
             cubic = True
         elif oblate or prolate:
-            vec = vector(eigvecs[:, 2] if oblate else eigvecs[:, 0])
+            vec = eigvecs[2] if oblate else eigvecs[0]
             axes.append(vec)
             coplanar = True
             orders = set()
@@ -277,7 +275,7 @@ class Points(Transformables):
                 prev_refl = curr_refl
                 curr_rot = False
                 curr_refl = False
-                vec = vector(eigvecs[:, i])
+                vec = eigvecs[i]
                 rot = RotationAxis(vec, 2)
                 if rot.symmetric(points, tol):
                     yield rot
@@ -287,7 +285,7 @@ class Points(Transformables):
                     yield refl
                     curr_refl = True
                 if i == 1:
-                    vec = vector(eigvecs[:, 2])
+                    vec = eigvecs[2]
                     if prev_rot and prev_refl:
                         if curr_rot and curr_refl:
                             yield RotationAxis(vec, 2)

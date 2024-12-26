@@ -41,12 +41,18 @@ __all__ = [
     "rotmat",
     "reflmat",
     "inertia",
+    "symmeig",
 ]
 
-from math import sqrt, sin, cos, acos
+from math import copysign, hypot, sqrt, sin, cos, acos
 from typing import Sequence, Tuple
 
-from .const import PI, PI_2
+try:
+    from numpy.linalg import eigh
+except ImportError:
+    eigh = None  # type: ignore
+
+from .const import PI, PI_2, EPS
 from .utils import clamp
 
 # `numpy` with `numpy.ndarray` is slower than `math` with `tuple`
@@ -555,3 +561,151 @@ def inertia(vecs: Sequence[Vector]) -> Matrix:
         (xy, yy, yz),
         (zx, yz, zz),
     )
+
+
+def symmeig(
+    symmmat: Matrix, upper: bool = True, fast: bool = True
+) -> Tuple[Vector, Matrix]:
+    """
+    Calculate the eigenpairs of a symmetric matrix `symmmat` and return a tuple
+    of sorted eigenvalues and a tuple of corresponding eigenvectors.  If
+    `upper` is enabled, the upper triangular part of the matrix is used.  If
+    `fast` is enabled, a faster algorithm is used.
+    """
+    if eigh is not None and fast:
+        vals_, vecs_ = eigh(symmmat, "U" if upper else "L")
+        vals = (float(vals_[0]), float(vals_[1]), float(vals_[2]))
+        vecs = (
+            (float(vecs_[0, 0]), float(vecs_[1, 0]), float(vecs_[2, 0])),
+            (float(vecs_[0, 1]), float(vecs_[1, 1]), float(vecs_[2, 1])),
+            (float(vecs_[0, 2]), float(vecs_[1, 2]), float(vecs_[2, 2])),
+        )
+        return vals, vecs
+    r0 = symmmat[0]
+    r1 = symmmat[1]
+    r2 = symmmat[2]
+    xx = r0[0]
+    yy = r1[1]
+    zz = r2[2]
+    if upper:
+        yx = r0[1]
+        zx = r0[2]
+        zy = r1[2]
+    else:
+        yx = r1[0]
+        zx = r2[0]
+        zy = r2[1]
+    length = copysign(hypot(yx, zx), yx)
+    if length != 0.0:
+        factor = 1.0 / length
+        cos = yx * factor
+        sin = zx * factor
+        cos_sin = cos * sin
+        sin_sin = sin * sin
+        cos_cos = cos * cos
+        summand = cos_sin * zy
+        summand += summand
+        zy_ = (cos_cos - sin_sin) * zy + cos_sin * (zz - yy)
+        yy_ = cos_cos * yy + summand + sin_sin * zz
+        zz_ = sin_sin * yy - summand + cos_cos * zz
+        yx = length
+        zy = zy_
+        yy = yy_
+        zz = zz_
+    else:
+        cos = 1.0
+        sin = 0.0
+    vec1_x = 1.0
+    vec1_y = 0.0
+    vec1_z = 0.0
+    vec2_x = 0.0
+    vec2_y = cos
+    vec2_z = sin
+    vec3_x = 0.0
+    vec3_y = -sin
+    vec3_z = cos
+    while True:
+        yy_ = abs(yy)
+        if abs(yx) <= EPS * (abs(xx) + yy_) and abs(zy) <= EPS * (
+            yy_ + abs(zz)
+        ):
+            break
+        length = copysign(hypot(xx, yx), xx)
+        transform1 = length != 0.0
+        if transform1:
+            factor = 1.0 / length
+            cos1 = xx * factor
+            sin1 = yx * factor
+            xx = length
+            xy = cos1 * yx + sin1 * yy
+            yy = cos1 * yy - sin1 * yx
+            yz = cos1 * zy
+            temp1 = vec1_x
+            temp2 = vec2_x
+            vec1_x = cos1 * temp1 + sin1 * temp2
+            vec2_x = cos1 * temp2 - sin1 * temp1
+            temp1 = vec1_y
+            temp2 = vec2_y
+            vec1_y = cos1 * temp1 + sin1 * temp2
+            vec2_y = cos1 * temp2 - sin1 * temp1
+            temp1 = vec1_z
+            temp2 = vec2_z
+            vec1_z = cos1 * temp1 + sin1 * temp2
+            vec2_z = cos1 * temp2 - sin1 * temp1
+        else:
+            xy = yx
+            yz = zy
+        length = copysign(hypot(yy, zy), yy)
+        transform2 = length != 0.0
+        if transform2:
+            factor = 1.0 / length
+            cos2 = yy * factor
+            sin2 = zy * factor
+            yy = length
+            temp1 = yz
+            temp2 = zz
+            yz = cos2 * temp1 + sin2 * temp2
+            zz = cos2 * temp2 - sin2 * temp1
+            temp1 = vec2_x
+            temp2 = vec3_x
+            vec2_x = cos2 * temp1 + sin2 * temp2
+            vec3_x = cos2 * temp2 - sin2 * temp1
+            temp1 = vec2_y
+            temp2 = vec3_y
+            vec2_y = cos2 * temp1 + sin2 * temp2
+            vec3_y = cos2 * temp2 - sin2 * temp1
+            temp1 = vec2_z
+            temp2 = vec3_z
+            vec2_z = cos2 * temp1 + sin2 * temp2
+            vec3_z = cos2 * temp2 - sin2 * temp1
+        if transform1:
+            temp1 = xx
+            temp2 = xy
+            xx = cos1 * temp1 + sin1 * temp2
+            xy = cos1 * temp2 - sin1 * temp1
+            yx = sin1 * yy
+            yy = cos1 * yy
+        if transform2:
+            yy = cos2 * yy + sin2 * yz
+            zy = sin2 * zz
+            zz = cos2 * zz
+    vals = (xx, yy, zz)
+    vecs = (
+        (vec1_x, vec1_y, vec1_z),
+        (vec2_x, vec2_y, vec2_z),
+        (vec3_x, vec3_y, vec3_z),
+    )
+    if xx <= yy:
+        if yy <= zz:
+            order = (0, 1, 2)
+        else:
+            order = (0, 2, 1) if xx <= zz else (2, 0, 1)
+    else:
+        if yy <= zz:
+            order = (1, 0, 2) if xx <= zz else (1, 2, 0)
+        else:
+            order = (2, 1, 0)
+    i1 = order[0]
+    i2 = order[1]
+    i3 = order[2]
+    return (vals[i1], vals[i2], vals[i3]), (vecs[i1], vecs[i2], vecs[i3])

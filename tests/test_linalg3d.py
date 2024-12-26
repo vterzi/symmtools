@@ -60,6 +60,7 @@ from symmtools.linalg3d import (
     rotmat,
     reflmat,
     inertia,
+    symmeig,
 )
 
 
@@ -353,6 +354,15 @@ class TestLinAlg3D(TestCase):
         mat[1, 2] = mat[2, 1] = -sum(vec[1] * vec[2] for vec in vecs)
         mat[2, 0] = mat[0, 2] = -sum(vec[2] * vec[0] for vec in vecs)
         self.assertLessEqual(abs(inertia(vecs) - mat).max(), TOL)
+
+    def test_symmeig(self) -> None:
+        mat = randmat()
+        eigvals1, eigvecs1 = symmeig(mat, fast=False)
+        eigvals2, eigvecs2 = symmeig(mat)
+        self.assertLessEqual(abs(array(eigvals1) - eigvals2).max(), TOL)
+        self.assertLessEqual(norm_(cross_(eigvecs1[0], eigvecs2[0])), TOL)
+        self.assertLessEqual(norm_(cross_(eigvecs1[1], eigvecs2[1])), TOL)
+        self.assertLessEqual(norm_(cross_(eigvecs1[2], eigvecs2[2])), TOL)
 
 
 if __name__ == "__main__":
