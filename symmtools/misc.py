@@ -5,7 +5,10 @@ __all__ = ["Plot"]
 from random import choice
 from typing import Optional, Sequence, Tuple, List
 
-from matplotlib.pyplot import figure  # type: ignore
+try:
+    from matplotlib.pyplot import figure  # type: ignore
+except ImportError:
+    figure = None
 
 from .const import EPS, PRIMAX, SECAX
 from .linalg3d import Vector, neg, add, sub, mul, norm, normalize, cross
@@ -381,6 +384,8 @@ class Plot:
     """3D plot."""
 
     def __init__(self, size: float) -> None:
+        if figure is None:
+            raise ImportError("`matplotlib` not found")
         if size <= 0:
             raise ValueError("non-positive size")
         ax = figure().add_subplot(projection="3d")
