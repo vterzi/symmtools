@@ -80,13 +80,15 @@ class _Vecs(ABC):
     ) -> None:
         self.vecs = tuple(
             tuple(
-                tuple(
-                    (
-                        SPECIAL_COMPONENTS[idx]
-                        if idx >= 0
-                        else -SPECIAL_COMPONENTS[-idx]
+                vector(
+                    tuple(
+                        (
+                            SPECIAL_COMPONENTS[idx]
+                            if idx >= 0
+                            else -SPECIAL_COMPONENTS[-idx]
+                        )
+                        for idx in idxs
                     )
-                    for idx in idxs
                 )
                 for idxs in arr_idxs
             )
