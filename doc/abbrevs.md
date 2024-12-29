@@ -19,6 +19,8 @@
 | atan          | arctangent                                                  |
 | atanh         | inverse hyperbolic tangent                                  |
 | attr          | attribute                                                   |
+| auth          | authenticate                                                |
+| avail         | available                                                   |
 | bin           | binary                                                      |
 | bool          | Boolean data type                                           |
 | calc          | calculate                                                   |
