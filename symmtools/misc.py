@@ -6,9 +6,9 @@ from random import choice
 from typing import Optional, Sequence, Tuple, List
 
 try:
-    from matplotlib.pyplot import figure  # type: ignore
+    from matplotlib.pyplot import figure
 except ImportError:
-    figure = None
+    pass
 
 from .const import EPS, PRIMAX, SECAX
 from .linalg3d import Vector, neg, add, sub, mul, norm, normalize, cross
@@ -384,7 +384,7 @@ class Plot:
     """3D plot."""
 
     def __init__(self, size: float) -> None:
-        if figure is None:
+        if figure not in globals():
             raise ImportError("`matplotlib` not found")
         if size <= 0:
             raise ValueError("non-positive size")

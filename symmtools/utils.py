@@ -13,7 +13,7 @@ from typing import Sequence, Tuple, List
 try:
     from scipy.optimize import linear_sum_assignment  # type: ignore
 except ImportError:
-    linear_sum_assignment = None
+    pass
 
 from .const import INF
 
@@ -121,7 +121,7 @@ def linassign(
     `maximize` is enabled, the maximum assignment is sought instead of the
     minimum.  If `fast` is enabled, a faster algorithm is used.
     """
-    if linear_sum_assignment is not None and fast:
+    if linear_sum_assignment in globals() and fast:
         return tuple(linear_sum_assignment(mat, maximize)[1])
     arr = list(map(list, mat))
     n = len(arr)
