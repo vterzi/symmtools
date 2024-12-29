@@ -49,8 +49,10 @@ from typing import Sequence, Tuple
 
 try:
     from numpy.linalg import eigh
+
+    EIGH_AVAIL = True
 except ImportError:
-    pass
+    EIGH_AVAIL = False
 
 from .const import PI, PI_2, EPS
 from .utils import clamp
@@ -572,7 +574,7 @@ def symmeig(
     `upper` is enabled, the upper triangular part of the matrix is used.  If
     `fast` is enabled, a faster algorithm is used.
     """
-    if eigh in globals() and fast:
+    if EIGH_AVAIL and fast:
         vals_, vecs_ = eigh(symmmat, "U" if upper else "L")
         vals = (float(vals_[0]), float(vals_[1]), float(vals_[2]))
         vecs = (

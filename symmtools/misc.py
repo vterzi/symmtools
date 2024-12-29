@@ -7,8 +7,10 @@ from typing import Optional, Sequence, Tuple, List
 
 try:
     from matplotlib.pyplot import figure
+
+    FIGURE_AVAIL = True
 except ImportError:
-    pass
+    FIGURE_AVAIL = False
 
 from .const import EPS, PRIMAX, SECAX
 from .linalg3d import Vector, neg, add, sub, mul, norm, normalize, cross
@@ -384,14 +386,14 @@ class Plot:
     """3D plot."""
 
     def __init__(self, size: float) -> None:
-        if figure not in globals():
-            raise ImportError("`matplotlib` not found")
+        if not FIGURE_AVAIL:
+            raise ImportError("`matplotlib.pyplot.figure` not available")
         if size <= 0:
             raise ValueError("non-positive size")
         ax = figure().add_subplot(projection="3d")
         ax.set_xlim(-size, size)
         ax.set_ylim(-size, size)
-        ax.set_zlim(-size, size)
+        ax.set_zlim(-size, size)  # type: ignore
         ax.set_aspect("equal")
         ax.set_axis_off()
         self._size = size
@@ -405,7 +407,13 @@ class Plot:
     ) -> None:
         if size < 0:
             raise ValueError("negative size")
-        self._ax.scatter(pos[0], pos[1], pos[2], color=color, s=size)
+        self._ax.scatter(
+            pos[0],
+            pos[1],
+            pos[2],
+            color=color,
+            s=size,  # type: ignore
+        )
 
     def points(
         self,
@@ -423,7 +431,7 @@ class Plot:
             xs.append(pos[0])
             ys.append(pos[1])
             zs.append(pos[2])
-        self._ax.scatter(xs, ys, zs, color=color, s=size)
+        self._ax.scatter(xs, ys, zs, color=color, s=size)  # type: ignore
 
     def line(
         self, pos1: Vector, pos2: Vector, color: Optional[str] = None
@@ -470,7 +478,7 @@ class Plot:
                 fragment.append(0)
                 fragment.append(comp1)
                 fragment.append(comp2)
-        self._ax.plot_trisurf(
+        self._ax.plot_trisurf(  # type: ignore
             fragments[0],
             fragments[1],
             fragments[2],
