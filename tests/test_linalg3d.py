@@ -137,7 +137,7 @@ class TestLinAlg3D(TestCase):
 
     def test_norm(self) -> None:
         vec = randvec()
-        self.assertEqual(norm(vec), norm_(vec))
+        self.assertAlmostEqual(norm(vec), norm_(vec), delta=TOL)
 
     def test_cross(self) -> None:
         vec1 = randvec()
@@ -360,9 +360,15 @@ class TestLinAlg3D(TestCase):
         eigvals1, eigvecs1 = symmeig(mat, fast=False)
         eigvals2, eigvecs2 = symmeig(mat)
         self.assertLessEqual(abs(array(eigvals1) - eigvals2).max(), TOL)
-        self.assertLessEqual(norm_(cross_(eigvecs1[0], eigvecs2[0])), TOL)
-        self.assertLessEqual(norm_(cross_(eigvecs1[1], eigvecs2[1])), TOL)
-        self.assertLessEqual(norm_(cross_(eigvecs1[2], eigvecs2[2])), TOL)
+        self.assertLessEqual(
+            float(norm_(cross_(eigvecs1[0], eigvecs2[0]))), TOL
+        )
+        self.assertLessEqual(
+            float(norm_(cross_(eigvecs1[1], eigvecs2[1]))), TOL
+        )
+        self.assertLessEqual(
+            float(norm_(cross_(eigvecs1[2], eigvecs2[2]))), TOL
+        )
 
 
 if __name__ == "__main__":

@@ -37,12 +37,12 @@ class TestUtils(TestCase):
         self.assertAlmostEqual(ratio1, ratio2, delta=TOL)
 
     def test_signvar(self) -> None:
-        vec = zeros(3)
-        for i in range(len(vec)):
-            while vec[i] == 0.0:
-                vec[i] = normalvariate(0.0, 1.0)
-        x, y, z = vec
-        vecs = set(tuple(elem) for elem in signvar(vec))
+        arr = zeros(3)
+        for i in range(len(arr)):
+            while arr[i] == 0.0:
+                arr[i] = normalvariate(0.0, 1.0)
+        x, y, z = arr
+        vecs = set(tuple(elem) for elem in signvar(tuple(arr)))
         self.assertSetEqual(
             vecs,
             {
@@ -56,34 +56,34 @@ class TestUtils(TestCase):
                 (-x, -y, -z),
             },
         )
-        vecs = set(tuple(elem) for elem in signvar(vec, 0, True))
+        vecs = set(tuple(elem) for elem in signvar(tuple(arr), 0, True))
         self.assertSetEqual(
             vecs, {(x, y, z), (-x, y, z), (x, -y, z), (-x, -y, z)}
         )
-        vecs = set(tuple(elem) for elem in signvar(vec, 1))
+        vecs = set(tuple(elem) for elem in signvar(tuple(arr), 1))
         self.assertSetEqual(
             vecs, {(x, y, z), (-x, -y, z), (-x, y, -z), (x, -y, -z)}
         )
-        vecs = set(tuple(elem) for elem in signvar(vec, -1))
+        vecs = set(tuple(elem) for elem in signvar(tuple(arr), -1))
         self.assertSetEqual(
             vecs, {(-x, y, z), (x, -y, z), (x, y, -z), (-x, -y, -z)}
         )
-        vec = zeros(2)
-        vecs = set(tuple(elem) for elem in signvar(vec))
+        arr = zeros(2)
+        vecs = set(tuple(elem) for elem in signvar(tuple(arr)))
         self.assertSetEqual(vecs, {(0.0, 0.0)})
-        for i in range(len(vec)):
-            while vec[i] == 0.0:
-                vec[i] = normalvariate(0.0, 1.0)
-        x, y = vec
-        vec[0] = 0.0
-        vecs = set(tuple(elem) for elem in signvar(vec))
+        for i in range(len(arr)):
+            while arr[i] == 0.0:
+                arr[i] = normalvariate(0.0, 1.0)
+        x, y = arr
+        arr[0] = 0.0
+        vecs = set(tuple(elem) for elem in signvar(tuple(arr)))
         self.assertSetEqual(vecs, {(0.0, y), (0.0, -y)})
-        vec[0] = x
-        vec[1] = 0.0
-        vecs = set(tuple(elem) for elem in signvar(vec))
+        arr[0] = x
+        arr[1] = 0.0
+        vecs = set(tuple(elem) for elem in signvar(tuple(arr)))
         self.assertSetEqual(vecs, {(x, 0.0), (-x, 0.0)})
-        vec[1] = y
-        vecs = set(tuple(elem) for elem in signvar(vec))
+        arr[1] = y
+        vecs = set(tuple(elem) for elem in signvar(tuple(arr)))
         self.assertSetEqual(vecs, {(x, y), (-x, y), (x, -y), (-x, -y)})
 
     def test_circshift(self) -> None:
