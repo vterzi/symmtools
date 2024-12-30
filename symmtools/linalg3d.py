@@ -44,7 +44,7 @@ __all__ = [
     "symmeig",
 ]
 
-from math import copysign, sqrt, hypot, sin, cos, acos
+from math import copysign, sqrt, hypot, cos, sin, acos
 from typing import Sequence, Tuple
 
 try:

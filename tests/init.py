@@ -1,6 +1,11 @@
 __all__ = [
     "TestCase",
     "main",
+    "pi",
+    "sqrt",
+    "cos",
+    "sin",
+    "acos",
     "random",
     "choice",
     "randint",
@@ -10,23 +15,20 @@ __all__ = [
     "Sequence",
     "Tuple",
     "List",
-    "pi",
-    "sqrt",
-    "sin",
-    "cos",
-    "acos",
-    "clip",
     "array",
     "empty",
     "zeros",
     "eye",
+    "clip",
     "cross",
     "roots",
     "ndarray",
     "float64",
     "norm",
     "linear_sum_assignment",
+    "EPS",
     "TOL",
+    "vec3D",
     "randsign",
     "randfloat",
     "randangle",
@@ -38,16 +40,16 @@ __all__ = [
 ]
 
 from unittest import TestCase, main
-from math import pi, sqrt, sin, cos, acos
+from math import pi, sqrt, cos, sin, acos
 from random import random, choice, randint, randrange, normalvariate
 from typing import Union, Sequence, Tuple, List
 
 from numpy import (
-    clip,
     array,
     empty,
     zeros,
     eye,
+    clip,
     cross,
     roots,
     ndarray,
@@ -57,7 +59,8 @@ from numpy.linalg import norm
 from numpy.typing import NDArray
 from scipy.optimize import linear_sum_assignment  # type: ignore
 
-from symmtools.const import TOL
+EPS = 7.0 / 3.0 - 4.0 / 3.0 - 1.0
+TOL = 2**10 * EPS
 
 
 def vec3D(vec: NDArray[float64]) -> Tuple[float, float, float]:

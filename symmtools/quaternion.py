@@ -2,7 +2,7 @@
 
 __all__ = ["Quaternion"]
 
-from math import sin, cos, atan2
+from math import cos, sin, atan2
 from typing import TypeVar, Any
 
 from .const import INF
