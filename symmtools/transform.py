@@ -37,7 +37,7 @@ from .linalg3d import (
     neg,
     add,
     mul,
-    matprod,
+    matmulmat,
     norm,
     diff,
     unitindep,
@@ -629,6 +629,6 @@ class Rotoreflection(Rotation):
 
     @property
     def mat(self) -> Matrix:
-        return matprod(
+        return matmulmat(
             reflmat(self._vec), trigrotmat(self._vec, self._cos, self._sin)
         )

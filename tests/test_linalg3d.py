@@ -49,9 +49,9 @@ from symmtools.linalg3d import (
     orthvec,
     angle,
     transpose,
-    matmul,
-    rmatmul,
-    matprod,
+    matmulvec,
+    vecmulmat,
+    matmulmat,
     intersectangle,
     trigrotate,
     rotate,
@@ -298,23 +298,23 @@ class TestLinAlg3D(TestCase):
         mat = randmat()
         self.assertLessEqual(abs(transpose(mat) - array(mat).T).max(), TOL)
 
-    def test_matmul(self) -> None:
+    def test_matmulvec(self) -> None:
         mat = randmat()
         vec = randvec()
-        self.assertTupleEqual(matmul(mat, vec), vec3D(array(mat) @ vec))
+        self.assertTupleEqual(matmulvec(mat, vec), vec3D(array(mat) @ vec))
 
-    def test_rmatmul(self) -> None:
+    def test_vecmulmat(self) -> None:
         vec = randvec()
         mat = randmat()
         self.assertLessEqual(
-            abs(rmatmul(vec, mat) - array(vec) @ mat).max(), TOL
+            abs(vecmulmat(vec, mat) - array(vec) @ mat).max(), TOL
         )
 
-    def test_matprod(self) -> None:
+    def test_matmulmat(self) -> None:
         mat1 = randmat()
         mat2 = randmat()
         self.assertLessEqual(
-            abs(matprod(mat1, mat2) - array(mat1) @ mat2).max(), TOL
+            abs(matmulmat(mat1, mat2) - array(mat1) @ mat2).max(), TOL
         )
 
     def test_trigrotate(self) -> None:

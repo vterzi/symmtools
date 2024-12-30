@@ -18,8 +18,8 @@ from symmtools.linalg3d import (
     neg,
     add,
     mul,
-    matmul,
-    matprod,
+    matmulvec,
+    matmulmat,
     normalize,
     parallel,
     rotate,
@@ -231,7 +231,7 @@ class TestRotation(TestCase):
         pos = randvec()
         point = Point(pos)
         mat = rotmat(vec, angle)
-        self.assertTrue(transform(point).same(Point(matmul(mat, pos)), TOL))
+        self.assertTrue(transform(point).same(Point(matmulvec(mat, pos)), TOL))
 
     def test_representation(self) -> None:
         vec = randunitvec()
@@ -330,7 +330,7 @@ class TestReflection(TestCase):
         pos = randvec()
         point = Point(pos)
         mat = reflmat(vec)
-        self.assertTrue(transform(point).same(Point(matmul(mat, pos)), TOL))
+        self.assertTrue(transform(point).same(Point(matmulvec(mat, pos)), TOL))
 
     def test_representation(self) -> None:
         vec = randunitvec()
@@ -425,8 +425,8 @@ class TestRotoreflection(TestCase):
         transform = Rotoreflection(vec, angle)
         pos = randvec()
         point = Point(pos)
-        mat = matprod(reflmat(vec), rotmat(vec, angle))
-        self.assertTrue(transform(point).same(Point(matmul(mat, pos)), TOL))
+        mat = matmulmat(reflmat(vec), rotmat(vec, angle))
+        self.assertTrue(transform(point).same(Point(matmulvec(mat, pos)), TOL))
 
     def test_representation(self) -> None:
         vec = randunitvec()
@@ -477,7 +477,7 @@ class TestRotoreflection(TestCase):
         vec = randunitvec()
         angle = randangle(True)
         transform = Rotoreflection(vec, angle)
-        mat = matprod(reflmat(vec), rotmat(vec, angle))
+        mat = matmulmat(reflmat(vec), rotmat(vec, angle))
         self.assertLessEqual(abs(array(transform.mat) - mat).max(), TOL)
 
     def test_transformation(self) -> None:
