@@ -1,4 +1,4 @@
-"""Miscellaneous tools."""
+"""Class for plotting."""
 
 __all__ = ["Plot"]
 
@@ -16,7 +16,6 @@ from .const import EPS, PRIMAX, SECAX
 from .linalg3d import Vector, neg, add, sub, mul, norm, normalize, cross
 from .primitive import Point, LabeledPoint
 
-_TOL = 2**6 * EPS
 ELEM_SYMBS = (
     "X",
     "H",
@@ -455,8 +454,9 @@ class Plot:
     ) -> None:
         normal = normalize(normal)
         # `matplotlib` is unable to draw polygons parallel to the z-axis
-        if abs(normal[2]) < _TOL:
-            normal = normalize((normal[0], normal[1], choice((1, -1)) * _TOL))
+        TOL = 2**6 * EPS
+        if abs(normal[2]) < TOL:
+            normal = normalize((normal[0], normal[1], choice((1, -1)) * TOL))
         vec1 = cross(normal, PRIMAX)
         vec_norm = norm(vec1)
         if vec_norm == 0.0:

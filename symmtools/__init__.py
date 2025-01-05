@@ -46,4 +46,4 @@ from .symmelem import (
 )
 from .quaternion import Quaternion
 from .ptgrp import PointGroup
-from .misc import Plot
+from .plot import Plot
