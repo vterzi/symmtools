@@ -1,13 +1,12 @@
 """Classes for primitive objects in a real 3D space."""
 
-__all__ = ["Point", "Points", "LabeledPoint", "Arrow", "StructPoint"]
+__all__ = ["Point", "Points", "LabeledPoint"]
 
 from math import sin, cos
 from re import split, fullmatch
 from typing import (
     TypeVar,
     Union,
-    Any,
     Sequence,
     Tuple,
     List,
@@ -43,8 +42,6 @@ from .linalg3d import (
     normalize,
     orthogonalize,
     zero,
-    diff,
-    unitindep,
     parallel,
     unitparallel,
     perpendicular,
@@ -53,15 +50,10 @@ from .linalg3d import (
     symmeig,
 )
 from .transform import (
-    Transformable,
     Transformables,
     Transformation,
     VectorTransformable,
-    DirectionTransformable,
     Translation,
-    Rotation,
-    Reflection,
-    Rotoreflection,
 )
 from .symmelem import (
     SymmetryElement,
@@ -771,154 +763,3 @@ class Points(Transformables):
             fi = li
             li = len(points)
         return cls(points)
-
-
-_Arrow = TypeVar("_Arrow", bound="Arrow")
-
-
-class Arrow(DirectionTransformable):
-    """Arrow in a real 3D space."""
-
-    def __init__(self, vec: Vector, fore: bool, back: bool) -> None:
-        """
-        Initialize the instance with a 3D non-zero vector `vec` and two
-        arguments, `fore` and `back`, describing the types of its ends: `True`
-        for head and `False` for tail. The direction of the vector corresponds
-        the direction from the end described by `back` to the end described by
-        `fore`. Possible combinations of `fore` and `back` are:
-        - '<->' (two heads) for `True` and `True`,
-        - '>->' (one head and one tail) for `True` and `False`,
-        - '<-<' (one tail and one head) for `False` and `True`,
-        - '>-<' (two tails) for `False` and `False`.
-        """
-        super().__init__(vec)
-        if fore and back:
-            self._form = 1
-        elif not fore and not back:
-            self._form = -1
-        else:
-            self._form = 0
-            if back:
-                self._vec = neg(self._vec)
-
-    @property
-    def form(self) -> int:
-        """
-        Arrow form: `1` for two heads ('<->'), `-1` for two tails ('>-<'), and
-        `0` otherwise ('>->' or '<-<').
-        """
-        return self._form
-
-    @property
-    def args(self) -> str:
-        if self._form == 1:
-            fore = True
-            back = True
-        elif self._form == -1:
-            fore = False
-            back = False
-        else:
-            fore = True
-            back = False
-        return f"{super().args},{fore},{back}"
-
-    @property
-    def props(self) -> Tuple:
-        return super().props + (self._form,)
-
-    def diff(self, obj: Any) -> float:
-        res = Transformable.diff(self, obj)
-        if res < INF:
-            if self._form == 0:
-                res = max(res, diff(self._vec, obj.vec))
-            else:
-                res = max(res, unitindep(self._vec, obj.vec))
-        return res
-
-    def negate(self: _Arrow) -> _Arrow:
-        res = self.copy()
-        if self._form == 0:
-            res._vec = neg(self._vec)
-        else:
-            res._form = -self._form
-        return res
-
-
-_StructPoint = TypeVar("_StructPoint", bound="StructPoint")
-
-
-class StructPoint(Point):
-    """Point with a coefficient and a set of arrows."""
-
-    def __init__(
-        self, vec: Vector, coef: float = 1.0, arrows: Sequence[Arrow] = ()
-    ) -> None:
-        """
-        Initialize the instance with a 3D position vector `vec`, a non-zero
-        coefficient `coef`, and a set of arrows `arrows`.
-        """
-        super().__init__(vec)
-        if coef == 0.0:
-            raise ValueError("zero coefficient")
-        obj = Transformables(arrows)
-        if coef < 0.0 and len(arrows) > 0:
-            coef = -coef
-            obj = obj.negate()
-        self._coef = coef
-        self._arrows = obj
-
-    @property
-    def coef(self) -> float:
-        """Coefficient."""
-        return self._coef
-
-    @property
-    def arrows(self) -> Transformables:
-        """Set of arrows."""
-        return self._arrows
-
-    @property
-    def args(self) -> str:
-        return f"{super().args},{self._coef},{self._arrows.args}"
-
-    @property
-    def props(self) -> Tuple:
-        return super().props + self._arrows.props
-
-    def diff(self, obj: Any) -> float:
-        res = super().diff(obj)
-        if res < INF:
-            res = max(
-                res, abs(self._coef - obj.coef), self._arrows.diff(obj.arrows)
-            )
-        return res
-
-    def negate(self: _StructPoint) -> _StructPoint:
-        res = super().negate()
-        if len(self._arrows) > 0:
-            res._arrows = self._arrows.negate()
-        else:
-            res._coef = -self._coef
-        return res
-
-    def invert(self: _StructPoint) -> _StructPoint:
-        res = super().invert()
-        res._arrows = self._arrows.invert()
-        return res
-
-    def rotate(self: _StructPoint, rot: Rotation) -> _StructPoint:
-        res = super().rotate(rot)
-        res._arrows = self._arrows.rotate(rot)
-        return res
-
-    def reflect(self: _StructPoint, refl: Reflection) -> _StructPoint:
-        res = super().reflect(refl)
-        res._arrows = self._arrows.reflect(refl)
-        return res
-
-    def rotoreflect(
-        self: _StructPoint, rotorefl: Rotoreflection
-    ) -> _StructPoint:
-        res = super().rotoreflect(rotorefl)
-        res._arrows = self._arrows.rotoreflect(rotorefl)
-        return res

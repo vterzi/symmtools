@@ -7,8 +7,6 @@ __all__ = [
     "Point",
     "Points",
     "LabeledPoint",
-    "Arrow",
-    "StructPoint",
     "IdentityElement",
     "RotationAxis",
     "ReflectionPlane",
@@ -31,7 +29,7 @@ from .transform import (
     Reflection,
     Rotoreflection,
 )
-from .primitive import Point, Points, LabeledPoint, Arrow, StructPoint
+from .primitive import Point, Points, LabeledPoint
 from .symmelem import (
     IdentityElement,
     RotationAxis,

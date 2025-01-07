@@ -98,28 +98,6 @@ class Transformable(ABC):
         """Return a copy of the instance."""
         return copy(self)
 
-    def negate(self: _Transformable) -> _Transformable:
-        """Return the instance resulting from the application of a negation."""
-        return self.copy()
-
-    def symmetry(self, obj: Any, tol: float) -> int:
-        """
-        Return the symmetry of the instance in relation to an object `obj`
-        within a tolerance `tol` (`1` for symmetric, `-1` for anti-symmetric,
-        and `0` for asymmetric) if the instance is not invariant to negation,
-        and otherwise check whether the instance is identical to an object
-        `obj` within a tolerance `tol`.
-        """
-        antiself = self.negate()
-        if self == antiself:
-            return self.same(obj, tol)
-        elif self.same(obj, tol):
-            return 1
-        elif antiself.same(obj, tol):
-            return -1
-        else:
-            return 0
-
     @abstractmethod
     def translate(
         self: _Transformable, transl: "Translation"
@@ -257,11 +235,6 @@ class Transformables(Transformable):
                     if elem.same(self._elems[idxs[i2]], tol):
                         return False
         return True
-
-    def negate(self: _Transformables) -> _Transformables:
-        res = self.copy()
-        res._elems = tuple(elem.negate() for elem in self._elems)
-        return res
 
     def translate(
         self: _Transformables, transl: "Translation"
