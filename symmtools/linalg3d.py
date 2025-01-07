@@ -420,32 +420,23 @@ def trigrotate(vec: Vector, axis: Vector, cos: float, sin: float) -> Vector:
     Rotate a vector `vec` by an angle with cosine `cos` and sine `sin` around
     an axis that contains the origin and is described by a unit vector `axis`.
     """
-    # ```
-    # base = mul(axis, dot(vec, axis))
-    # projection = sub(vec, base)
-    # perpendicular = cross(axis, projection)
-    # add(add(base, mul(projection, cos)), mul(perpendicular, sin))
-    # ``` is slower
+    # Rodrigues' rotation formula.
+    # `lincomb3(vec, cos, cross(axis, vec), sin, axis, dot(axis, vec)
+    # * (1.0 - cos))` is slower.
     vec_x = vec[0]
     vec_y = vec[1]
     vec_z = vec[2]
     axis_x = axis[0]
     axis_y = axis[1]
     axis_z = axis[2]
-    scalar = vec_x * axis_x + vec_y * axis_y + vec_z * axis_z
-    base_x = axis_x * scalar
-    base_y = axis_y * scalar
-    base_z = axis_z * scalar
-    projection_x = vec_x - base_x
-    projection_y = vec_y - base_y
-    projection_z = vec_z - base_z
-    perpendicular_x = axis_y * projection_z - axis_z * projection_y
-    perpendicular_y = axis_z * projection_x - axis_x * projection_z
-    perpendicular_z = axis_x * projection_y - axis_y * projection_x
+    perpendicular_x = axis_y * vec_z - axis_z * vec_y
+    perpendicular_y = axis_z * vec_x - axis_x * vec_z
+    perpendicular_z = axis_x * vec_y - axis_y * vec_x
+    scalar = (axis_x * vec_x + axis_y * vec_y + axis_z * vec_z) * (1.0 - cos)
     return (
-        base_x + projection_x * cos + perpendicular_x * sin,
-        base_y + projection_y * cos + perpendicular_y * sin,
-        base_z + projection_z * cos + perpendicular_z * sin,
+        vec_x * cos + perpendicular_x * sin + axis_x * scalar,
+        vec_y * cos + perpendicular_y * sin + axis_y * scalar,
+        vec_z * cos + perpendicular_z * sin + axis_z * scalar,
     )
 
 
@@ -487,9 +478,10 @@ def trigrotmat(axis: Vector, cos: float, sin: float) -> Matrix:
     x = axis[0]
     y = axis[1]
     z = axis[2]
-    x_cos = x * (1.0 - cos)
-    y_cos = y * (1.0 - cos)
-    z_cos = z * (1.0 - cos)
+    temp = 1.0 - cos
+    x_cos = x * temp
+    y_cos = y * temp
+    z_cos = z * temp
     x_sin = x * sin
     y_sin = y * sin
     z_sin = z * sin
