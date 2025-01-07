@@ -57,8 +57,8 @@ except ImportError:
 from .const import PI, PI_2, EPS
 from .utils import clamp
 
-# `numpy` with `numpy.ndarray` is slower than `math` with `tuple`
-# array unpacking is slower than indexing
+# `numpy` with `numpy.ndarray` is slower than `math` with `tuple`.
+# Array unpacking is slower than indexing.
 
 Vector = Tuple[float, float, float]
 Matrix = Tuple[Vector, Vector, Vector]
@@ -168,7 +168,7 @@ def normalize(vec: Vector) -> Vector:
 
 def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
     """Orthogonalize a vector `vec` to a unit vector `unitvec`."""
-    # `sub(vec, mul(unitvec, dot(vec, unitvec)))` is slower
+    # `sub(vec, mul(unitvec, dot(vec, unitvec)))` is slower.
     x1 = vec[0]
     y1 = vec[1]
     z1 = vec[2]
@@ -201,7 +201,7 @@ def zero(vec: Vector, tol: float) -> bool:
 
 def diff(vec1: Vector, vec2: Vector) -> float:
     """Calculate the difference between two vectors `vec1` and `vec2`."""
-    # `norm(sub(vec1, vec2))` is slower
+    # `norm(sub(vec1, vec2))` is slower.
     return max(
         abs(vec1[0] - vec2[0]), abs(vec1[1] - vec2[1]), abs(vec1[2] - vec2[2])
     )
@@ -217,7 +217,7 @@ def same(vec1: Vector, vec2: Vector, tol: float) -> bool:
 
 def indep(vec1: Vector, vec2: Vector) -> float:
     """Calculate the linear independence of two vectors `vec1` and `vec2`."""
-    # `norm(cross(vec1, vec2))` is slower
+    # `norm(cross(vec1, vec2))` is slower.
     x1 = vec1[0]
     y1 = vec1[1]
     z1 = vec1[2]
@@ -234,8 +234,8 @@ def unitindep(unitvec1: Vector, unitvec2: Vector) -> float:
     Calculate the linear independence of two unit vectors `unitvec1` and
     `unitvec2`.
     """
-    # `abs(abs(dot(unitvec1, unitvec2)) - 1)` is faster but less accurate
-    # `min(diff(unitvec1, unitvec2), diff(unitvec1, neg(unitvec2)))` is slower
+    # `abs(abs(dot(unitvec1, unitvec2)) - 1)` is faster but less accurate.
+    # `min(diff(unitvec1, unitvec2), diff(unitvec1, neg(unitvec2)))` is slower.
     x1 = unitvec1[0]
     y1 = unitvec1[1]
     z1 = unitvec1[2]
@@ -279,7 +279,7 @@ def orthvec(unitvec: Vector) -> Vector:
     odd indices, and orthogonalizing the result to the original unit vector.
     """
     # `normalize(orthogonalize((-unitvec[2], unitvec[0], -unitvec[1]),
-    # unitvec))` is slower
+    # unitvec))` is slower.
     x2 = unitvec[0]
     y2 = unitvec[1]
     z2 = unitvec[2]
@@ -296,9 +296,9 @@ def orthvec(unitvec: Vector) -> Vector:
 
 def angle(vec1: Vector, vec2: Vector) -> float:
     """Calculate the angle between two vectors `vec1` and `vec2`."""
-    # `acos(clamp(dot(unitvec1, unitvec2), -1.0, 1.0))` is less accurate
+    # `acos(clamp(dot(unitvec1, unitvec2), -1.0, 1.0))` is less accurate.
     # `acos(clamp(dot(vec1, vec2) / sqrt(sqnorm(vec1) * sqnorm(vec2)), -1.0,
-    # 1.0))` is slower
+    # 1.0))` is slower.
     x1 = vec1[0]
     y1 = vec1[1]
     z1 = vec1[2]
@@ -453,7 +453,7 @@ def reflect(vec: Vector, normal: Vector) -> Vector:
     Reflect a vector `vec` through a plane that contains the origin and whose
     normal is described by a unit vector `normal`.
     """
-    # `sub(vec, mul(normal, 2.0 * dot(vec, normal)))` is slower
+    # `sub(vec, mul(normal, 2.0 * dot(vec, normal)))` is slower.
     vec_x = vec[0]
     vec_y = vec[1]
     vec_z = vec[2]
