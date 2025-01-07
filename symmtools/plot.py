@@ -13,7 +13,17 @@ except ImportError:
     FIGURE_AVAIL = False
 
 from .const import EPS, PRIMAX, SECAX
-from .linalg3d import Vector, neg, add, sub, mul, norm, normalize, cross
+from .linalg3d import (
+    Vector,
+    neg,
+    add,
+    sub,
+    mul,
+    lincomb2,
+    norm,
+    normalize,
+    cross,
+)
 from .primitive import Point, LabeledPoint
 
 ELEM_SYMBS = (
@@ -468,7 +478,7 @@ class Plot:
         comps = ((size, size), (size, -size), (-size, -size), (-size, size))
         vertices = []
         for comp1, comp2 in comps:
-            vertices.append(mul(vec1, comp1) + mul(vec2, comp2))
+            vertices.append(lincomb2(vec1, comp1, vec2, comp2))
         fragments: Tuple[List[float], List[float], List[float]] = ([], [], [])
         for idx in range(len(vertices)):
             for i, (comp1, comp2) in enumerate(
