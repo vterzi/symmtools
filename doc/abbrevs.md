@@ -29,6 +29,7 @@
 | ch            | change                                                      |
 | chr, char     | character                                                   |
 | clr           | clear                                                       |
+| cls           | class                                                       |
 | cmd           | command                                                     |
 | cmp           | compare                                                     |
 | cnt           | count                                                       |
