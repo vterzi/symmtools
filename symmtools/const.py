@@ -21,9 +21,8 @@ __all__ = [
     "Symb",
 ]
 
-from math import nan as NAN, inf as INF, pi as PI, sqrt, atan
+from math import nan as NAN, inf as INF, pi as PI, tau as TAU, sqrt, atan
 
-TAU = 2.0 * PI
 PI_2 = 0.5 * PI
 EPS = 7.0 / 3.0 - 4.0 / 3.0 - 1.0
 TOL = 2**10 * EPS
