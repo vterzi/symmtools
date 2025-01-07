@@ -19,6 +19,7 @@ from .linalg3d import (
     add,
     sub,
     mul,
+    div,
     lincomb2,
     norm,
     normalize,
@@ -472,7 +473,7 @@ class Plot:
         if vec_norm == 0.0:
             vec1 = cross(normal, SECAX)
             vec_norm = norm(vec1)
-        vec1 = mul(vec1, 1.0 / vec_norm)
+        vec1 = div(vec1, vec_norm)
         vec2 = normalize(cross(normal, vec1))
         size = self._size
         comps = ((size, size), (size, -size), (-size, -size), (-size, size))

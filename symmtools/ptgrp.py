@@ -31,6 +31,7 @@ from .linalg3d import (
     add,
     sub,
     mul,
+    div,
     lincomb3,
     dot,
     sqnorm,
@@ -743,7 +744,7 @@ class PointGroup(Transformable):
                             collinear_group = False
                             # The normal of the plane is a potential axis of
                             # rotation.
-                            axis = mul(normal, 1.0 / normal_norm)
+                            axis = div(normal, normal_norm)
                             if new(axes, axis):
                                 # Calculate the distance from the origin to the
                                 # plane.
@@ -990,7 +991,7 @@ class PointGroup(Transformable):
                             # normal of the plane containing the points (main
                             # axis).
                             if nonzero:
-                                axis = mul(midpoint, 1.0 / midpoint_norm)
+                                axis = div(midpoint, midpoint_norm)
                             else:
                                 axis = normalize(cross(segment, main_axis))
                             # The axes of two-fold rotation axes in symmetric

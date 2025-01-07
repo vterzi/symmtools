@@ -36,7 +36,7 @@ from .linalg3d import (
     Matrix,
     neg,
     add,
-    mul,
+    div,
     matmulmat,
     norm,
     diff,
@@ -399,7 +399,7 @@ class DirectionTransformable(VectorTransformable):
         vec_norm = norm(vec)
         if vec_norm == 0.0:
             raise ValueError("zero vector")
-        super().__init__(mul(vec, 1.0 / vec_norm))
+        super().__init__(div(vec, vec_norm))
 
     def diff(self, obj: Any) -> float:
         res = Transformable.diff(self, obj)

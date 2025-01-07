@@ -34,6 +34,7 @@ from .linalg3d import (
     add,
     sub,
     mul,
+    div,
     lincomb2,
     lincomb3,
     dot,
@@ -331,7 +332,7 @@ class Points(Transformables):
                         normal_norm = norm(normal)
                         if normal_norm <= tol:
                             continue
-                        axis = mul(normal, 1.0 / normal_norm)
+                        axis = div(normal, normal_norm)
                         collinear_part = False
                         if new(axes, axis):
                             dist = dot(pos1, axis)
@@ -390,7 +391,7 @@ class Points(Transformables):
                     nonzero = midpoint_norm > tol
                     if nonzero or coplanar:
                         if nonzero:
-                            axis = mul(midpoint, 1.0 / midpoint_norm)
+                            axis = div(midpoint, midpoint_norm)
                         else:
                             axis = normalize(cross(segment, normals[0]))
                         if (
@@ -674,17 +675,17 @@ class Points(Transformables):
                 vec2 = points[idxs[1]].pos
                 vec1 = sub(vec2, vec)
                 vec_norm = norm(vec1)
-                vec1 = mul(vec1, 1.0 / vec_norm) if vec_norm > 0.0 else PRIMAX
+                vec1 = div(vec1, vec_norm) if vec_norm > 0.0 else PRIMAX
                 vec2 = orthogonalize(sub(points[idxs[2]].pos, vec2), vec1)
                 vec_norm = norm(vec2)
-                vec2 = mul(vec2, 1.0 / vec_norm) if vec_norm > 0.0 else SECAX
+                vec2 = div(vec2, vec_norm) if vec_norm > 0.0 else SECAX
                 vec3 = cross(vec1, vec2)
                 vec_norm = norm(vec3)
                 if vec_norm == 0.0:
                     vec2 = TERTAX
                     vec3 = cross(vec1, vec2)
                     vec_norm = norm(vec3)
-                vec3 = mul(vec3, 1.0 / vec_norm)
+                vec3 = div(vec3, vec_norm)
                 factor = dist * sin(angle)
                 vec = add(
                     vec,

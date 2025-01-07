@@ -10,6 +10,7 @@ __all__ = [
     "add",
     "sub",
     "mul",
+    "div",
     "lincomb2",
     "lincomb3",
     "dot",
@@ -99,6 +100,11 @@ def mul(vec: Vector, scalar: float) -> Vector:
     return (vec[0] * scalar, vec[1] * scalar, vec[2] * scalar)
 
 
+def div(vec: Vector, scalar: float) -> Vector:
+    """Divide a vector `vec` by a scalar `scalar`."""
+    return mul(vec, 1.0 / scalar)
+
+
 def lincomb2(
     vec1: Vector, scalar1: float, vec2: Vector, scalar2: float
 ) -> Vector:
@@ -163,7 +169,7 @@ def cross(vec1: Vector, vec2: Vector) -> Vector:
 
 def normalize(vec: Vector) -> Vector:
     """Normalize a non-zero vector `vec` to a unit vector."""
-    return mul(vec, 1.0 / norm(vec))
+    return div(vec, norm(vec))
 
 
 def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
