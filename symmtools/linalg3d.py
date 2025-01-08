@@ -41,11 +41,16 @@ __all__ = [
     "trigrotmat",
     "rotmat",
     "reflmat",
+    "rotquat",
+    "quatrot",
+    "conjugate",
+    "quatmulquat",
+    "quatrotate",
     "inertia",
     "symmeig",
 ]
 
-from math import copysign, sqrt, hypot, cos, sin, acos
+from math import copysign, sqrt, hypot, cos, sin, acos, atan2
 from typing import Sequence, Tuple
 
 try:
@@ -62,6 +67,7 @@ from .utils import clamp
 # Array unpacking is slower than indexing.
 
 Vector = Tuple[float, float, float]
+Quaternion = Tuple[float, float, float, float]
 Matrix = Tuple[Vector, Vector, Vector]
 
 
@@ -528,6 +534,78 @@ def reflmat(normal: Vector) -> Matrix:
         (1.0 - x * x2, xy, zx),
         (xy, 1.0 - y * y2, yz),
         (zx, yz, 1.0 - z * z2),
+    )
+
+
+def rotquat(axis: Vector, angle: float) -> Quaternion:
+    """
+    Create a rotation quaternion from a unit vector `axis` representing the
+    axis of rotation and an angle `angle`.
+    """
+    angle *= 0.5
+    scalar = sin(angle)
+    return (cos(angle), axis[0] * scalar, axis[1] * scalar, axis[2] * scalar)
+
+
+def quatrot(quat: Quaternion) -> Tuple[Vector, float]:
+    """Determine the axis and angle of a rotation quaternion `quat`."""
+    x = quat[1]
+    y = quat[2]
+    z = quat[3]
+    norm = hypot(x, y, z)
+    scalar = 1.0 / norm
+    return (x * scalar, y * scalar, z * scalar), 2.0 * atan2(norm, quat[0])
+
+
+def conjugate(quat: Quaternion) -> Quaternion:
+    """Return the conjugate of a quaternion `quat`."""
+    return (quat[0], -quat[1], -quat[2], -quat[3])
+
+
+def quatmulquat(quat1: Quaternion, quat2: Quaternion) -> Quaternion:
+    """Multiply two quaternions `quat1` and `quat2`."""
+    w1 = quat1[0]
+    x1 = quat1[1]
+    y1 = quat1[2]
+    z1 = quat1[3]
+    w2 = quat2[0]
+    x2 = quat2[1]
+    y2 = quat2[2]
+    z2 = quat2[3]
+    return (
+        w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2,
+        y1 * z2 - y2 * z1 + x1 * w2 + x2 * w1,
+        z1 * x2 - z2 * x1 + y1 * w2 + y2 * w1,
+        x1 * y2 - x2 * y1 + z1 * w2 + z2 * w1,
+    )
+
+
+def quatrotate(vec: Vector, quat: Quaternion) -> Vector:
+    """Apply a rotation quaternion `quat` to a vector `vec`."""
+    w = quat[0]
+    x = quat[1]
+    y = quat[2]
+    z = quat[3]
+    ww = w * w
+    xx = x * x
+    yy = y * y
+    zz = z * z
+    wx = w * x
+    wy = w * y
+    wz = w * z
+    xy = x * y
+    yz = y * z
+    zx = z * x
+    x = vec[0]
+    y = vec[1]
+    z = vec[2]
+    x2 = x + x
+    y2 = y + y
+    z2 = z + z
+    return (
+        (x * (ww + xx - yy - zz) + y2 * (xy - wz) + z2 * (zx + wy)),
+        (x2 * (xy + wz) + y * (ww - xx + yy - zz) + z2 * (yz - wx)),
+        (x2 * (zx - wy) + y2 * (yz + wx) + z * (ww - xx - yy + zz)),
     )
 
 
