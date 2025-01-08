@@ -19,7 +19,7 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 from copy import copy
-from math import sin, cos
+from math import fmod, sin, cos
 from typing import (
     TypeVar,
     Any,
@@ -507,7 +507,7 @@ class Rotation(DirectionTransformable, Transformation):
         angle `angle`.
         """
         super().__init__(vec)
-        angle %= TAU
+        angle = fmod(angle, TAU)
         if angle == 0.0:
             raise ValueError("zero angle")
         angle = float(angle)
