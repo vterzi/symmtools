@@ -280,7 +280,7 @@ def perpendicular(vec1: Vector, vec2: Vector, tol: float) -> bool:
 
 def orthvec(unitvec: Vector) -> Vector:
     """
-    Generate a unit vector that is orthogonal to a unit vector `unitvec` by
+    Create a unit vector that is orthogonal to a unit vector `unitvec` by
     applying a circular shift to its components, negating the components with
     odd indices, and orthogonalizing the result to the original unit vector.
     """
@@ -477,7 +477,7 @@ def reflect(vec: Vector, normal: Vector) -> Vector:
 
 def trigrotmat(axis: Vector, cos: float, sin: float) -> Matrix:
     """
-    Generate a transformation matrix for a rotation by an angle with cosine
+    Create a transformation matrix for a rotation by an angle with cosine
     `cos` and sine `sin` around an axis that contains the origin and is
     described by a unit vector `axis`.
     """
@@ -503,7 +503,7 @@ def trigrotmat(axis: Vector, cos: float, sin: float) -> Matrix:
 
 def rotmat(axis: Vector, angle: float) -> Matrix:
     """
-    Generate a transformation matrix for a rotation by an angle `angle` around
+    Create a transformation matrix for a rotation by an angle `angle` around
     an axis that contains the origin and is described by a unit vector `axis`.
     """
     return trigrotmat(axis, cos(angle), sin(angle))
@@ -511,7 +511,7 @@ def rotmat(axis: Vector, angle: float) -> Matrix:
 
 def reflmat(normal: Vector) -> Matrix:
     """
-    Generate a transformation matrix for a reflection through a plane that
+    Create a transformation matrix for a reflection through a plane that
     contains the origin and whose normal is described by a unit vector
     `normal`.
     """
