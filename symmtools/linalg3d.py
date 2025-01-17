@@ -31,6 +31,7 @@ __all__ = [
     "orthvec",
     "angle",
     "intersectangle",
+    "normangle",
     "transpose",
     "matmulvec",
     "vecmulmat",
@@ -50,7 +51,7 @@ __all__ = [
     "symmeig",
 ]
 
-from math import copysign, sqrt, hypot, cos, sin, acos, atan2
+from math import copysign, fmod, sqrt, hypot, cos, sin, acos, atan2
 from typing import Sequence, Tuple
 
 try:
@@ -60,7 +61,7 @@ try:
 except ImportError:
     EIGH_AVAIL = False
 
-from .const import PI, HALF_PI, EPS
+from .const import PI, TAU, HALF_PI, EPS
 from .utils import clamp
 
 # `numpy` with `numpy.ndarray` is slower than `math` with `tuple`.
@@ -342,6 +343,11 @@ def intersectangle(vec1: Vector, vec2: Vector) -> float:
     if ang > HALF_PI:
         ang = PI - ang
     return ang
+
+
+def normangle(angle: float) -> float:
+    """Normalize an angle to the range [-pi, pi)."""
+    return fmod(angle + PI, TAU) - PI
 
 
 def transpose(mat: Matrix) -> Matrix:
