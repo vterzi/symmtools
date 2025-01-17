@@ -586,30 +586,23 @@ def quatmulquat(quat1: Quaternion, quat2: Quaternion) -> Quaternion:
 
 def quatrotate(vec: Vector, quat: Quaternion) -> Vector:
     """Apply a rotation quaternion `quat` to a vector `vec`."""
-    w = quat[0]
-    x = quat[1]
-    y = quat[2]
-    z = quat[3]
-    ww = w * w
-    xx = x * x
-    yy = y * y
-    zz = z * z
-    wx = w * x
-    wy = w * y
-    wz = w * z
-    xy = x * y
-    yz = y * z
-    zx = z * x
-    x = vec[0]
-    y = vec[1]
-    z = vec[2]
-    x2 = x + x
-    y2 = y + y
-    z2 = z + z
+    vec_x = vec[0]
+    vec_y = vec[1]
+    vec_z = vec[2]
+    quat_w = quat[0]
+    quat_x = quat[1]
+    quat_y = quat[2]
+    quat_z = quat[3]
+    temp_x = quat_y * vec_z - quat_z * vec_y
+    temp_y = quat_z * vec_x - quat_x * vec_z
+    temp_z = quat_x * vec_y - quat_y * vec_x
+    temp_x += temp_x
+    temp_y += temp_y
+    temp_z += temp_z
     return (
-        (x * (ww + xx - yy - zz) + y2 * (xy - wz) + z2 * (zx + wy)),
-        (x2 * (xy + wz) + y * (ww - xx + yy - zz) + z2 * (yz - wx)),
-        (x2 * (zx - wy) + y2 * (yz + wx) + z * (ww - xx - yy + zz)),
+        vec_x + quat_w * temp_x + quat_y * temp_z - quat_z * temp_y,
+        vec_y + quat_w * temp_y + quat_z * temp_x - quat_x * temp_z,
+        vec_z + quat_w * temp_z + quat_x * temp_y - quat_y * temp_x,
     )
 
 
