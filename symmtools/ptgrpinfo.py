@@ -17,7 +17,7 @@ from typing import (
 from .const import (
     INF,
     PI,
-    PI_2,
+    HALF_PI,
     PHI,
     PRIMAX,
     SECAX,
@@ -564,7 +564,7 @@ class PointGroupInfos:
             res = super().angles
             order = self._order
             sv = (ReflectionPlane,)
-            res[frozenset(((RotationAxis, order), sv))] = {PI_2: order}
+            res[frozenset(((RotationAxis, order), sv))] = {HALF_PI: order}
             entry = {}
             step = PI / order
             ang = step
@@ -572,7 +572,7 @@ class PointGroupInfos:
                 entry[ang] = order
                 ang += step
             if order % 2 == 0:
-                entry[PI_2] = order // 2
+                entry[HALF_PI] = order // 2
             res[frozenset((sv,))] = entry
             return res
 
@@ -682,7 +682,7 @@ class PointGroupInfos:
             order = self._order
             C2 = (RotationAxis, 2)
             if order > 2:
-                res[frozenset(((RotationAxis, order), C2))] = {PI_2: order}
+                res[frozenset(((RotationAxis, order), C2))] = {HALF_PI: order}
                 entry = {}
                 step = PI / order
                 ang = step
@@ -690,10 +690,10 @@ class PointGroupInfos:
                     entry[ang] = order
                     ang += step
                 if order % 2 == 0:
-                    entry[PI_2] = order // 2
+                    entry[HALF_PI] = order // 2
                 res[frozenset((C2,))] = entry
             else:
-                res[frozenset((C2,))] = {PI_2: 3}
+                res[frozenset((C2,))] = {HALF_PI: 3}
             return res
 
     class Dnd(Dn):
@@ -732,7 +732,7 @@ class PointGroupInfos:
             S2n = (RotoreflectionAxis, double_order)
             if order > 2:
                 Cn = (RotationAxis, order)
-                res[frozenset((Cn, sd))] = {PI_2: order}
+                res[frozenset((Cn, sd))] = {HALF_PI: order}
                 entry = {}
                 step = PI / double_order
                 ang = step
@@ -740,13 +740,13 @@ class PointGroupInfos:
                     entry[ang] = double_order
                     ang += step
                 if order % 2 == 1:
-                    entry[PI_2] = order
+                    entry[HALF_PI] = order
                 res[frozenset((C2, sd))] = entry
                 res[frozenset((Cn, S2n))] = {0.0: 1}
-                res[frozenset((C2, S2n))] = {PI_2: order}
+                res[frozenset((C2, S2n))] = {HALF_PI: order}
             else:
-                res[frozenset((C2, sd))] = {PI_2: 2, 0.5 * PI_2: 4}
-                res[frozenset((C2, S2n))] = {0.0: 1, PI_2: 2}
+                res[frozenset((C2, sd))] = {HALF_PI: 2, 0.5 * HALF_PI: 4}
+                res[frozenset((C2, S2n))] = {0.0: 1, HALF_PI: 2}
             entry = {}
             step = PI / order
             ang = step
@@ -754,9 +754,9 @@ class PointGroupInfos:
                 entry[ang] = order
                 ang += step
             if order % 2 == 0:
-                entry[PI_2] = order // 2
+                entry[HALF_PI] = order // 2
             res[frozenset((sd,))] = entry
-            res[frozenset((sd, S2n))] = {PI_2: order}
+            res[frozenset((sd, S2n))] = {HALF_PI: order}
             return res
 
     class Dnh(Dn):
@@ -813,7 +813,7 @@ class PointGroupInfos:
                 double_order = 2 * order
                 Cn = (RotationAxis, order)
                 Sn = (RotoreflectionAxis, order)
-                res[frozenset((Cn, s))] = {0.0: 1, PI_2: order}
+                res[frozenset((Cn, s))] = {0.0: 1, HALF_PI: order}
                 entry1 = {0.0: order}
                 entry2 = {}
                 step = PI / order
@@ -823,19 +823,19 @@ class PointGroupInfos:
                     entry2[ang] = order
                     ang += step
                 if order % 2 == 0:
-                    entry1[PI_2] = double_order
-                    entry2[PI_2] = order + order // 2
+                    entry1[HALF_PI] = double_order
+                    entry2[HALF_PI] = order + order // 2
                 else:
-                    entry1[PI_2] = order
-                    entry2[PI_2] = order
+                    entry1[HALF_PI] = order
+                    entry2[HALF_PI] = order
                 res[frozenset((C2, s))] = entry1
                 res[frozenset((s,))] = entry2
                 res[frozenset((Cn, Sn))] = {0.0: 1}
-                res[frozenset((C2, Sn))] = {PI_2: order}
-                res[frozenset((s, Sn))] = {0.0: 1, PI_2: order}
+                res[frozenset((C2, Sn))] = {HALF_PI: order}
+                res[frozenset((s, Sn))] = {0.0: 1, HALF_PI: order}
             else:
-                res[frozenset((C2, s))] = {0.0: 3, PI_2: 6}
-                res[frozenset((s,))] = {PI_2: 3}
+                res[frozenset((C2, s))] = {0.0: 3, HALF_PI: 6}
+                res[frozenset((s,))] = {HALF_PI: 3}
             return res
 
     T = SpecialPointGroupInfo(

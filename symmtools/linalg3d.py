@@ -60,7 +60,7 @@ try:
 except ImportError:
     EIGH_AVAIL = False
 
-from .const import PI, PI_2, EPS
+from .const import PI, HALF_PI, EPS
 from .utils import clamp
 
 # `numpy` with `numpy.ndarray` is slower than `math` with `tuple`.
@@ -335,7 +335,7 @@ def intersectangle(vec1: Vector, vec2: Vector) -> float:
     `vec1` and `vec2`.
     """
     ang = angle(vec1, vec2)
-    if ang > PI_2:
+    if ang > HALF_PI:
         ang = PI - ang
     return ang
 
