@@ -2,6 +2,7 @@
 
 __all__ = ["Plot"]
 
+from math import ldexp
 from random import choice
 from typing import Optional, Sequence, Tuple, List
 
@@ -27,6 +28,7 @@ from .linalg3d import (
 )
 from .primitive import Point, LabeledPoint
 
+_TOL = ldexp(EPS, 6)
 ELEM_SYMBS = (
     "X",
     "H",
@@ -465,9 +467,8 @@ class Plot:
     ) -> None:
         normal = normalize(normal)
         # `matplotlib` is unable to draw polygons parallel to the z-axis
-        TOL = 2**6 * EPS
-        if abs(normal[2]) < TOL:
-            normal = normalize((normal[0], normal[1], choice((1, -1)) * TOL))
+        if abs(normal[2]) < _TOL:
+            normal = normalize((normal[0], normal[1], choice((1, -1)) * _TOL))
         vec1 = cross(normal, PRIMAX)
         vec_norm = norm(vec1)
         if vec_norm == 0.0:

@@ -175,7 +175,11 @@ def cross(vec1: Vector, vec2: Vector) -> Vector:
 
 def normalize(vec: Vector) -> Vector:
     """Normalize a non-zero vector `vec` to a unit vector."""
-    return div(vec, norm(vec))
+    x = vec[0]
+    y = vec[1]
+    z = vec[2]
+    scalar = 1.0 / hypot(x, y, z)
+    return (x * scalar, y * scalar, z * scalar)
 
 
 def orthogonalize(vec: Vector, unitvec: Vector) -> Vector:
@@ -618,8 +622,8 @@ def inertia(vecs: Sequence[Vector]) -> Matrix:
     yy = 0.0
     zz = 0.0
     xy = 0.0
-    zx = 0.0
     yz = 0.0
+    zx = 0.0
     for vec in vecs:
         x = vec[0]
         y = vec[1]
@@ -631,8 +635,8 @@ def inertia(vecs: Sequence[Vector]) -> Matrix:
         yy += z_z + x_x
         zz += x_x + y_y
         xy -= x * y
-        zx -= x * z
         yz -= y * z
+        zx -= z * x
     return (
         (xx, xy, zx),
         (xy, yy, yz),
