@@ -5,8 +5,8 @@ __all__ = [
     "Reflection",
     "Rotoreflection",
     "Point",
-    "Points",
     "LabeledPoint",
+    "Points",
     "IdentityElement",
     "RotationAxis",
     "ReflectionPlane",
@@ -29,7 +29,7 @@ from .transform import (
     Reflection,
     Rotoreflection,
 )
-from .primitive import Point, Points, LabeledPoint
+from .primitive import Point, LabeledPoint, Points
 from .symmelem import (
     IdentityElement,
     RotationAxis,

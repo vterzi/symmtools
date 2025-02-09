@@ -1,6 +1,6 @@
 """Classes for primitive objects in a real 3D space."""
 
-__all__ = ["Point", "Points", "LabeledPoint"]
+__all__ = ["Point", "LabeledPoint", "Points"]
 
 from math import sin, cos
 from re import split, fullmatch
