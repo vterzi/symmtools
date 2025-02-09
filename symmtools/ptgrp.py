@@ -34,7 +34,6 @@ from .linalg3d import (
     div,
     lincomb3,
     dot,
-    sqnorm,
     norm,
     normalize,
     orthogonalize,
@@ -43,9 +42,11 @@ from .linalg3d import (
     parallel,
     unitparallel,
     perpendicular,
-    orthvec,
     angle,
     intersectangle,
+    quatrot,
+    alignvec,
+    alignvecs,
     inertia,
     symmeig,
 )
@@ -72,7 +73,6 @@ from .symmelem import (
     CenterRotoreflectionAxes,
     SymmetryElements,
 )
-from .quaternion import Quaternion
 from .ptgrpinfo import PointGroupInfo, PointGroupInfos, VARIANTS
 from .primitive import Points
 
@@ -86,16 +86,12 @@ def vec_rot(
     orthogonal to vector `to_vec` is provided, it will be used to construct
     the rotation in case the vectors are antiparallel.
     """
-    axis = cross(from_vec, to_vec)
-    if sqnorm(axis) > 0.0:
-        ang = angle(from_vec, to_vec)
-        if ang > 0.0:
-            return Rotation(axis, ang)
-    elif dot(from_vec, to_vec) < 0.0:
-        if orth_axis is None:
-            orth_axis = orthvec(normalize(to_vec))
-        return Rotation(orth_axis, PI)
-    return Identity()
+    quat = alignvec(from_vec, to_vec, orth_axis)
+    if quat[0] == 1.0:
+        return Identity()
+    else:
+        axis, angle = quatrot(quat)
+        return Rotation(axis, angle)
 
 
 def vecs_rot(
@@ -106,19 +102,12 @@ def vecs_rot(
     `from_vec1` and `from_vec2` to another pair of orthogonal vectors `to_vec1`
     and `to_vec2`.
     """
-    transform1 = vec_rot(from_vec1, to_vec1, to_vec2)
-    from_vec2 = transform1.apply(from_vec2)
-    transform2 = vec_rot(from_vec2, to_vec2, to_vec1)
-    if isinstance(transform2, Rotation):
-        if isinstance(transform1, Rotation):
-            return (
-                Quaternion.from_rotation(transform2)
-                * Quaternion.from_rotation(transform1)
-            ).rotation
-        else:
-            return transform2
+    quat = alignvecs(from_vec1, from_vec2, to_vec1, to_vec2)
+    if quat[0] == 1.0:
+        return Identity()
     else:
-        return transform1
+        axis, angle = quatrot(quat)
+        return Rotation(axis, angle)
 
 
 _PointGroup = TypeVar("_PointGroup", bound="PointGroup")

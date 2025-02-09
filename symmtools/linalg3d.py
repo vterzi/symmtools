@@ -3,6 +3,7 @@
 __all__ = [
     "Vector",
     "Matrix",
+    "Quaternion",
     "vector",
     "matrix",
     "pos",
@@ -47,12 +48,14 @@ __all__ = [
     "conjugate",
     "quatmulquat",
     "quatrotate",
+    "alignvec",
+    "alignvecs",
     "inertia",
     "symmeig",
 ]
 
 from math import copysign, fmod, sqrt, hypot, cos, sin, acos, atan2
-from typing import Sequence, Tuple
+from typing import Optional, Sequence, Tuple, List
 
 try:
     from numpy.linalg import eigh
@@ -68,8 +71,8 @@ from .utils import clamp
 # Array unpacking is slower than indexing.
 
 Vector = Tuple[float, float, float]
-Quaternion = Tuple[float, float, float, float]
 Matrix = Tuple[Vector, Vector, Vector]
+Quaternion = Tuple[float, float, float, float]
 
 
 def vector(arr: Sequence[float]) -> Vector:
@@ -610,6 +613,41 @@ def quatrotate(vec: Vector, quat: Quaternion) -> Vector:
         vec_y + quat_w * temp_y + quat_z * temp_x - quat_x * temp_z,
         vec_z + quat_w * temp_z + quat_x * temp_y - quat_y * temp_x,
     )
+
+
+def alignvec(
+    from_vec: Vector, to_vec: Vector, orth_axis: Optional[Vector] = None
+) -> Quaternion:
+    """
+    Return the proper transformation from one non-zero vector `from_vec` to
+    another non-zero vector `to_vec`.  If a vector `orth_axis` that is
+    orthogonal to vector `to_vec` is provided, it will be used to construct
+    the rotation in case the vectors are antiparallel.
+    """
+    axis = cross(from_vec, to_vec)
+    if sqnorm(axis) > 0.0:
+        ang = angle(from_vec, to_vec)
+        if ang > 0.0:
+            return rotquat(normalize(axis), ang)
+    elif dot(from_vec, to_vec) < 0.0:
+        if orth_axis is None:
+            orth_axis = orthvec(normalize(to_vec))
+        return rotquat(orth_axis, PI)
+    return (1.0, 0.0, 0.0, 0.0)
+
+
+def alignvecs(
+    from_vec1: Vector, from_vec2: Vector, to_vec1: Vector, to_vec2: Vector
+) -> Quaternion:
+    """
+    Return the proper transformation from one pair of orthogonal vectors
+    `from_vec1` and `from_vec2` to another pair of orthogonal vectors `to_vec1`
+    and `to_vec2`.
+    """
+    quat1 = alignvec(from_vec1, to_vec1, to_vec2)
+    from_vec2 = quatrotate(from_vec2, quat1)
+    quat2 = alignvec(from_vec2, to_vec2, to_vec1)
+    return quatmulquat(quat2, quat1)
 
 
 def inertia(vecs: Sequence[Vector]) -> Matrix:

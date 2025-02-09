@@ -17,7 +17,6 @@ __all__ = [
     "AxisReflectionPlanes",
     "CenterReflectionPlanes",
     "CenterRotoreflectionAxes",
-    "Quaternion",
     "PointGroup",
     "Plot",
 ]
@@ -42,6 +41,5 @@ from .symmelem import (
     CenterReflectionPlanes,
     CenterRotoreflectionAxes,
 )
-from .quaternion import Quaternion
 from .ptgrp import PointGroup
 from .plot import Plot
