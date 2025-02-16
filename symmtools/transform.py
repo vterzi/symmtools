@@ -205,12 +205,33 @@ class Transformables(Transformable):
     def __iter__(self) -> Iterator[Transformable]:
         return iter(self._elems)
 
+    def order(self, other: "Transformables") -> List[int]:
+        """
+        Return the order of elements in an instance "other" that matches the
+        order of elements in this instance.
+        """
+        if not self.similar(other):
+            raise ValueError("dissimilar instances")
+        self_elems = self._elems
+        other_elems = other.elems
+        order = [0] * len(self_elems)
+        for (_, idxs1), (_, idxs2) in zip(self._groups, other.groups):
+            diffs = []
+            for idx1 in idxs1:
+                elem = self_elems[idx1]
+                row = []
+                for idx2 in idxs2:
+                    row.append(elem.diff(other_elems[idx2]))
+                diffs.append(row)
+            for i1, i2 in enumerate(linassign(diffs)):
+                order[idxs1[i1]] = idxs2[i2]
+        return order
+
     def diff(self, obj: Any) -> float:
         res = super().diff(obj)
         if res < INF:
             try:
                 for (_, idxs1), (_, idxs2) in zip(self._groups, obj.groups):
-                    n = max(len(idxs1), len(idxs2))
                     diffs = []
                     for idx1 in idxs1:
                         elem = self._elems[idx1]
@@ -218,9 +239,8 @@ class Transformables(Transformable):
                         for idx2 in idxs2:
                             row.append(elem.diff(obj[idx2]))
                         diffs.append(row)
-                    order = linassign(diffs)
-                    for i in range(n):
-                        res = max(res, diffs[i][order[i]])
+                    for i1, i2 in enumerate(linassign(diffs)):
+                        res = max(res, diffs[i1][i2])
             except ValueError:
                 res = INF
         return res
