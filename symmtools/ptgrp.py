@@ -1062,7 +1062,12 @@ class PointGroup(Transformable):
                     found_refl = found_rot
                 else:
                     found_refl = ReflectionPlane(vec).symmetric(points, tol)
-                if found_rot or found_refl:
+                # Rotation axes are more important than reflection planes for
+                # the determination of the orientation of the point group and
+                # are, therefore, prepended to the list.
+                if found_rot:
+                    axes.insert(0, vec)
+                elif found_refl:
                     axes.append(vec)
                 idx = 0  # 0 == 0b00
                 if found_rot:
