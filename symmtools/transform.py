@@ -34,6 +34,7 @@ from .const import INF, PI, TAU
 from .linalg3d import (
     Vector,
     Matrix,
+    Quaternion,
     neg,
     add,
     div,
@@ -45,6 +46,7 @@ from .linalg3d import (
     reflect,
     trigrotmat,
     reflmat,
+    rotquat,
 )
 from .utils import linassign
 
@@ -561,6 +563,11 @@ class Rotation(DirectionTransformable, Transformation):
     @property
     def mat(self) -> Matrix:
         return trigrotmat(self._vec, self._cos, self._sin)
+
+    @property
+    def quat(self) -> Quaternion:
+        """Quaternion representation."""
+        return rotquat(self._vec, self._angle)
 
 
 class Reflection(DirectionTransformable, Transformation):
