@@ -48,13 +48,15 @@ __all__ = [
     "conjugate",
     "quatmulquat",
     "quatrotate",
+    "quatzyzangles",
     "alignvec",
     "alignvecs",
     "inertia",
     "symmeig",
 ]
 
-from math import copysign, fmod, sqrt, hypot, cos, sin, acos, atan2
+from math import copysign, fmod, gcd, comb, sqrt, hypot, cos, sin, acos, atan2
+from cmath import exp
 from typing import Optional, Sequence, Tuple, List
 
 try:
@@ -73,6 +75,8 @@ from .utils import clamp
 Vector = Tuple[float, float, float]
 Matrix = Tuple[Vector, Vector, Vector]
 Quaternion = Tuple[float, float, float, float]
+
+_SQRT_HALF = sqrt(0.5)
 
 
 def vector(arr: Sequence[float]) -> Vector:
@@ -615,6 +619,20 @@ def quatrotate(vec: Vector, quat: Quaternion) -> Vector:
     )
 
 
+def quatzyzangles(quat: Quaternion) -> Tuple[float, float, float]:
+    w = quat[0]
+    x = quat[1]
+    y = quat[2]
+    z = quat[3]
+    angle2 = atan2(hypot(x, y), hypot(w, z))  # check gimbal lock
+    angle2 += angle2
+    angle_plus = atan2(z, w)
+    angle_minus = atan2(x, y)
+    angle1 = normangle(angle_plus + angle_minus)
+    angle3 = normangle(angle_plus - angle_minus)
+    return (angle1, angle2, angle3)
+
+
 def alignvec(
     from_vec: Vector, to_vec: Vector, orth_axis: Optional[Vector] = None
 ) -> Quaternion:
@@ -834,3 +852,163 @@ def symmeig(
     i2 = order[1]
     i3 = order[2]
     return (vals[i1], vals[i2], vals[i3]), (vecs[i1], vecs[i2], vecs[i3])
+
+
+def spherfuncs(degree: int) -> List[str]:
+    labels = [""] * (degree + degree + 1)
+    for order in range(degree + 1):
+        arr: Tuple[List[Tuple[int, int, int, int]], ...] = ([], [])
+        diff = degree - order
+        for i in range(order + 1):
+            factor = comb(order, i)  # TODO optimize
+            if (i // 2) % 2 == 1:
+                factor = -factor
+            arr[i % 2].append((factor, order - i, i, diff))
+        for i, funcs in enumerate(arr):
+            if len(funcs) == 0:
+                continue
+            denom = 0
+            for func in funcs:
+                denom = gcd(denom, func[0])
+            terms = []
+            for func in funcs:
+                factor = func[0] // denom
+                prefix = str(factor)
+                if abs(factor) == 1:
+                    prefix = prefix[:-1]
+                terms.append(
+                    prefix + "x" * func[1] + "y" * func[2] + "z" * func[3]
+                )
+            string = "+".join(terms)
+            string = string.replace("+-", "-")
+            idx = degree
+            if i == 0:
+                idx += order
+            else:
+                idx -= order
+            labels[idx] = string
+    return labels
+
+
+def realspher(complex_coefs: Sequence[complex]) -> List[float]:
+    """
+    Convert complex spherical harmonics with coefficients `complex_coefs` to
+    real.
+    """
+    dim = len(complex_coefs)
+    degree = dim // 2
+    real_coefs = [0.0] * dim
+    real_coefs[degree] = complex_coefs[degree].real
+    for order in range(1, degree + 1):
+        i1 = degree + order
+        i2 = degree - order
+        coef1 = _SQRT_HALF * complex_coefs[i1]
+        coef2 = _SQRT_HALF * complex_coefs[i2]
+        if order % 2 == 0:
+            real_coefs[i1] = coef2.real + coef1.real
+            real_coefs[i2] = coef2.imag - coef1.imag
+        else:
+            real_coefs[i1] = coef2.real - coef1.real
+            real_coefs[i2] = -coef2.imag - coef1.imag
+    return real_coefs
+
+
+def complexspher(real_coefs: Sequence[float]) -> List[complex]:
+    """
+    Convert real spherical harmonics with coefficients `real_coefs` to complex.
+    """
+    dim = len(real_coefs)
+    degree = dim // 2
+    complex_coefs = [0.0j] * dim
+    complex_coefs[degree] = complex(real_coefs[degree], 0.0)
+    for order in range(1, degree + 1):
+        i1 = degree + order
+        i2 = degree - order
+        coef1 = _SQRT_HALF * real_coefs[i1]
+        coef2 = _SQRT_HALF * real_coefs[i2]
+        if order % 2 == 0:
+            complex_coefs[i1] = complex(coef1, coef2)
+        else:
+            complex_coefs[i1] = complex(-coef1, -coef2)
+        complex_coefs[i2] = complex(coef1, -coef2)
+    return complex_coefs
+
+
+def orthrotmatspher(
+    degrees: Sequence[int], angle: float
+) -> List[List[List[complex]]]:
+    dim = 2 * max(degrees) + 1
+    angle *= 0.5
+    cosine = cos(angle)
+    sine = sin(angle)
+    factorial = 1
+    factorials = [factorial]
+    pow_cos = 1.0
+    cosines = [pow_cos]
+    pow_sin = 1.0
+    sines = [pow_sin]
+    for i in range(1, dim):
+        factorial *= i
+        factorials.append(factorial)
+        pow_cos *= cosine
+        cosines.append(pow_cos)
+        pow_sin *= sine
+        sines.append(pow_sin)
+    prods = [[1] * dim for _ in range(dim)]
+    for i1 in range(dim):
+        factorial = factorials[i1]
+        for i2 in range(i1, dim):
+            prod = factorial * factorials[i2]
+            prods[i1][i2] = prod
+            prods[i2][i1] = prod
+    mats = []
+    for degree in degrees:
+        dim = degree + degree + 1
+        mat = [[0.0j] * dim for _ in range(dim)]
+        for order1 in range(-degree, degree + 1):
+            pos1 = degree + order1
+            neg1 = degree - order1
+            factor = prods[pos1][neg1]
+            for order2 in range(order1, degree + 1):
+                pos2 = degree + order2
+                neg2 = degree - order2
+                diff = order1 - order2
+                total = 0.0
+                for i in range(max(0, diff), min(pos1, neg2) + 1):
+                    diff1 = pos1 - i
+                    diff2 = neg2 - i
+                    diff3 = i - diff
+                    part = (
+                        cosines[diff1 + diff2]
+                        * sines[i + diff3]
+                        / (prods[diff1][diff2] * prods[i][diff3])
+                    )
+                    if diff3 % 2 != 0:
+                        part = -part
+                    total += part
+                entry = total * sqrt(prods[pos2][neg2] * factor)
+                mat[pos2][pos1] = entry
+                if pos1 != pos2:
+                    if diff % 2 != 0:
+                        entry = -entry
+                    mat[pos1][pos2] = entry
+        mats.append(mat)
+    return mats
+
+
+def rotmatspher(
+    degrees: Sequence[int], quat: Quaternion
+) -> List[List[List[complex]]]:
+    angles = quatzyzangles(quat)
+    mats = orthrotmatspher(degrees, angles[1])
+    angle1 = angles[0]
+    angle2 = angles[2]
+    for degree, mat in zip(degrees, mats):
+        dim = degree + degree + 1
+        for i1 in range(dim):
+            row = mat[i1]
+            phase1 = (degree - i1) * angle1
+            for i2 in range(dim):
+                phase2 = (degree - i2) * angle2
+                row[i2] *= exp(complex(0.0, phase1 + phase2))
+    return mats
