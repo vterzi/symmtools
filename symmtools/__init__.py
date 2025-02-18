@@ -18,6 +18,12 @@ __all__ = [
     "CenterReflectionPlanes",
     "CenterRotoreflectionAxes",
     "PointGroup",
+    "Basis",
+    "SphericalFunctions",
+    "SphericalInversion",
+    "SphericalRotation",
+    "SphericalReflection",
+    "SphericalRotoreflection",
     "Plot",
 ]
 
@@ -42,4 +48,12 @@ from .symmelem import (
     CenterRotoreflectionAxes,
 )
 from .ptgrp import PointGroup
+from .spher import (
+    Basis,
+    SphericalFunctions,
+    SphericalInversion,
+    SphericalRotation,
+    SphericalReflection,
+    SphericalRotoreflection,
+)
 from .plot import Plot
