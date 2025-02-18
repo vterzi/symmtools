@@ -15,7 +15,7 @@ __all__ = [
     "TERTAX",
     "SPECIAL_ANGLES",
     "SPECIAL_COMPONENTS",
-    "ORB_TYPES",
+    "SPHER_FUNC_TYPES",
     "LABEL_RE",
     "UINT_RE",
     "FLOAT_RE",
@@ -141,7 +141,7 @@ SPECIAL_COMPONENTS = (
     sqrt(3.0 / 8.0) * PHI,
     1.0,
 )
-ORB_TYPES = "spdfghiklmnoqrtuvwxyz"
+SPHER_FUNC_TYPES = "spdfghiklmnoqrtuvwxyz"
 LABEL_RE = r"(?:\b[A-Za-z_]\w*\b)"
 UINT_RE = r"(?:\d+)"
 FLOAT_RE = r"(?:[+\-]?(?:\d+\.?\d*|\.\d+)(?:[Ee][+\-]?\d+)?)"
