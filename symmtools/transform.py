@@ -47,6 +47,7 @@ from .linalg3d import (
     trigrotmat,
     reflmat,
     rotquat,
+    quatrot,
 )
 from .utils import linassign
 
@@ -588,6 +589,11 @@ class Rotation(DirectionTransformable, Transformation):
     def quat(self) -> Quaternion:
         """Quaternion representation."""
         return rotquat(self._vec, self._angle)
+
+    @classmethod
+    def from_quat(cls, quat: Quaternion) -> "Rotation":
+        """Create an instance from a quaternion `quat`."""
+        return cls(*quatrot(quat))
 
 
 class Reflection(DirectionTransformable, Transformation):
