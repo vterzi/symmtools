@@ -3,11 +3,14 @@
 __all__ = [
     "clamp",
     "rational",
+    "reducefrac",
+    "sqrtfactor",
     "signvar",
     "circshift",
     "linassign",
 ]
 
+from math import gcd
 from typing import Sequence, Tuple, List
 
 try:
@@ -51,6 +54,32 @@ def rational(num: float, tol: float) -> Tuple[int, int]:
     if negative:
         nom = -nom
     return nom, denom
+
+
+def reducefrac(nom: int, denom: int) -> Tuple[int, int]:
+    """
+    Reduce a fraction given by a nominator `nom` and a denominator `denom`.
+    """
+    divisor = gcd(nom, denom)
+    if divisor > 1:
+        nom //= divisor
+        denom //= divisor
+    return nom, denom
+
+
+def sqrtfactor(radicand: int) -> Tuple[int, int]:
+    """Factor out the square factors of a square-root radicand `radicand`."""
+    prefactor = 1
+    factor = 1
+    while True:
+        factor += 1
+        sq_factor = factor * factor
+        if sq_factor > radicand:
+            break
+        while radicand % sq_factor == 0:
+            prefactor *= factor
+            radicand //= sq_factor
+    return prefactor, radicand
 
 
 def signvar(
