@@ -55,9 +55,21 @@ __all__ = [
     "symmeig",
 ]
 
-from math import copysign, fmod, gcd, comb, sqrt, hypot, cos, sin, acos, atan2
+from math import (
+    copysign,
+    fmod,
+    gcd,
+    factorial,
+    comb,
+    sqrt,
+    hypot,
+    cos,
+    sin,
+    acos,
+    atan2,
+)
 from cmath import exp
-from typing import Optional, Sequence, Tuple, List
+from typing import Optional, Sequence, Tuple, List, Dict
 
 try:
     from numpy.linalg import eigh
@@ -67,7 +79,7 @@ except ImportError:
     EIGH_AVAIL = False
 
 from .const import PI, TAU, HALF_PI, EPS
-from .utils import clamp
+from .utils import clamp, reducefrac, sqrtfactor
 
 # `numpy` with `numpy.ndarray` is slower than `math` with `tuple`.
 # Array unpacking is slower than indexing.
@@ -854,40 +866,155 @@ def symmeig(
     return (vals[i1], vals[i2], vals[i3]), (vecs[i1], vecs[i2], vecs[i3])
 
 
-def spherfuncs(degree: int) -> List[str]:
-    labels = [""] * (degree + degree + 1)
+_Frac = Tuple[int, int]
+_Terms = Dict[Tuple[int, int, int, int], int]
+
+
+def spherfuncs(
+    degree: int, expand: bool = False
+) -> List[Tuple[_Frac, _Terms, _Terms]]:
+    funcs: List[Tuple[_Frac, _Terms, _Terms]] = [((1, 1), {}, {})] * (
+        degree + degree + 1
+    )
     for order in range(degree + 1):
-        arr: Tuple[List[Tuple[int, int, int, int]], ...] = ([], [])
-        diff = degree - order
+        zenith_terms = {}
+        for i in range((degree - order) // 2 + 1):
+            temp1 = i + i
+            temp2 = degree - temp1
+            coef = (
+                comb(degree, i)
+                * comb(temp2 + degree, degree)
+                * comb(temp2, order)
+                * factorial(order)
+            )
+            if i % 2 != 0:
+                coef = -coef
+            zenith_terms[(0, 0, temp2 - order, temp1)] = coef
+        all_azimuth_terms: Tuple[_Terms, _Terms] = ({}, {})
         for i in range(order + 1):
-            factor = comb(order, i)  # TODO optimize
+            coef = comb(order, i)
             if (i // 2) % 2 == 1:
-                factor = -factor
-            arr[i % 2].append((factor, order - i, i, diff))
-        for i, funcs in enumerate(arr):
-            if len(funcs) == 0:
+                coef = -coef
+            all_azimuth_terms[i % 2][(order - i, i, 0, 0)] = coef
+        divisor = gcd(*zenith_terms.values())
+        if divisor > 1:
+            for pows in zenith_terms:
+                zenith_terms[pows] //= divisor
+        common_nom = divisor * divisor
+        common_denom = 1 << (degree + degree)
+        for factor in range(degree - order + 1, degree + order + 1):
+            common_denom *= factor
+        if order != 0:
+            common_nom *= 2
+        if expand:
+            repeat = True
+            while repeat:
+                repeat = False
+                for pows in tuple(zenith_terms):
+                    if pows[3] > 0:
+                        repeat = True
+                        coef = zenith_terms[pows]
+                        del zenith_terms[pows]
+                        arr = list(pows)
+                        arr[3] -= 2
+                        for i in range(3):
+                            arr[i] += 2
+                            new_pows = (arr[0], arr[1], arr[2], arr[3])
+                            arr[i] -= 2
+                            if new_pows not in zenith_terms:
+                                zenith_terms[new_pows] = 0
+                            zenith_terms[new_pows] += coef
+        for i, azimuth_terms in enumerate(all_azimuth_terms):
+            if len(azimuth_terms) == 0:
                 continue
-            denom = 0
-            for func in funcs:
-                denom = gcd(denom, func[0])
-            terms = []
-            for func in funcs:
-                factor = func[0] // denom
-                prefix = str(factor)
-                if abs(factor) == 1:
-                    prefix = prefix[:-1]
-                terms.append(
-                    prefix + "x" * func[1] + "y" * func[2] + "z" * func[3]
-                )
-            string = "+".join(terms)
-            string = string.replace("+-", "-")
             idx = degree
             if i == 0:
                 idx += order
             else:
                 idx -= order
-            labels[idx] = string
-    return labels
+            divisor = gcd(*azimuth_terms.values())
+            if divisor > 1:
+                for pows in azimuth_terms:
+                    azimuth_terms[pows] //= divisor
+            frac = reducefrac(common_nom * divisor * divisor, common_denom)
+            if expand:
+                terms: _Terms = {}
+                for azimuth_term, azimuth_coef in azimuth_terms.items():
+                    azimuth_pows = tuple(azimuth_term)
+                    for zenith_term, zenith_coef in zenith_terms.items():
+                        zenith_pows = tuple(zenith_term)
+                        pows = (
+                            azimuth_pows[0] + zenith_pows[0],
+                            azimuth_pows[1] + zenith_pows[1],
+                            azimuth_pows[2] + zenith_pows[2],
+                            azimuth_pows[3] + zenith_pows[3],
+                        )
+                        if pows not in terms:
+                            terms[pows] = 0
+                        terms[pows] += azimuth_coef * zenith_coef
+                funcs[idx] = (frac, terms, {})
+            else:
+                funcs[idx] = (frac, azimuth_terms, zenith_terms)
+    return funcs
+
+
+def spherfunclabels(
+    degree: int, expand: bool = False, norm: bool = False
+) -> List[str]:
+    def parenthesize(string: str) -> str:
+        return "(" + string + ")" if "+" in string or "-" in string else string
+
+    strings = []
+    for func in spherfuncs(degree, expand):
+        string = ""
+        parenthesized = False
+        for terms in func[1:]:
+            expr = ""
+            for pows, coef in terms.items():
+                if coef > 0:
+                    expr += "+"
+                else:
+                    expr += "-"
+                    coef = -coef
+                if coef > 1:
+                    expr += str(coef)
+                expr += (
+                    "x" * pows[0]
+                    + "y" * pows[1]
+                    + "z" * pows[2]
+                    + "r" * pows[3]
+                )
+            if expr.startswith("+"):
+                expr = expr[1:]
+            if len(string) > 0 and len(expr) > 0:
+                string = parenthesize(string)
+                expr = parenthesize(expr)
+                parenthesized = True
+            string += expr
+        if norm:
+            factors = []
+            nom, denom = func[0]
+            prefactor_nom, radicand_nom = sqrtfactor(nom)
+            prefactor_denom, radicand_denom = sqrtfactor(denom)
+            for nom, denom, prefix, postfix in (
+                (prefactor_nom, prefactor_denom, "", ""),
+                (radicand_nom, radicand_denom, "sqrt(", ")"),
+            ):
+                factor = str(nom)
+                if denom > 1:
+                    factor += "/" + str(denom)
+                if factor != "1":
+                    factors.append(prefix + factor + postfix)
+            if len(factors) > 0:
+                if len(string) > 0:
+                    if not parenthesized:
+                        string = parenthesize(string)
+                    factors.append(string)
+                string = "*".join(factors)
+        if len(string) == 0:
+            string = "1"
+        strings.append(string)
+    return strings
 
 
 def realspher(complex_coefs: Sequence[complex]) -> List[float]:

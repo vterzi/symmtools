@@ -7,7 +7,13 @@ from copy import copy
 from typing import Sequence, Dict, List, Tuple
 
 from .const import PRIMAX, SPHER_FUNC_TYPES
-from .linalg3d import Vector, alignvec, spherfuncs, complexspher, rotmatspher
+from .linalg3d import (
+    Vector,
+    alignvec,
+    spherfunclabels,
+    complexspher,
+    rotmatspher,
+)
 from .transform import Inversion, Rotation, Reflection, Rotoreflection
 from .primitive import Points, LabeledPoint
 
@@ -43,7 +49,7 @@ class Basis:
             if degree > max_degree:
                 continue
             idxs = []
-            for func in spherfuncs(degree):
+            for func in spherfunclabels(degree):
                 if func not in funcs:
                     raise ValueError(
                         f"missing function '{func}' for orbital type"
