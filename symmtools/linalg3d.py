@@ -81,7 +81,7 @@ except ImportError:
 from .const import PI, TAU, HALF_PI, EPS
 from .utils import clamp, reducefrac, sqrtfactor
 
-# `numpy` with `numpy.ndarray` is slower than `math` with `tuple`.
+# `numpy` with `numpy.ndarray` is slower than `math` with `tuple` for 3D.
 # Array unpacking is slower than indexing.
 
 Vector = Tuple[float, float, float]
@@ -1036,7 +1036,7 @@ def realspher(complex_coefs: Sequence[complex]) -> List[float]:
             real_coefs[i2] = coef2.imag - coef1.imag
         else:
             real_coefs[i1] = coef2.real - coef1.real
-            real_coefs[i2] = -coef2.imag - coef1.imag
+            real_coefs[i2] = coef2.imag + coef1.imag
     return real_coefs
 
 
@@ -1054,10 +1054,10 @@ def complexspher(real_coefs: Sequence[float]) -> List[complex]:
         coef1 = _SQRT_HALF * real_coefs[i1]
         coef2 = _SQRT_HALF * real_coefs[i2]
         if order % 2 == 0:
-            complex_coefs[i1] = complex(coef1, coef2)
+            complex_coefs[i1] = complex(coef1, -coef2)
         else:
-            complex_coefs[i1] = complex(-coef1, -coef2)
-        complex_coefs[i2] = complex(coef1, -coef2)
+            complex_coefs[i1] = complex(-coef1, coef2)
+        complex_coefs[i2] = complex(coef1, coef2)
     return complex_coefs
 
 
@@ -1134,8 +1134,8 @@ def rotmatspher(
         dim = degree + degree + 1
         for i1 in range(dim):
             row = mat[i1]
-            phase1 = (degree - i1) * angle1
+            phase1 = (degree - i1) * angle2
             for i2 in range(dim):
-                phase2 = (degree - i2) * angle2
+                phase2 = (degree - i2) * angle1
                 row[i2] *= exp(complex(0.0, phase1 + phase2))
     return mats
